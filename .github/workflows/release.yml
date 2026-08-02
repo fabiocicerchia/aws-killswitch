@@ -68,7 +68,7 @@ jobs:
       # Keyless Sigstore signing — no long-lived key to store or rotate. Verify
       # with: gh attestation verify <binary> --repo <owner>/<repo>
       - name: sign
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: dist/aws-killswitch-*
 
