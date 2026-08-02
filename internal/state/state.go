@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/model"
+	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 )
 
 type Store interface {

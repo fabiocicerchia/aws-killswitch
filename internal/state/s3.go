@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/model"
+	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 )
 
 // S3 is the durable home for snapshots.

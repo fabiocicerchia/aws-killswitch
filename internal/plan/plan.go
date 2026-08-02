@@ -12,8 +12,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/model"
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/policy"
+	"github.com/fabiocicerchia/aws-killswitch/internal/model"
+	"github.com/fabiocicerchia/aws-killswitch/internal/policy"
 )
 
 type Input struct {

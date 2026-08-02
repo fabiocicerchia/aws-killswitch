@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/audit"
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/model"
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/state"
+	"github.com/fabiocicerchia/aws-killswitch/internal/audit"
+	"github.com/fabiocicerchia/aws-killswitch/internal/model"
+	"github.com/fabiocicerchia/aws-killswitch/internal/state"
 )
 
 // --- doubles -----------------------------------------------------------------
