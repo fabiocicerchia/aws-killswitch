@@ -1,0 +1,45 @@
+{
+  "Version": "2012-10-17",
+  "Comment": "Read-only. Everything `aws-killswitch plan`, `status` and `spend` need, and nothing that can change a resource. Attach this where you only want to see what would happen.",
+  "Statement": [
+    {
+      "Sid": "Discover",
+      "Effect": "Allow",
+      "Action": [
+        "autoscaling:DescribeAutoScalingGroups",
+        "ec2:DescribeInstances",
+        "ec2:DescribeInstanceTypes",
+        "ec2:DescribeNatGateways",
+        "ec2:DescribeRouteTables",
+        "ecs:ListClusters",
+        "ecs:ListServices",
+        "ecs:DescribeServices",
+        "elasticloadbalancing:DescribeLoadBalancers",
+        "elasticloadbalancing:DescribeListeners",
+        "elasticloadbalancing:DescribeTags",
+        "lambda:ListFunctions",
+        "lambda:ListTags",
+        "lambda:GetFunctionConcurrency",
+        "rds:DescribeDBInstances",
+        "rds:DescribeDBClusters",
+        "sts:GetCallerIdentity"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "Spend",
+      "Effect": "Allow",
+      "Action": ["ce:GetCostAndUsage"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ReadSnapshots",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:ListBucket"],
+      "Resource": [
+        "arn:aws:s3:::CHANGE-ME-ops-bucket",
+        "arn:aws:s3:::CHANGE-ME-ops-bucket/killswitch/*"
+      ]
+    }
+  ]
+}

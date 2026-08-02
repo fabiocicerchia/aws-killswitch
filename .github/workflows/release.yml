@@ -1,0 +1,78 @@
+name: release
+
+# release-please reads Conventional Commit messages on main and keeps an open
+# "release PR" with the next version bump + CHANGELOG. Merging that PR tags the
+# release (vX.Y.Z) and publishes a GitHub Release; `artifacts` then attaches the
+# binaries, an SBOM, and a signed provenance attestation to that release.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create tags & releases
+      pull-requests: write # open/update the release PR
+    outputs:
+      released: ${{ steps.release.outputs.release_created }}
+      tag: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          # "simple" is language-agnostic (tracks version.txt + CHANGELOG).
+          # Swap for node/python/rust/etc. to also bump manifests.
+          release-type: simple
+
+  artifacts:
+    needs: release-please
+    if: needs.release-please.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # upload assets to the release
+      id-token: write # keyless signing via Sigstore
+      attestations: write # record the provenance attestation
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-please.outputs.tag }}
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      # Pure Go, so cross-compiling is a loop rather than a build matrix.
+      - name: build
+        env:
+          CGO_ENABLED: "0"
+        run: |
+          mkdir -p dist
+          for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+            os=${target%/*} arch=${target#*/}
+            GOOS=$os GOARCH=$arch go build -trimpath \
+              -o "dist/aws-killswitch-$os-$arch" ./cmd/aws-killswitch
+          done
+          cd dist && sha256sum -- * > checksums.txt
+
+      - name: sbom
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: dist/sbom.cyclonedx.json
+
+      # Keyless Sigstore signing — no long-lived key to store or rotate. Verify
+      # with: gh attestation verify <binary> --repo <owner>/<repo>
+      - name: sign
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: dist/aws-killswitch-*
+
+      - name: upload
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ needs.release-please.outputs.tag }}" dist/*

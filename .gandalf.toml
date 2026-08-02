@@ -1,0 +1,15 @@
+# Gates that have nothing to run against here, so their warnings are noise
+# rather than signal. Everything else stays on.
+[gandalf]
+skip = [
+  # This is a Go CLI. The only Python in the tree is docs/requirements.txt
+  # (mkdocs), so the pytest gate finds no tests and the Atheris gate finds no
+  # harness — Go coverage comes from go_test and the native fuzz targets in
+  # internal/model/fuzz_test.go.
+  "tests",
+  "atheris",
+  # DAST scanners: no HTTP surface to point them at.
+  "dalfox",
+  "nikto",
+  "sqlmap",
+]

@@ -1,0 +1,67 @@
+name: security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1" # weekly, catches newly disclosed CVEs
+
+permissions:
+  contents: read
+  security-events: write # upload SARIF to the Security tab
+
+jobs:
+  secrets:
+    name: secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  vulns:
+    name: filesystem & dependency scan (trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scanners: vuln,misconfig,secret
+          format: sarif
+          output: trivy.sarif
+          severity: CRITICAL,HIGH
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v4.37.3
+        with:
+          sarif_file: trivy.sarif
+
+  govulncheck:
+    name: go vulnerability scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      # Call-graph aware: only reports vulns this code actually reaches, so a
+      # red result here is always worth acting on.
+      - run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+  codeql:
+    name: codeql
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: github/codeql-action/init@v4.37.3
+        with:
+          languages: go
+      - uses: github/codeql-action/analyze@v4.37.3

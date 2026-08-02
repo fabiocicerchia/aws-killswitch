@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # Keep GitHub Actions pinned versions fresh.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  # This project pulls in ~40 AWS SDK modules and acts on production
+  # infrastructure, so its dependencies are worth tracking rather than leaving
+  # to the yearly upgrade.
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly

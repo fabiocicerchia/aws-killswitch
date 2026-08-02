@@ -1,0 +1,62 @@
+name: code-quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Lint the GitHub Actions workflows themselves.
+      - name: actionlint
+        uses: raven-actions/actionlint@v2
+
+      # Enforce .editorconfig (indentation, EOL, trailing whitespace).
+      - name: editorconfig-checker
+        uses: editorconfig-checker/action-editorconfig-checker@v2
+
+      # Catch common typos in code and docs.
+      - name: typos
+        uses: crate-ci/typos@master
+
+      # pre-commit runs the language-specific hooks defined in
+      # .pre-commit-config.yaml. It no-ops gracefully if none apply.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+      - name: pre-commit
+        uses: pre-commit/action@v3.0.1
+
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: build
+        run: go build ./...
+      - name: vet
+        run: go vet ./...
+      - name: test
+        run: go test -race -coverprofile=coverage.out ./...
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+
+      # Short smoke run only. The corpus lives in testdata/fuzz once a crasher
+      # is found and committed, so regressions are caught by `go test` above;
+      # this just keeps the fuzz targets compiling and exercised on every PR.
+      - name: fuzz smoke
+        run: |
+          for t in FuzzSnapshotDecode FuzzIsNeverTouch; do
+            go test ./internal/model/ -run "$t" -fuzz "$t" -fuzztime 60s
+          done

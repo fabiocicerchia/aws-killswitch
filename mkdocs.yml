@@ -1,0 +1,25 @@
+site_name: aws-killswitch
+site_description: >-
+  Stop an AWS account spending without losing anything: cut ingress, drain
+  compute, and record exactly how to put it back.
+repo_url: https://github.com/fabiocicerchia/aws-killswitch
+docs_dir: docs
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      toggle: { icon: material/weather-night, name: Dark mode }
+    - scheme: slate
+      toggle: { icon: material/weather-sunny, name: Light mode }
+
+nav:
+  - Home: README.md
+  - Getting Started: getting-started.md
+  - Architecture: architecture.md
+  - IAM policy (read-only): iam-plan-readonly.json
+  - IAM policy (fire): iam-fire.json
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
