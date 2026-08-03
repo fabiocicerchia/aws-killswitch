@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/model"
+	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 )
 
 // Executor applies and undoes changes. Every Apply has a matching Restore, and

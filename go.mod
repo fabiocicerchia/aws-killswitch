@@ -1,4 +1,4 @@
-module github.com/fabiocicerchia/local-ai-lab/aws-killswitch
+module github.com/fabiocicerchia/aws-killswitch
 
 go 1.24
 

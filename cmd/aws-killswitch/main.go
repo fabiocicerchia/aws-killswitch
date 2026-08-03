@@ -18,13 +18,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/audit"
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/awsx"
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/engine"
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/model"
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/plan"
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/policy"
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/state"
+	"github.com/fabiocicerchia/aws-killswitch/internal/audit"
+	"github.com/fabiocicerchia/aws-killswitch/internal/awsx"
+	"github.com/fabiocicerchia/aws-killswitch/internal/engine"
+	"github.com/fabiocicerchia/aws-killswitch/internal/model"
+	"github.com/fabiocicerchia/aws-killswitch/internal/plan"
+	"github.com/fabiocicerchia/aws-killswitch/internal/policy"
+	"github.com/fabiocicerchia/aws-killswitch/internal/state"
 )
 
 const usage = `aws-killswitch — stop an account spending, without losing anything

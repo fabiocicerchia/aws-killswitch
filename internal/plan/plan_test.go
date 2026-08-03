@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/model"
-	"github.com/fabiocicerchia/local-ai-lab/aws-killswitch/internal/policy"
+	"github.com/fabiocicerchia/aws-killswitch/internal/model"
+	"github.com/fabiocicerchia/aws-killswitch/internal/policy"
 )
 
 func res(kind model.Kind, id string, tags map[string]string) model.Resource {
