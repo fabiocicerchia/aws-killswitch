@@ -329,8 +329,8 @@ type brokenAfterN struct {
 }
 
 func (b *brokenAfterN) Put(ctx context.Context, s model.Snapshot) error {
-	if b.memStore.puts >= b.failAfter {
-		b.memStore.puts++
+	if b.puts >= b.failAfter {
+		b.puts++
 		return errors.New("s3: connection reset")
 	}
 	return b.memStore.Put(ctx, s)

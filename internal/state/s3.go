@@ -64,7 +64,7 @@ func (s S3) Get(ctx context.Context, planID string) (model.Snapshot, error) {
 	if err != nil {
 		return model.Snapshot{}, fmt.Errorf("%w: %s", ErrNotFound, planID)
 	}
-	defer out.Body.Close()
+	defer func() { _ = out.Body.Close() }()
 	b, err := io.ReadAll(out.Body)
 	if err != nil {
 		return model.Snapshot{}, err
