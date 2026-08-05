@@ -15,10 +15,8 @@ theme:
 
 nav:
   - Home: README.md
-  - Getting Started: getting-started.md
   - Architecture: architecture.md
-  - IAM policy (read-only): iam-plan-readonly.json
-  - IAM policy (fire): iam-fire.json
+  - Getting Started: getting-started.md
 
 markdown_extensions:
   - admonition

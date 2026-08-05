@@ -91,3 +91,36 @@ database by itself.
 Cost Explorer lags by hours, so this catches slow burn and nothing sudden. For a
 fast trip, invoke the CLI from an AWS Budgets action or a CloudWatch alarm on
 `EstimatedCharges` instead of polling.
+
+## Triggering it
+
+`spend` reads month-to-date cost from Cost Explorer and exits 3 above the
+threshold, which is enough for a cron:
+
+```sh
+aws-killswitch spend --threshold 500 || aws-killswitch fire --yes
+```
+
+**But Cost Explorer lags by hours to a day.** That is fine for "the bill is
+running away over a week" and useless for "something spiked twenty minutes ago".
+For a fast trip, drive the CLI from an AWS Budgets action or a CloudWatch alarm
+on `EstimatedCharges` rather than polling from here. The tool says so at runtime
+rather than letting a stale number look authoritative.
+
+## IAM
+
+Two policies in `docs/`, deliberately split: `iam-plan-readonly.json` is
+everything `plan`, `status` and `spend` need and cannot change a thing —
+attach it widely. `iam-fire.json` is the write half, tag-conditioned, with an
+explicit `Deny` on every destructive action.
+
+## Development
+
+```sh
+make test   # go test ./...
+make lint   # vet + gofmt
+```
+
+`internal/plan` decides what happens and is pure. `internal/engine` enforces the
+ordering and the write-first rule. `internal/awsx` is the only package that
+talks to AWS. The first two hold the tests, because they hold the decisions.
