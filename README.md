@@ -5,6 +5,7 @@
 [![Security](https://github.com/fabiocicerchia/aws-killswitch/actions/workflows/security.yml/badge.svg)](https://github.com/fabiocicerchia/aws-killswitch/actions/workflows/security.yml)
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](LICENSE)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/fabiocicerchia/aws-killswitch/badge)](https://securityscorecards.dev/viewer/?uri=github.com/fabiocicerchia/aws-killswitch)
+[![CI carbon](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/fabiocicerchia/aws-killswitch/gh-pages/badge.json)](.github/workflows/carbon-badge.yml)
 
 **Stop an AWS account spending, without losing anything.** Cuts ingress, drains
 compute, and records exactly how to put it all back.
