@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.43.4
 	github.com/aws/aws-sdk-go-v2/config v1.32.34
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.70.4
-	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.67.3
+	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.67.4
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.318.1
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.90.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.58.4
