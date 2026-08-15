@@ -294,10 +294,14 @@ func (c *Clients) instances(ctx context.Context) ([]model.Resource, error) {
 				if err != nil {
 					return nil, err
 				}
+				// Unknown family or size leaves this zero, which the plan
+				// renders as "not estimated" rather than as free.
+				price, _ := EC2HourlyUSD(string(inst.InstanceType))
 				out = append(out, model.Resource{
 					ID: aws.ToString(inst.InstanceId), Kind: model.KindEC2Instance,
 					Name: nameOf(tags, aws.ToString(inst.InstanceId)), Region: c.Region,
 					Tags: tags, HasInstanceStore: hasStore,
+					EstimatedHourlyUSD: price,
 					Prior: map[string]any{
 						"state": string(inst.State.Name),
 						"type":  string(inst.InstanceType),
@@ -369,7 +373,7 @@ func (c *Clients) natGateways(ctx context.Context) ([]model.Resource, error) {
 				ID: id, Kind: model.KindNATGateway, Name: nameOf(tags, id),
 				Region: c.Region, Tags: tags, Prior: prior,
 				// The headline idle cost in most accounts, and it holds nothing.
-				EstimatedHourlyUSD: 0.045,
+				EstimatedHourlyUSD: natGatewayHourlyUSD,
 			})
 		}
 	}
@@ -415,10 +419,12 @@ func (c *Clients) databases(ctx context.Context) ([]model.Resource, error) {
 			if aws.ToString(db.DBClusterIdentifier) != "" {
 				continue
 			}
+			price, _ := RDSHourlyUSD(aws.ToString(db.DBInstanceClass))
 			out = append(out, model.Resource{
 				ID: aws.ToString(db.DBInstanceIdentifier), ARN: aws.ToString(db.DBInstanceArn),
 				Kind: model.KindRDSInstance, Name: aws.ToString(db.DBInstanceIdentifier),
 				Region: c.Region, Tags: rdsTags(db.TagList),
+				EstimatedHourlyUSD: price,
 				Prior: map[string]any{
 					"status": aws.ToString(db.DBInstanceStatus),
 					"class":  aws.ToString(db.DBInstanceClass),

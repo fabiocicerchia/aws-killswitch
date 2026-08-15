@@ -157,19 +157,37 @@ func (p Plan) ByPhase() [][]Action {
 // BlastRadius is how much of the account this touches — the number a person
 // checks before typing yes.
 type BlastRadius struct {
-	Total      int
-	ByKind     map[Kind]int
-	TouchesDB  bool
-	DataLoss   bool // an instance-store instance is in the plan
+	Total     int
+	ByKind    map[Kind]int
+	TouchesDB bool
+	DataLoss  bool // an instance-store instance is in the plan
+
+	// SavingsUSD is the hourly total across resources that have an estimate.
 	SavingsUSD float64
+	// SavingsByKind breaks that down, so a plan dominated by one kind is
+	// visible rather than hidden inside a single number.
+	SavingsByKind map[Kind]float64
+	// UnpricedByKind counts resources with no defensible estimate. Reported
+	// separately and never as zero: a zero saving is a claim that stopping the
+	// thing is free, which is a different statement from not knowing.
+	UnpricedByKind map[Kind]int
 }
 
 func (p Plan) BlastRadius() BlastRadius {
-	b := BlastRadius{ByKind: map[Kind]int{}}
+	b := BlastRadius{
+		ByKind:         map[Kind]int{},
+		SavingsByKind:  map[Kind]float64{},
+		UnpricedByKind: map[Kind]int{},
+	}
 	for _, a := range p.Actions {
 		b.Total++
 		b.ByKind[a.Resource.Kind]++
-		b.SavingsUSD += a.Resource.EstimatedHourlyUSD
+		if a.Resource.EstimatedHourlyUSD > 0 {
+			b.SavingsUSD += a.Resource.EstimatedHourlyUSD
+			b.SavingsByKind[a.Resource.Kind] += a.Resource.EstimatedHourlyUSD
+		} else {
+			b.UnpricedByKind[a.Resource.Kind]++
+		}
 		if a.Phase == PhaseData {
 			b.TouchesDB = true
 		}

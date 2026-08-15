@@ -83,6 +83,31 @@ no record of how to start it is an outage of unknown length.
 
 That invariant, and the ones below, are what the tests are about.
 
+## What the saving estimate means
+
+The plan prints an hourly saving per kind and in total, from list-price
+constants in `internal/awsx/pricing.go` — not from the Pricing API. The trip
+path runs when an account is already on fire; adding a network call and a
+failure mode to it, to refine a number nobody acts on in the moment, is the
+wrong trade.
+
+Read the figure as a floor, not a quote:
+
+- **us-east-1, on-demand, Linux.** Other regions run roughly 5-25% higher, and
+  Windows or commercial-database licensing can double a figure.
+- **Compute only.** Storage, data transfer, provisioned IOPS and snapshots keep
+  costing while an instance is stopped, and none of them are modelled.
+- **RDS is priced single-AZ.** A Multi-AZ deployment bills roughly double.
+
+One price per instance family is enough because on-demand pricing is linear in
+vCPU within a family: each size step doubles both. Families that break that
+pattern are left out of the table rather than approximated.
+
+A kind, family or size the table does not know reports **not estimated**, and
+is counted separately from the total. That distinction is deliberate: folding
+an unpriced resource in as zero would assert that stopping it is free, which is
+a different claim from not knowing what it costs.
+
 ## What it will not do
 
 **It never deletes.** Everything is a stop, a scale to zero, or a throttle. The
