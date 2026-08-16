@@ -5,7 +5,7 @@ go 1.24
 toolchain go1.26.5
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.43.4
+	github.com/aws/aws-sdk-go-v2 v1.43.5
 	github.com/aws/aws-sdk-go-v2/config v1.32.34
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.70.4
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.67.4
@@ -32,5 +32,5 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/signin v1.5.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.33.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.3 // indirect
-	github.com/aws/smithy-go v1.27.6 // indirect
+	github.com/aws/smithy-go v1.27.7 // indirect
 )
