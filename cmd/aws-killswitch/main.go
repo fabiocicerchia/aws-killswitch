@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -17,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
-
 	"github.com/fabiocicerchia/aws-killswitch/internal/audit"
 	"github.com/fabiocicerchia/aws-killswitch/internal/awsx"
 	"github.com/fabiocicerchia/aws-killswitch/internal/engine"
@@ -213,9 +213,10 @@ func printPlan(p model.Plan, pol policy.Policy, o options) error {
 
 	fmt.Printf("%d resources would change", b.Total)
 	if b.SavingsUSD > 0 {
-		fmt.Printf(", saving about $%.2f/hour on the resources with a known price", b.SavingsUSD)
+		fmt.Printf(", saving about $%.2f/hour", b.SavingsUSD)
 	}
 	fmt.Println()
+	printSavings(b)
 	if len(p.AckRequired) > 0 {
 		fmt.Println("\nRequires --force:")
 		for _, a := range p.AckRequired {
@@ -448,4 +449,41 @@ func emit(v any) error {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
+}
+
+// printSavings breaks the estimate down per kind, and says which resources
+// have no estimate at all.
+//
+// The two are reported separately on purpose. Folding an unpriced resource
+// into the total as zero would assert that stopping it is free, which is a
+// different claim from not knowing what it costs — and the second is the
+// honest one for a family this build has never seen.
+func printSavings(b model.BlastRadius) {
+	kinds := make([]model.Kind, 0, len(b.SavingsByKind)+len(b.UnpricedByKind))
+	for k := range b.SavingsByKind {
+		kinds = append(kinds, k)
+	}
+	for k := range b.UnpricedByKind {
+		if _, seen := b.SavingsByKind[k]; !seen {
+			kinds = append(kinds, k)
+		}
+	}
+	if len(kinds) == 0 {
+		return
+	}
+	sort.Slice(kinds, func(i, j int) bool { return kinds[i] < kinds[j] })
+
+	fmt.Println("\nEstimated hourly saving (us-east-1 list price, compute only):")
+	for _, k := range kinds {
+		line := fmt.Sprintf("  %-14s", k)
+		if usd, ok := b.SavingsByKind[k]; ok {
+			line += fmt.Sprintf(" $%.2f/hour", usd)
+		} else {
+			line += fmt.Sprintf(" %-11s", "not estimated")
+		}
+		if n := b.UnpricedByKind[k]; n > 0 {
+			line += fmt.Sprintf("  (%d not estimated)", n)
+		}
+		fmt.Println(line)
+	}
 }
