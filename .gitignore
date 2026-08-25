@@ -3,3 +3,6 @@ dist/
 reports/
 killswitch.json
 *.jsonl
+
+# Docs site build
+site/
