@@ -5,6 +5,18 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0](https://github.com/fabiocicerchia/aws-killswitch/compare/v1.8.0...v1.9.0) (2026-08-25)
+
+
+### Features
+
+* **docs:** build the docs site in Actions and drop Read the Docs ([#57](https://github.com/fabiocicerchia/aws-killswitch/issues/57)) ([fa539a8](https://github.com/fabiocicerchia/aws-killswitch/commit/fa539a8cfa5a6b4b7fc03b9ad6492f0a1abc55af))
+
+
+### Bug Fixes
+
+* **ci:** compute the next release PR after the draft is published ([#55](https://github.com/fabiocicerchia/aws-killswitch/issues/55)) ([18814c2](https://github.com/fabiocicerchia/aws-killswitch/commit/18814c2d5b3a3c0aedd296612c03d7848a7a9c17))
+
 ## [1.8.0](https://github.com/fabiocicerchia/aws-killswitch/compare/v1.7.0...v1.8.0) (2026-08-24)
 
 
