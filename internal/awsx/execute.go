@@ -85,19 +85,19 @@ func (e *Executor) Restore(ctx context.Context, en model.Entry) error {
 	case model.KindLambda:
 		return restoreLambda(ctx, c, en)
 	case model.KindECSService:
-		n, ok := model.PriorInt(en.Prior, "desired_count")
+		n, ok := model.PriorInt32(en.Prior, "desired_count")
 		if !ok {
-			return errors.New("no recorded desired count; refusing to guess")
+			return errors.New("no usable recorded desired count; refusing to guess")
 		}
-		return scaleService(ctx, c, en.Prior, int32(n))
+		return scaleService(ctx, c, en.Prior, n)
 	case model.KindASG:
-		min, okMin := model.PriorInt(en.Prior, "min_size")
-		des, okDes := model.PriorInt(en.Prior, "desired_capacity")
-		max, okMax := model.PriorInt(en.Prior, "max_size")
+		min, okMin := model.PriorInt32(en.Prior, "min_size")
+		des, okDes := model.PriorInt32(en.Prior, "desired_capacity")
+		max, okMax := model.PriorInt32(en.Prior, "max_size")
 		if !okMin || !okDes || !okMax {
-			return errors.New("incomplete recorded capacity; refusing to guess")
+			return errors.New("incomplete or unusable recorded capacity; refusing to guess")
 		}
-		return scaleASG(ctx, c, en.ID, int32(min), int32(des), int32(max))
+		return scaleASG(ctx, c, en.ID, min, des, max)
 	case model.KindEC2Instance:
 		_, err := c.EC2.StartInstances(ctx, &ec2.StartInstancesInput{InstanceIds: []string{en.ID}})
 		return err
@@ -197,12 +197,12 @@ func restoreLambda(ctx context.Context, c *Clients, en model.Entry) error {
 		})
 		return err
 	}
-	n, ok := model.PriorInt(en.Prior, "reserved_concurrency")
+	n, ok := model.PriorInt32(en.Prior, "reserved_concurrency")
 	if !ok {
-		return errors.New("recorded a reservation but not its value; refusing to guess")
+		return errors.New("recorded a reservation but not a usable value; refusing to guess")
 	}
 	_, err := c.Lambda.PutFunctionConcurrency(ctx, &lambda.PutFunctionConcurrencyInput{
-		FunctionName: aws.String(en.ID), ReservedConcurrentExecutions: aws.Int32(int32(n)),
+		FunctionName: aws.String(en.ID), ReservedConcurrentExecutions: aws.Int32(n),
 	})
 	return err
 }
