@@ -1,6 +1,7 @@
 package plan
 
 import (
+	"math"
 	"strings"
 	"testing"
 	"time"
@@ -292,6 +293,38 @@ func TestPriorIntSurvivesJSONRoundTrip(t *testing.T) {
 	}
 	if _, ok := model.PriorInt(map[string]any{"s": "3"}, "s"); ok {
 		t.Error("a string must not be silently coerced")
+	}
+}
+
+// The AWS scaling APIs take int32, and the prior comes back through JSON, which
+// constrains nothing. A bare int32(n) turns 4294967296 into 0 — a restore that
+// scales the service to zero and reports success, which is the exact failure
+// this tool exists to prevent. PriorInt32 must refuse instead of wrapping.
+func TestPriorInt32RefusesRatherThanWrapping(t *testing.T) {
+	for name, v := range map[string]any{
+		"wraps to zero":     float64(1 << 32),
+		"wraps to garbage":  float64(5000000000),
+		"one past MaxInt32": float64(math.MaxInt32 + 1),
+		"negative":          float64(-1),
+		"not a number":      "3",
+	} {
+		if got, ok := model.PriorInt32(map[string]any{"n": v}, "n"); ok {
+			t.Errorf("%s: got %d ok=true, want refusal", name, got)
+		}
+	}
+
+	for name, v := range map[string]any{
+		"zero":        float64(0),
+		"typical":     float64(3),
+		"max in fact": float64(math.MaxInt32),
+	} {
+		if _, ok := model.PriorInt32(map[string]any{"n": v}, "n"); !ok {
+			t.Errorf("%s: refused a value that is in range", name)
+		}
+	}
+
+	if _, ok := model.PriorInt32(map[string]any{}, "missing"); ok {
+		t.Error("a missing key must report not-ok rather than zero")
 	}
 }
 

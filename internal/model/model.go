@@ -14,6 +14,7 @@ package model
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 	"time"
@@ -319,6 +320,27 @@ func PriorInt(prior map[string]any, key string) (int, bool) {
 		return int(n), true
 	}
 	return 0, false
+}
+
+// PriorInt32 reads an integer out of the recorded prior state and narrows it to
+// the int32 the AWS APIs take, refusing rather than wrapping.
+//
+// The prior comes back through JSON, so nothing constrains its range on the way
+// in: a hand-edited or corrupted state file can hold any number at all. A bare
+// int32(n) turns 4294967296 into 0 and 5000000000 into 705032704, so a restore
+// would scale a service to zero, or to some arbitrary capacity, and report
+// success. Refusing is the only safe answer — the caller cannot guess what was
+// meant, and this tool's whole promise is that the restore path is exact.
+//
+// Reports false for a missing key, a non-numeric value, a negative count, or
+// anything above math.MaxInt32.
+func PriorInt32(prior map[string]any, key string) (int32, bool) {
+	n, ok := PriorInt(prior, key)
+	if !ok || n < 0 || n > math.MaxInt32 {
+		return 0, false
+	}
+
+	return int32(n), true
 }
 
 func PriorString(prior map[string]any, key string) (string, bool) {
