@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.1](https://github.com/fabiocicerchia/aws-killswitch/compare/v1.9.0...v1.9.1) (2026-08-29)
+
+
+### Bug Fixes
+
+* stop silently wrapping recorded capacities on the restore path ([#58](https://github.com/fabiocicerchia/aws-killswitch/issues/58)) ([27a62ec](https://github.com/fabiocicerchia/aws-killswitch/commit/27a62ecae887136a823f7b9edc49339b800665fb))
+* unblock quality and clear the Scorecard pinned-dependencies finding ([#60](https://github.com/fabiocicerchia/aws-killswitch/issues/60)) ([8673d35](https://github.com/fabiocicerchia/aws-killswitch/commit/8673d355c11bdce606774e982088c1870cf2ca73))
+
 ## [1.9.0](https://github.com/fabiocicerchia/aws-killswitch/compare/v1.8.0...v1.9.0) (2026-08-25)
 
 
