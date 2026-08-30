@@ -16,8 +16,8 @@ github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.37 h1:oyd3ke4V9AhKcRR7rRgxk1VyI+D
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.37/go.mod h1:aA9D7SqfG9IC1b7FLD7Iyc8Q4JN0a8gHhNjN4zPlIaI=
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.72.2 h1:QRj6kv7NZ33+Va/bGzDNd+WbCuocF5wQLx1av7Oj9Xs=
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.72.2/go.mod h1:7/hlAWgVGLsdlxD+xwD3/S/19CPE6hYlbmtAtjWQy4I=
-github.com/aws/aws-sdk-go-v2/service/costexplorer v1.67.6 h1:HzC/uIdf6rBPkngznmR4z1JOwazyQ+2Qk/GA3sOJvTI=
-github.com/aws/aws-sdk-go-v2/service/costexplorer v1.67.6/go.mod h1:cmB2f1OP2jT9dANuPp9z/eyGWSKpinAX5poc1M6Oees=
+github.com/aws/aws-sdk-go-v2/service/costexplorer v1.68.0 h1:AU+6xjH3J9FG1I2ueElJGD85DdjKXI2HL3iG4MM0uzw=
+github.com/aws/aws-sdk-go-v2/service/costexplorer v1.68.0/go.mod h1:e4eqPX09BPNiJq9DB7hsONzTQIYcQSDT/lASaVVPBEs=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.322.0 h1:ZDC/lswqgAoeNiee1NxZPJzrO/pNNlYyOZ0VaIQVqZE=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.322.0/go.mod h1:JzZmY7901meEnfOnNax3sxcqbBgLEGjrqtu+gdwA4Ag=
 github.com/aws/aws-sdk-go-v2/service/ecs v1.90.0 h1:uxOo7ZIoUh64cKhwC+zUY2A8oT7ZDdAjy5TvKr6KI6U=
