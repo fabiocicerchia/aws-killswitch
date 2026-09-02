@@ -49,6 +49,21 @@ Nothing changes without --yes. Stateful storage — S3, EFS, DynamoDB, EBS
 volumes, snapshots, backups — is never touched under any flag.
 `
 
+const (
+	// planRowFormat lays out one resource row — kind, reference, note — in the
+	// plan, the refusals and the restore preview, so the three read as one
+	// table. refWidth is passed into it as the reference column's width and is
+	// what the reference is truncated to: the two have to be the same number or
+	// a long name pushes the notes out of line.
+	planRowFormat = "  %-14s %-*s %s\n"
+	refWidth      = 40
+
+	// localDirName is the per-user directory holding the local snapshot copy and
+	// the audit log, under $HOME.
+	localDirName  = ".aws-killswitch"
+	auditFileName = "audit.jsonl"
+)
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Print(usage)
@@ -198,7 +213,7 @@ func printPlan(p model.Plan, pol policy.Policy, o options) error {
 		ph := model.Phase(phase)
 		fmt.Printf("%s — %s\n", strings.ToUpper(ph.String()), ph.Why())
 		for _, a := range actions {
-			fmt.Printf("  %-14s %-40s %s\n", a.Resource.Kind, truncate(a.Resource.Ref(), 40), a.Op)
+			fmt.Printf(planRowFormat, a.Resource.Kind, refWidth, truncate(a.Resource.Ref(), refWidth), a.Op)
 		}
 		fmt.Println()
 	}
@@ -206,7 +221,7 @@ func printPlan(p model.Plan, pol policy.Policy, o options) error {
 	if len(p.Refusals) > 0 {
 		fmt.Printf("NOT TOUCHED (%d)\n", len(p.Refusals))
 		for _, r := range p.Refusals {
-			fmt.Printf("  %-14s %-40s %s\n", r.Resource.Kind, truncate(r.Resource.Ref(), 40), r.Reason)
+			fmt.Printf(planRowFormat, r.Resource.Kind, refWidth, truncate(r.Resource.Ref(), refWidth), r.Reason)
 		}
 		fmt.Println()
 	}
@@ -315,7 +330,7 @@ func cmdRestore(ctx context.Context, cfg aws.Config, store state.Store, log *aud
 	if !o.yes {
 		fmt.Printf("plan %s would restore %d resources, compute first:\n\n", planID, len(changed))
 		for _, e := range plan.RestoreOrder(changed) {
-			fmt.Printf("  %-14s %-40s %s\n", e.Kind, truncate(refOf(e), 40), e.Phase)
+			fmt.Printf(planRowFormat, e.Kind, refWidth, truncate(refOf(e), refWidth), e.Phase)
 		}
 		fmt.Println("\nDry run — pass --yes to apply.")
 		return nil
@@ -418,15 +433,15 @@ func (o options) auditPathOrDefault() string {
 	if o.auditPath != "" {
 		return o.auditPath
 	}
-	return filepath.Join(o.localDir, "audit.jsonl")
+	return filepath.Join(o.localDir, auditFileName)
 }
 
 func defaultLocalDir() string {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return ".aws-killswitch"
+		return localDirName
 	}
-	return filepath.Join(home, ".aws-killswitch")
+	return filepath.Join(home, localDirName)
 }
 
 func planID(now time.Time) string { return "ks-" + now.Format("20060102-150405") }
