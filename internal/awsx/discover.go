@@ -198,37 +198,49 @@ func (c *Clients) services(ctx context.Context) ([]model.Resource, error) {
 			return nil, err
 		}
 		for _, cluster := range cpage.ClusterArns {
-			svcPager := ecs.NewListServicesPaginator(c.ECS, &ecs.ListServicesInput{Cluster: aws.String(cluster)})
-			for svcPager.HasMorePages() {
-				spage, err := svcPager.NextPage(ctx)
-				if err != nil {
-					return nil, err
+			rs, err := c.servicesIn(ctx, cluster)
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, rs...)
+		}
+	}
+	return out, nil
+}
+
+// servicesIn records the desired count of every service in one cluster, along
+// with the cluster and service names the restore will need to address it.
+func (c *Clients) servicesIn(ctx context.Context, cluster string) ([]model.Resource, error) {
+	var out []model.Resource
+	pager := ecs.NewListServicesPaginator(c.ECS, &ecs.ListServicesInput{Cluster: aws.String(cluster)})
+	for pager.HasMorePages() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, batch := range chunk(page.ServiceArns, 10) { // DescribeServices caps at 10
+			desc, err := c.ECS.DescribeServices(ctx, &ecs.DescribeServicesInput{
+				Cluster: aws.String(cluster), Services: batch,
+				Include: []ecstypesInclude{"TAGS"},
+			})
+			if err != nil {
+				return nil, err
+			}
+			for _, s := range desc.Services {
+				tags := map[string]string{}
+				for _, t := range s.Tags {
+					tags[aws.ToString(t.Key)] = aws.ToString(t.Value)
 				}
-				for _, batch := range chunk(spage.ServiceArns, 10) { // DescribeServices caps at 10
-					desc, err := c.ECS.DescribeServices(ctx, &ecs.DescribeServicesInput{
-						Cluster: aws.String(cluster), Services: batch,
-						Include: []ecstypesInclude{"TAGS"},
-					})
-					if err != nil {
-						return nil, err
-					}
-					for _, s := range desc.Services {
-						tags := map[string]string{}
-						for _, t := range s.Tags {
-							tags[aws.ToString(t.Key)] = aws.ToString(t.Value)
-						}
-						out = append(out, model.Resource{
-							ID: aws.ToString(s.ServiceArn), ARN: aws.ToString(s.ServiceArn),
-							Kind: model.KindECSService, Name: aws.ToString(s.ServiceName),
-							Region: c.Region, Tags: tags,
-							Prior: map[string]any{
-								"desired_count": int(s.DesiredCount),
-								"cluster":       cluster,
-								"service":       aws.ToString(s.ServiceName),
-							},
-						})
-					}
-				}
+				out = append(out, model.Resource{
+					ID: aws.ToString(s.ServiceArn), ARN: aws.ToString(s.ServiceArn),
+					Kind: model.KindECSService, Name: aws.ToString(s.ServiceName),
+					Region: c.Region, Tags: tags,
+					Prior: map[string]any{
+						"desired_count": int(s.DesiredCount),
+						"cluster":       cluster,
+						"service":       aws.ToString(s.ServiceName),
+					},
+				})
 			}
 		}
 	}

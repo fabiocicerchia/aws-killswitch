@@ -85,19 +85,9 @@ func (e *Executor) Restore(ctx context.Context, en model.Entry) error {
 	case model.KindLambda:
 		return restoreLambda(ctx, c, en)
 	case model.KindECSService:
-		n, ok := model.PriorInt32(en.Prior, "desired_count")
-		if !ok {
-			return errors.New("no usable recorded desired count; refusing to guess")
-		}
-		return scaleService(ctx, c, en.Prior, n)
+		return restoreService(ctx, c, en)
 	case model.KindASG:
-		min, okMin := model.PriorInt32(en.Prior, "min_size")
-		des, okDes := model.PriorInt32(en.Prior, "desired_capacity")
-		max, okMax := model.PriorInt32(en.Prior, "max_size")
-		if !okMin || !okDes || !okMax {
-			return errors.New("incomplete or unusable recorded capacity; refusing to guess")
-		}
-		return scaleASG(ctx, c, en.ID, min, des, max)
+		return restoreASG(ctx, c, en)
 	case model.KindEC2Instance:
 		_, err := c.EC2.StartInstances(ctx, &ec2.StartInstancesInput{InstanceIds: []string{en.ID}})
 		return err
@@ -207,6 +197,27 @@ func restoreLambda(ctx context.Context, c *Clients, en model.Entry) error {
 	return err
 }
 
+func restoreService(ctx context.Context, c *Clients, en model.Entry) error {
+	n, ok := model.PriorInt32(en.Prior, "desired_count")
+	if !ok {
+		return errors.New("no usable recorded desired count; refusing to guess")
+	}
+	return scaleService(ctx, c, en.Prior, n)
+}
+
+// restoreASG needs all three bounds or none: a partial restore would leave the
+// group with a capacity nobody chose, so a missing or unusable value refuses
+// rather than substituting a default.
+func restoreASG(ctx context.Context, c *Clients, en model.Entry) error {
+	min, okMin := model.PriorInt32(en.Prior, "min_size")
+	des, okDes := model.PriorInt32(en.Prior, "desired_capacity")
+	max, okMax := model.PriorInt32(en.Prior, "max_size")
+	if !okMin || !okDes || !okMax {
+		return errors.New("incomplete or unusable recorded capacity; refusing to guess")
+	}
+	return scaleASG(ctx, c, en.ID, min, des, max)
+}
+
 func scaleService(ctx context.Context, c *Clients, prior map[string]any, count int32) error {
 	cluster, ok := model.PriorString(prior, "cluster")
 	if !ok {
@@ -267,6 +278,13 @@ func restoreNATGateway(ctx context.Context, c *Clients, en model.Entry) error {
 	}
 
 	routes, _ := en.Prior["routes"].([]any)
+	return repointRoutes(ctx, c, newID, routes)
+}
+
+// repointRoutes sends every route that used the old gateway at the new one.
+// Recreating the gateway without this leaves private subnets with no egress
+// behind a restore that reported success.
+func repointRoutes(ctx context.Context, c *Clients, newID string, routes []any) error {
 	for _, raw := range routes {
 		r, ok := raw.(map[string]any)
 		if !ok {

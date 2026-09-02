@@ -129,15 +129,9 @@ func run(ctx context.Context, cmd string, args []string, o options) error {
 		return cmdSpend(ctx, cfg, o)
 	}
 
-	pol, err := loadPolicy(o.configPath)
+	pol, err := policyFor(o)
 	if err != nil {
 		return err
-	}
-	if o.stateURI != "" {
-		pol.StateURI = o.stateURI
-	}
-	if err := pol.Validate(); err != nil {
-		return fmt.Errorf("%s: %w", o.configPath, err)
 	}
 
 	log, logErr := audit.New(o.auditPathOrDefault())
@@ -163,24 +157,7 @@ func run(ctx context.Context, cmd string, args []string, o options) error {
 	}
 
 	account := accountID(ctx, cfg)
-	regions := pol.Scope.Regions
-	if len(regions) == 0 {
-		regions = []string{cfg.Region}
-	}
-
-	clients := map[string]*awsx.Clients{}
-	var resources []model.Resource
-	var discoveryErrs []error
-	for _, region := range regions {
-		c := awsx.NewClients(cfg, region)
-		clients[region] = c
-		rs, errs := c.Discover(ctx)
-		resources = append(resources, rs...)
-		discoveryErrs = append(discoveryErrs, errs...)
-	}
-	for _, e := range discoveryErrs {
-		fmt.Fprintf(os.Stderr, "warning: %v\n", e)
-	}
+	regions, clients, resources := discoverAll(ctx, cfg, pol)
 
 	now := time.Now().UTC()
 	p := plan.Build(plan.Input{
@@ -374,6 +351,49 @@ func cmdSpend(ctx context.Context, cfg aws.Config, o options) error {
 }
 
 // --- wiring ------------------------------------------------------------------
+
+// policyFor loads the policy file, applies the -state override, and validates
+// the result. Validation happens before discovery, so a mistake costs nothing.
+func policyFor(o options) (policy.Policy, error) {
+	pol, err := loadPolicy(o.configPath)
+	if err != nil {
+		return policy.Policy{}, err
+	}
+	if o.stateURI != "" {
+		pol.StateURI = o.stateURI
+	}
+	if err := pol.Validate(); err != nil {
+		return policy.Policy{}, fmt.Errorf("%s: %w", o.configPath, err)
+	}
+	return pol, nil
+}
+
+// discoverAll walks every region in scope read-only and returns the clients it
+// built, so the fire reuses them rather than rebuilding one per action.
+//
+// Per-region, per-service failures are reported and not returned: a missing
+// permission on one service should degrade the plan and say so, not leave the
+// operator with nothing during an incident.
+func discoverAll(ctx context.Context, cfg aws.Config, pol policy.Policy) ([]string, map[string]*awsx.Clients, []model.Resource) {
+	regions := pol.Scope.Regions
+	if len(regions) == 0 {
+		regions = []string{cfg.Region}
+	}
+	clients := map[string]*awsx.Clients{}
+	var resources []model.Resource
+	var discoveryErrs []error
+	for _, region := range regions {
+		c := awsx.NewClients(cfg, region)
+		clients[region] = c
+		rs, errs := c.Discover(ctx)
+		resources = append(resources, rs...)
+		discoveryErrs = append(discoveryErrs, errs...)
+	}
+	for _, e := range discoveryErrs {
+		fmt.Fprintf(os.Stderr, "warning: %v\n", e)
+	}
+	return regions, clients, resources
+}
 
 func loadPolicy(path string) (policy.Policy, error) {
 	b, err := os.ReadFile(path)
