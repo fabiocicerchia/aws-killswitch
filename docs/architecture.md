@@ -58,7 +58,7 @@ instance is stopped so the group does not replace it.
 1. A `Kind` in `internal/model`, and a phase for it.
 2. A case in `plan.actionFor` — including what makes it *refuse*, which is
    usually the more important half.
-3. Discovery in `internal/awsx/discover.go`, recording enough prior state to
+3. Discovery in the matching `internal/awsx/discover_<phase>.go`, recording enough prior state to
    restore it exactly.
 4. `Apply` and `Restore` in `internal/awsx/execute.go`.
 5. A test in `internal/plan` for the refusal, and one for the ordering if it
