@@ -8,6 +8,8 @@
 package policy
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -134,4 +136,20 @@ func lookupFold(tags map[string]string, key string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// Parse reads a policy from JSON, refusing anything it does not recognise.
+//
+// DisallowUnknownFields is deliberate: a misspelled key in a file that decides
+// what gets stopped would otherwise be silently ignored, and the operator would
+// find out during an incident that the scope they wrote was not the scope in
+// force.
+func Parse(data []byte) (Policy, error) {
+	var p Policy
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&p); err != nil {
+		return Policy{}, err
+	}
+	return p, nil
 }

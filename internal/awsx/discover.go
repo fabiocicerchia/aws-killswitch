@@ -12,27 +12,38 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	apigwtypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	asgtypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elbtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 )
 
 type Clients struct {
-	Region string
-	EC2    *ec2.Client
-	ECS    *ecs.Client
-	Lambda *lambda.Client
-	RDS    *rds.Client
-	ASG    *autoscaling.Client
-	ELB    *elasticloadbalancingv2.Client
+	Region     string
+	EC2        *ec2.Client
+	ECS        *ecs.Client
+	Lambda     *lambda.Client
+	RDS        *rds.Client
+	ASG        *autoscaling.Client
+	ELB        *elasticloadbalancingv2.Client
+	EKS        *eks.Client
+	APIGateway *apigateway.Client
+	// CloudFront is global, not regional. It is set on exactly one Clients so
+	// a multi-region run does not find every distribution once per region and
+	// plan the same disable five times.
+	CloudFront *cloudfront.Client
 }
 
 func NewClients(cfg aws.Config, region string) *Clients {
@@ -45,7 +56,22 @@ func NewClients(cfg aws.Config, region string) *Clients {
 		EC2:    ec2.NewFromConfig(c), ECS: ecs.NewFromConfig(c),
 		Lambda: lambda.NewFromConfig(c), RDS: rds.NewFromConfig(c),
 		ASG: autoscaling.NewFromConfig(c), ELB: elasticloadbalancingv2.NewFromConfig(c),
+		EKS: eks.NewFromConfig(c), APIGateway: apigateway.NewFromConfig(c),
 	}
+}
+
+// WithCloudFront marks this Clients as the one that also walks CloudFront.
+//
+// CloudFront has no regions. Whoever builds the per-region set calls this on
+// exactly one of them; without it, a run across five regions would discover
+// every distribution five times and plan five identical disables.
+func (c *Clients) WithCloudFront(cfg aws.Config) *Clients {
+	g := cfg.Copy()
+	// The service is global but the SDK still needs an endpoint region, and
+	// us-east-1 is the one CloudFront's control plane answers on.
+	g.Region = "us-east-1"
+	c.CloudFront = cloudfront.NewFromConfig(g)
+	return c
 }
 
 // Discover walks the account read-only. Per-service failures are collected
@@ -63,6 +89,9 @@ func (c *Clients) Discover(ctx context.Context) ([]model.Resource, []error) {
 		"ec2":         c.instances,
 		"natgateway":  c.natGateways,
 		"rds":         c.databases,
+		"eks":         c.nodegroups,
+		"apigateway":  c.apiStages,
+		"cloudfront":  c.distributions,
 	} {
 		rs, err := fn(ctx)
 		if err != nil {
@@ -452,4 +481,180 @@ func (c *Clients) databases(ctx context.Context) ([]model.Resource, error) {
 		}
 	}
 	return out, nil
+}
+
+// --- EKS, CloudFront, API Gateway --------------------------------------------
+
+// nodegroups finds managed node groups, which are ASGs the EKS control plane
+// owns. Scaling the underlying ASG directly does not work: the control plane
+// reconciles it straight back, so the nodegroup itself is the thing to scale.
+func (c *Clients) nodegroups(ctx context.Context) ([]model.Resource, error) {
+	var out []model.Resource
+	clusters := eks.NewListClustersPaginator(c.EKS, &eks.ListClustersInput{})
+	for clusters.HasMorePages() {
+		page, err := clusters.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, cluster := range page.Clusters {
+			groups := eks.NewListNodegroupsPaginator(c.EKS,
+				&eks.ListNodegroupsInput{ClusterName: aws.String(cluster)})
+			for groups.HasMorePages() {
+				gp, err := groups.NextPage(ctx)
+				if err != nil {
+					return nil, err
+				}
+				for _, name := range gp.Nodegroups {
+					r, err := c.nodegroup(ctx, cluster, name)
+					if err != nil {
+						return nil, err
+					}
+					if r != nil {
+						out = append(out, *r)
+					}
+				}
+			}
+		}
+	}
+	return out, nil
+}
+
+func (c *Clients) nodegroup(ctx context.Context, cluster, name string) (*model.Resource, error) {
+	d, err := c.EKS.DescribeNodegroup(ctx, &eks.DescribeNodegroupInput{
+		ClusterName: aws.String(cluster), NodegroupName: aws.String(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	ng := d.Nodegroup
+	if ng == nil || ng.ScalingConfig == nil {
+		return nil, nil
+	}
+	// A Fargate profile or a self-managed group has no scaling config and does
+	// not arrive here; a nodegroup mid-update does, and scaling one of those
+	// races the update. Leave it to the operator rather than fighting EKS.
+	if ng.Status != "" && ng.Status != "ACTIVE" && ng.Status != "DEGRADED" {
+		return nil, nil
+	}
+	return &model.Resource{
+		// The cluster is part of the identity: two clusters can each have a
+		// nodegroup called "default", and restore has to know which.
+		ID:   cluster + "/" + name,
+		ARN:  aws.ToString(ng.NodegroupArn),
+		Kind: model.KindEKSNodegroup, Name: name, Region: c.Region,
+		Tags: ng.Tags,
+		Prior: map[string]any{
+			"cluster_name": cluster,
+			"nodegroup":    name,
+			"desired_size": int(aws.ToInt32(ng.ScalingConfig.DesiredSize)),
+			"min_size":     int(aws.ToInt32(ng.ScalingConfig.MinSize)),
+			"max_size":     int(aws.ToInt32(ng.ScalingConfig.MaxSize)),
+		},
+	}, nil
+}
+
+// distributions finds enabled CloudFront distributions. Nil client means this
+// is not the region that walks the global services.
+func (c *Clients) distributions(ctx context.Context) ([]model.Resource, error) {
+	if c.CloudFront == nil {
+		return nil, nil
+	}
+	var out []model.Resource
+	pager := cloudfront.NewListDistributionsPaginator(c.CloudFront, &cloudfront.ListDistributionsInput{})
+	for pager.HasMorePages() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if page.DistributionList == nil {
+			continue
+		}
+		for _, d := range page.DistributionList.Items {
+			id := aws.ToString(d.Id)
+			out = append(out, model.Resource{
+				ID: id, ARN: aws.ToString(d.ARN),
+				Kind: model.KindCloudFront,
+				Name: aws.ToString(d.DomainName),
+				// Recorded as global rather than as whichever region happened
+				// to find it, so a restore does not look for it in one region.
+				Region: model.GlobalRegion,
+				Prior: map[string]any{
+					"enabled": aws.ToBool(d.Enabled),
+					"comment": aws.ToString(d.Comment),
+				},
+			})
+		}
+	}
+	return out, nil
+}
+
+// apiStages finds REST API stages that are not already throttled to zero.
+//
+// The stage's *default* method throttle is the lever: one write, one value to
+// put back, and it applies to every method under the stage. Per-method
+// overrides are left exactly as they are — restoring a stage-wide default is
+// exact, and rewriting individual methods would not be.
+func (c *Clients) apiStages(ctx context.Context) ([]model.Resource, error) {
+	var out []model.Resource
+	apis := apigateway.NewGetRestApisPaginator(c.APIGateway, &apigateway.GetRestApisInput{})
+	for apis.HasMorePages() {
+		page, err := apis.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, api := range page.Items {
+			apiID := aws.ToString(api.Id)
+			stages, err := c.APIGateway.GetStages(ctx,
+				&apigateway.GetStagesInput{RestApiId: aws.String(apiID)})
+			if err != nil {
+				return nil, err
+			}
+			for _, st := range stages.Item {
+				out = append(out, apiStage(c.Region, apiID, aws.ToString(api.Name), st))
+			}
+		}
+	}
+	return out, nil
+}
+
+func apiStage(region, apiID, apiName string, st apigwtypes.Stage) model.Resource {
+	name := aws.ToString(st.StageName)
+	// An absent default throttle is not "no limit": it is the account limit,
+	// which is what restore has to put back. Recorded as -1 so the two cases
+	// stay distinguishable in a JSON state file, where a missing key and a zero
+	// look the same after a round trip.
+	rate, burst := -1.0, -1
+	if s, ok := st.MethodSettings["*/*"]; ok {
+		rate = s.ThrottlingRateLimit
+		burst = int(s.ThrottlingBurstLimit)
+	}
+	label := apiName
+	if label == "" {
+		label = apiID
+	}
+	return model.Resource{
+		ID:     apiID + "/" + name,
+		Kind:   model.KindAPIGatewayStage,
+		Name:   label + " " + name,
+		Region: region,
+		Tags:   st.Tags,
+		Prior: map[string]any{
+			"rest_api_id": apiID,
+			"stage_name":  name,
+			"rate_limit":  rate,
+			"burst_limit": burst,
+		},
+	}
+}
+
+// AccountID is the account these credentials belong to, or "unknown".
+//
+// Never an error: it is a label on a plan, and failing a cost incident because
+// STS was slow would be the wrong trade.
+func AccountID(ctx context.Context, cfg aws.Config) string {
+	out, err := sts.NewFromConfig(cfg).GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	if err != nil {
+		return "unknown"
+	}
+	return aws.ToString(out.Account)
 }

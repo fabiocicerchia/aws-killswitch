@@ -17,7 +17,6 @@ import (
 	awscfg "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/fabiocicerchia/aws-killswitch/internal/audit"
 	"github.com/fabiocicerchia/aws-killswitch/internal/awsx"
 	"github.com/fabiocicerchia/aws-killswitch/internal/engine"
@@ -147,7 +146,7 @@ func run(ctx context.Context, cmd string, args []string, o options) error {
 		return cmdRestore(ctx, cfg, store, log, args[0], o)
 	}
 
-	account := accountID(ctx, cfg)
+	account := awsx.AccountID(ctx, cfg)
 	regions := pol.Scope.Regions
 	if len(regions) == 0 {
 		regions = []string{cfg.Region}
@@ -156,8 +155,13 @@ func run(ctx context.Context, cmd string, args []string, o options) error {
 	clients := map[string]*awsx.Clients{}
 	var resources []model.Resource
 	var discoveryErrs []error
-	for _, region := range regions {
+	for i, region := range regions {
 		c := awsx.NewClients(cfg, region)
+		if i == 0 {
+			// CloudFront is global. Exactly one region walks it, or a run across
+			// five regions plans the same five disables.
+			c = c.WithCloudFront(cfg)
+		}
 		clients[region] = c
 		rs, errs := c.Discover(ctx)
 		resources = append(resources, rs...)
@@ -308,7 +312,15 @@ func cmdRestore(ctx context.Context, cfg aws.Config, store state.Store, log *aud
 	clients := map[string]*awsx.Clients{}
 	for _, e := range changed {
 		if _, ok := clients[e.Region]; !ok {
-			clients[e.Region] = awsx.NewClients(cfg, e.Region)
+			region := e.Region
+			if region == model.GlobalRegion {
+				// A distribution has no region. Build the client on the
+				// configured default; only its CloudFront half is ever used.
+				region = cfg.Region
+			}
+			// Every executor client carries the global client, so a restore
+			// that includes a distribution can always reach it.
+			clients[e.Region] = awsx.NewClients(cfg, region).WithCloudFront(cfg)
 		}
 	}
 
@@ -370,10 +382,8 @@ func loadPolicy(path string) (policy.Policy, error) {
 		}
 		return policy.Policy{}, err
 	}
-	var p policy.Policy
-	dec := json.NewDecoder(strings.NewReader(string(b)))
-	dec.DisallowUnknownFields()
-	if err := dec.Decode(&p); err != nil {
+	p, err := policy.Parse(b)
+	if err != nil {
 		return policy.Policy{}, fmt.Errorf("%s: %w", path, err)
 	}
 	return p, nil
@@ -388,30 +398,13 @@ const samplePolicy = `{
 }
 `
 
-func buildStore(ctx context.Context, cfg aws.Config, pol policy.Policy, localDir string) (state.Store, error) {
-	local := state.Local{Dir: localDir}
+func buildStore(_ context.Context, cfg aws.Config, pol policy.Policy, localDir string) (state.Store, error) {
 	if pol.StateURI == "" {
 		fmt.Fprintf(os.Stderr,
 			"warning: no state_uri — snapshots are only in %s. Lose that directory and the restore record goes with it.\n", localDir)
-		return local, nil
-	}
-	bucket, prefix, ok := state.ParseURI(pol.StateURI)
-	if !ok {
-		return nil, fmt.Errorf("state_uri must be s3://bucket/prefix, got %q", pol.StateURI)
 	}
 	// Durable store first, so a rebuilt laptop still finds the record.
-	return state.Multi{Stores: []state.Store{
-		state.S3{Client: s3.NewFromConfig(cfg), Bucket: bucket, Prefix: prefix},
-		local,
-	}}, nil
-}
-
-func accountID(ctx context.Context, cfg aws.Config) string {
-	out, err := sts.NewFromConfig(cfg).GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
-	if err != nil {
-		return "unknown"
-	}
-	return aws.ToString(out.Account)
+	return state.Build(s3.NewFromConfig(cfg), pol.StateURI, localDir)
 }
 
 func (o options) auditPathOrDefault() string {

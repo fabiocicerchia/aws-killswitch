@@ -1,16 +1,20 @@
 module github.com/fabiocicerchia/aws-killswitch
 
-go 1.24
+go 1.26
 
 toolchain go1.26.6
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.44.0
+	github.com/aws/aws-lambda-go v1.55.0
+	github.com/aws/aws-sdk-go-v2 v1.45.1
 	github.com/aws/aws-sdk-go-v2/config v1.32.36
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.72.2
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.68.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.324.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.91.0
+	github.com/aws/aws-sdk-go-v2/service/eks v1.96.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.101.1
 	github.com/aws/aws-sdk-go-v2/service/rds v1.124.3
@@ -22,8 +26,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.16 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.35 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.36 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.40 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.40 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.41 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.28 // indirect

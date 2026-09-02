@@ -1,0 +1,11 @@
+{
+  "Version": "2012-10-17",
+  "Comment": "Trust policy for the killswitch Lambda's execution role. Only Lambda assumes it; the Budgets action invokes the function, it does not assume this role.",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "Service": "lambda.amazonaws.com" },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}

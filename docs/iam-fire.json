@@ -1,6 +1,6 @@
 {
   "Version": "2012-10-17",
-  "Comment": "The write half. Attach alongside iam-plan-readonly.json only on the identity allowed to fire. Every action here is reversible: stop, scale, throttle, modify. There is no Delete* except DeleteNatGateway, which is the one resource AWS gives no way to stop, and no action against S3, EBS, snapshots, EFS, DynamoDB or backups.",
+  "Comment": "The write half. Attach alongside iam-plan-readonly.json only on the identity allowed to fire. Every action here is reversible: stop, scale, throttle, modify, disable. There is no Delete* except DeleteNatGateway, which is the one resource AWS gives no way to stop, and no action against S3, EBS, snapshots, EFS, DynamoDB or backups.",
   "Statement": [
     {
       "Sid": "StopComputeReversibly",
@@ -11,18 +11,27 @@
         "lambda:PutFunctionConcurrency",
         "lambda:DeleteFunctionConcurrency",
         "ec2:StopInstances",
-        "ec2:StartInstances"
+        "ec2:StartInstances",
+        "eks:UpdateNodegroupConfig"
       ],
       "Resource": "*",
       "Condition": {
-        "StringEquals": { "aws:ResourceTag/Env": "CHANGE-ME" }
+        "StringEquals": {
+          "aws:ResourceTag/Env": "CHANGE-ME"
+        }
       }
     },
     {
       "Sid": "BlockAndUnblockIngress",
       "Effect": "Allow",
-      "Action": ["elasticloadbalancing:ModifyListener"],
-      "Resource": "*"
+      "Action": [
+        "elasticloadbalancing:ModifyListener",
+        "cloudfront:GetDistributionConfig",
+        "cloudfront:UpdateDistribution",
+        "apigateway:PATCH"
+      ],
+      "Resource": "*",
+      "Comment": "CloudFront and API Gateway are not tag-conditioned: neither carries the resource tags the compute condition relies on, and scoping them is done in the policy file's scope instead."
     },
     {
       "Sid": "NatGatewayOptIn",
@@ -49,7 +58,9 @@
     {
       "Sid": "WriteSnapshots",
       "Effect": "Allow",
-      "Action": ["s3:PutObject"],
+      "Action": [
+        "s3:PutObject"
+      ],
       "Resource": "arn:aws:s3:::CHANGE-ME-ops-bucket/killswitch/*"
     },
     {

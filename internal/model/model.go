@@ -20,6 +20,12 @@ import (
 	"time"
 )
 
+// GlobalRegion is the Region recorded for services that have none. CloudFront
+// is the only one so far. It is a real value rather than an empty string so a
+// state file says plainly where the resource lives, and so the executor can
+// route it deliberately instead of by accident.
+const GlobalRegion = "global"
+
 type Kind string
 
 const (
@@ -31,6 +37,13 @@ const (
 	KindNATGateway  Kind = "nat-gateway"
 	KindRDSInstance Kind = "rds-instance"
 	KindRDSCluster  Kind = "rds-cluster"
+
+	// Three services discovery could not see, so a trip left them running.
+	// Each is stopped by writing a number the service already has a field for,
+	// which is why all three restore exactly: there is nothing to recreate.
+	KindEKSNodegroup    Kind = "eks-nodegroup"
+	KindCloudFront      Kind = "cloudfront-distribution"
+	KindAPIGatewayStage Kind = "apigateway-stage"
 )
 
 // Phase is the order things happen in, and the order is not cosmetic.
@@ -350,4 +363,50 @@ func PriorString(prior map[string]any, key string) (string, bool) {
 	}
 	s, ok := v.(string)
 	return s, ok
+}
+
+// PriorBool reads a boolean out of the recorded prior state.
+//
+// Only a real bool counts. A CloudFront distribution's prior "enabled" decides
+// whether restore switches it back on, and coercing a string or a number into
+// that answer is how a distribution stays dark after a restore reports success.
+func PriorBool(prior map[string]any, key string) (bool, bool) {
+	v, ok := prior[key]
+	if !ok {
+		return false, false
+	}
+	b, ok := v.(bool)
+	return b, ok
+}
+
+// PriorFloat reads a rate out of the recorded prior state.
+//
+// API Gateway throttles are floats — 10.5 requests/second is legal — so this
+// cannot go through PriorInt without rounding a limit the account was actually
+// set to. A negative rate is refused: the API rejects it, and restoring to a
+// value that fails is not a restore.
+func PriorFloat(prior map[string]any, key string) (float64, bool) {
+	v, ok := prior[key]
+	if !ok {
+		return 0, false
+	}
+	var f float64
+	switch n := v.(type) {
+	case float64:
+		f = n
+	case float32:
+		f = float64(n)
+	case int:
+		f = float64(n)
+	case int32:
+		f = float64(n)
+	case int64:
+		f = float64(n)
+	default:
+		return 0, false
+	}
+	if f < 0 || math.IsNaN(f) || math.IsInf(f, 0) {
+		return 0, false
+	}
+	return f, true
 }

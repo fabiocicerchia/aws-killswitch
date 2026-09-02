@@ -406,3 +406,108 @@ func TestPlanIsDeterministic(t *testing.T) {
 		}
 	}
 }
+
+// --- EKS nodegroups, CloudFront, API Gateway stages -------------------------
+
+func withPrior(r model.Resource, prior map[string]any) model.Resource {
+	r.Prior = prior
+	return r
+}
+
+func TestNodegroupIsScaledBeforeLooseInstancesAndAfterLambda(t *testing.T) {
+	// An EKS nodegroup replaces an instance stopped underneath it, exactly as an
+	// ASG does — so it has to be scaled before the loose-instance sweep, or the
+	// control plane undoes the work.
+	p := build(prodScope(),
+		res(model.KindEC2Instance, "i-1", nil),
+		withPrior(res(model.KindEKSNodegroup, "prod/workers", nil),
+			map[string]any{"cluster_name": "prod", "nodegroup": "workers",
+				"desired_size": 6, "min_size": 3, "max_size": 12}),
+		res(model.KindLambda, "fn-1", nil),
+	)
+	var order []model.Kind
+	for _, a := range p.Actions {
+		order = append(order, a.Resource.Kind)
+	}
+	want := []model.Kind{model.KindLambda, model.KindEKSNodegroup, model.KindEC2Instance}
+	for i := range want {
+		if i >= len(order) || order[i] != want[i] {
+			t.Fatalf("order = %v, want %v", order, want)
+		}
+	}
+}
+
+func TestNodegroupAlreadyAtZeroIsRefusedNotReapplied(t *testing.T) {
+	p := build(prodScope(), withPrior(res(model.KindEKSNodegroup, "prod/workers", nil),
+		map[string]any{"cluster_name": "prod", "nodegroup": "workers",
+			"desired_size": 0, "min_size": 0, "max_size": 4}))
+	if len(p.Actions) != 0 || len(p.Refusals) != 1 {
+		t.Fatalf("want one refusal and no action, got %d/%d", len(p.Actions), len(p.Refusals))
+	}
+	if !strings.Contains(p.Refusals[0].Reason, "already at zero") {
+		t.Errorf("reason = %q", p.Refusals[0].Reason)
+	}
+}
+
+func TestCloudFrontIsCutFirstOfAll(t *testing.T) {
+	// It is the outermost edge and the slowest to take effect, so it starts
+	// first and has propagated by the time the rest is done.
+	p := build(prodScope(),
+		res(model.KindALBListener, "listener-1", nil),
+		withPrior(res(model.KindAPIGatewayStage, "abc123/prod", nil),
+			map[string]any{"rest_api_id": "abc123", "stage_name": "prod",
+				"rate_limit": 100.0, "burst_limit": 200}),
+		withPrior(res(model.KindCloudFront, "E123", nil), map[string]any{"enabled": true}),
+	)
+	if len(p.Actions) < 3 {
+		t.Fatalf("want three ingress actions, got %d", len(p.Actions))
+	}
+	if p.Actions[0].Resource.Kind != model.KindCloudFront {
+		t.Errorf("first action is %s, want CloudFront", p.Actions[0].Resource.Kind)
+	}
+	if p.Actions[1].Resource.Kind != model.KindAPIGatewayStage {
+		t.Errorf("second action is %s, want the API Gateway stage", p.Actions[1].Resource.Kind)
+	}
+	// Both carry a warning: a disable is not instant, and a throttle returns
+	// 429 rather than failing to connect. Neither is obvious under pressure.
+	if p.Actions[0].Warning == "" || p.Actions[1].Warning == "" {
+		t.Error("both ingress cuts should say what a caller will see")
+	}
+}
+
+func TestAnAlreadyDisabledDistributionIsRefused(t *testing.T) {
+	p := build(prodScope(),
+		withPrior(res(model.KindCloudFront, "E123", nil), map[string]any{"enabled": false}))
+	if len(p.Actions) != 0 || len(p.Refusals) != 1 {
+		t.Fatalf("want one refusal, got %d actions", len(p.Actions))
+	}
+	if !strings.Contains(p.Refusals[0].Reason, "already disabled") {
+		t.Errorf("reason = %q", p.Refusals[0].Reason)
+	}
+}
+
+func TestAStageAlreadyThrottledToZeroIsRefused(t *testing.T) {
+	p := build(prodScope(), withPrior(res(model.KindAPIGatewayStage, "abc/prod", nil),
+		map[string]any{"rest_api_id": "abc", "stage_name": "prod",
+			"rate_limit": 0.0, "burst_limit": 0}))
+	if len(p.Actions) != 0 || len(p.Refusals) != 1 {
+		t.Fatalf("want one refusal, got %d actions", len(p.Actions))
+	}
+}
+
+func TestNewKindsRestoreInReverseOfTheOrderTheyWereCut(t *testing.T) {
+	// Restore is the product: ingress must come back *last*, after the compute
+	// that serves it, or the first request through hits nothing.
+	entries := []model.Entry{
+		{Kind: model.KindCloudFront, ID: "E123", Phase: model.PhaseIngress},
+		{Kind: model.KindEKSNodegroup, ID: "prod/workers", Phase: model.PhaseCompute},
+		{Kind: model.KindAPIGatewayStage, ID: "abc/prod", Phase: model.PhaseIngress},
+	}
+	got := RestoreOrder(entries)
+	if got[len(got)-1].Phase != model.PhaseIngress {
+		t.Fatalf("restore ends on %s, want ingress last", got[len(got)-1].Phase)
+	}
+	if got[0].Kind != model.KindEKSNodegroup {
+		t.Errorf("restore starts with %s, want compute first", got[0].Kind)
+	}
+}
