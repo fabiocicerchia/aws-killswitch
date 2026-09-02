@@ -61,12 +61,14 @@ func Build(in Input, p policy.Policy) model.Plan {
 	return out
 }
 
+// refuse is the other half of actionFor's answer: leave this resource alone,
+// and record why so the plan can print it.
+func refuse(r model.Resource, reason string) (model.Action, model.Refusal, bool) {
+	return model.Action{}, model.Refusal{Resource: r, Reason: reason}, false
+}
+
 // actionFor decides what stopping one resource means, or refuses it.
 func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, bool) {
-	refuse := func(reason string) (model.Action, model.Refusal, bool) {
-		return model.Action{}, model.Refusal{Resource: r, Reason: reason}, false
-	}
-
 	switch r.Kind {
 	case model.KindALBListener:
 		return model.Action{
@@ -84,7 +86,7 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 
 	case model.KindECSService:
 		if n, ok := model.PriorInt(r.Prior, "desired_count"); ok && n == 0 {
-			return refuse("already at zero")
+			return refuse(r, "already at zero")
 		}
 		return model.Action{
 			Resource: r, Phase: model.PhaseCompute,
@@ -93,7 +95,7 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 
 	case model.KindASG:
 		if n, ok := model.PriorInt(r.Prior, "desired_capacity"); ok && n == 0 {
-			return refuse("already at zero")
+			return refuse(r, "already at zero")
 		}
 		return model.Action{
 			Resource: r, Phase: model.PhaseCompute,
@@ -102,13 +104,13 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 
 	case model.KindEC2Instance:
 		if s, ok := model.PriorString(r.Prior, "state"); ok && s != "running" {
-			return refuse("not running (" + s + ")")
+			return refuse(r, "not running ("+s+")")
 		}
 		if r.HasInstanceStore && !p.AllowInstanceStoreLoss {
 			// The API stops it happily and says nothing. Refusing by default is
 			// the only way this does not eventually erase someone's scratch
 			// data during a cost incident.
-			return refuse("has instance-store volumes, which a stop erases; set allow_instance_store_loss to accept that")
+			return refuse(r, "has instance-store volumes, which a stop erases; set allow_instance_store_loss to accept that")
 		}
 		act := model.Action{
 			Resource: r, Phase: model.PhaseCompute,
@@ -121,7 +123,7 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 
 	case model.KindNATGateway:
 		if !p.DeleteNATGateways {
-			return refuse("NAT gateways can only be deleted, not stopped; set delete_nat_gateways to include them")
+			return refuse(r, "NAT gateways can only be deleted, not stopped; set delete_nat_gateways to include them")
 		}
 		return model.Action{
 			Resource: r, Phase: model.PhaseNetwork,
@@ -131,10 +133,10 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 
 	case model.KindRDSInstance, model.KindRDSCluster:
 		if !p.IncludeDatabases {
-			return refuse("database: excluded unless include_databases is set")
+			return refuse(r, "database: excluded unless include_databases is set")
 		}
 		if s, ok := model.PriorString(r.Prior, "status"); ok && s != "available" {
-			return refuse("not available (" + s + ")")
+			return refuse(r, "not available ("+s+")")
 		}
 		op := "stop the database"
 		if p.FinalSnapshot {
@@ -146,7 +148,7 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 		}, model.Refusal{}, true
 	}
 
-	return refuse("unsupported kind " + string(r.Kind))
+	return refuse(r, "unsupported kind "+string(r.Kind))
 }
 
 // sortPlan puts the actions in the order they will run: by phase, then by kind
