@@ -235,14 +235,19 @@ resource "aws_ecs_service" "main" {
 
 # --- KindASG and KindEC2Instance ---------------------------------------------
 
+# arm64, and the instance types below match it. Graviton is what this account
+# would be built on if it were real — greenlint (GL016) is a sibling tool in
+# this same portfolio, and a scratch account that costs real money while it
+# exists is the last place to ignore it. The AMI architecture and the instance
+# family have to move together: an arm64 image will not boot on t3.
 data "aws_ssm_parameter" "al2023" {
-  name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
+  name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
 }
 
 resource "aws_launch_template" "main" {
   name_prefix   = "${var.prefix}-"
   image_id      = data.aws_ssm_parameter.al2023.value
-  instance_type = "t3.micro"
+  instance_type = "t4g.micro"
   tag_specifications {
     resource_type = "instance"
     tags          = local.tags
@@ -274,7 +279,7 @@ resource "aws_autoscaling_group" "main" {
 # never exercise the standalone path.
 resource "aws_instance" "standalone" {
   ami                    = data.aws_ssm_parameter.al2023.value
-  instance_type          = "t3.micro"
+  instance_type          = "t4g.micro"
   subnet_id              = aws_subnet.private[0].id
   vpc_security_group_ids = [aws_security_group.open.id]
   tags                   = local.tags
@@ -391,7 +396,11 @@ resource "aws_eks_node_group" "main" {
   node_group_name = "${var.prefix}-ng"
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = aws_subnet.private[*].id
-  instance_types  = ["t3.small"]
+  # ami_type has to be set explicitly alongside an arm64 instance family: the
+  # default is AL2023_x86_64_STANDARD, and a nodegroup that pairs it with t4g
+  # gets nodes that never join.
+  ami_type       = "AL2023_ARM_64_STANDARD"
+  instance_types = ["t4g.small"]
   scaling_config {
     min_size     = 1
     desired_size = 2
