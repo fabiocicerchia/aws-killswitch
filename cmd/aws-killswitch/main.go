@@ -45,7 +45,7 @@ volumes, snapshots, backups — is never touched under any flag.
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Print(usage)
-		os.Exit(2)
+		os.Exit(exitUsage)
 	}
 
 	fs := flag.NewFlagSet("aws-killswitch", flag.ExitOnError)
@@ -80,7 +80,7 @@ func main() {
 		yes: *yes, force: *force, asJSON: *asJSON,
 	}); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
+		os.Exit(exitCode(err))
 	}
 }
 
@@ -95,12 +95,12 @@ func run(ctx context.Context, cmd string, args []string, o options) error {
 	case "plan", "fire", "status", "restore", "spend":
 	default:
 		fmt.Print(usage)
-		return errors.New("unknown command " + cmd)
+		return failWith(exitUsage, errors.New("unknown command "+cmd))
 	}
 
 	cfg, err := awscfg.LoadDefaultConfig(ctx)
 	if err != nil {
-		return fmt.Errorf("loading AWS credentials: %w", err)
+		return failWith(exitConfig, fmt.Errorf("loading AWS credentials: %w", err))
 	}
 
 	if cmd == "spend" {
@@ -129,7 +129,7 @@ func run(ctx context.Context, cmd string, args []string, o options) error {
 		return cmdStatus(ctx, store, o)
 	case "restore":
 		if len(args) == 0 {
-			return errors.New("restore needs a plan id — see `aws-killswitch status`")
+			return failWith(exitUsage, errors.New("restore needs a plan id — see `aws-killswitch status`"))
 		}
 		return cmdRestore(ctx, cfg, store, log, args[0], o)
 	}

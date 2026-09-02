@@ -37,7 +37,7 @@ func policyFor(o options) (policy.Policy, error) {
 		pol.StateURI = o.stateURI
 	}
 	if err := pol.Validate(); err != nil {
-		return policy.Policy{}, fmt.Errorf("%s: %w", o.configPath, err)
+		return policy.Policy{}, failWith(exitConfig, fmt.Errorf("%s: %w", o.configPath, err))
 	}
 	return pol, nil
 }
@@ -73,9 +73,9 @@ func loadPolicy(path string) (policy.Policy, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return policy.Policy{}, fmt.Errorf(
+			return policy.Policy{}, failWith(exitNoInput, fmt.Errorf(
 				"no policy at %s — this tool will not act without one, because the default would otherwise be the whole account.\n"+
-					"Write one:\n\n%s", path, samplePolicy)
+					"Write one:\n\n%s", path, samplePolicy))
 		}
 		return policy.Policy{}, err
 	}
@@ -83,7 +83,7 @@ func loadPolicy(path string) (policy.Policy, error) {
 	dec := json.NewDecoder(strings.NewReader(string(b)))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&p); err != nil {
-		return policy.Policy{}, fmt.Errorf("%s: %w", path, err)
+		return policy.Policy{}, failWith(exitDataErr, fmt.Errorf("%s: %w", path, err))
 	}
 	return p, nil
 }
@@ -106,7 +106,7 @@ func buildStore(ctx context.Context, cfg aws.Config, pol policy.Policy, localDir
 	}
 	bucket, prefix, ok := state.ParseURI(pol.StateURI)
 	if !ok {
-		return nil, fmt.Errorf("state_uri must be s3://bucket/prefix, got %q", pol.StateURI)
+		return nil, failWith(exitConfig, fmt.Errorf("state_uri must be s3://bucket/prefix, got %q", pol.StateURI))
 	}
 	// Durable store first, so a rebuilt laptop still finds the record.
 	return state.Multi{Stores: []state.Store{

@@ -28,7 +28,7 @@ func cmdFire(ctx context.Context, p model.Plan, pol policy.Policy, store state.S
 		for _, a := range p.AckRequired {
 			fmt.Fprintf(os.Stderr, "  ! %s\n", a)
 		}
-		return errors.New("refusing to fire without acknowledgement")
+		return failWith(exitUsage, errors.New("refusing to fire without acknowledgement"))
 	}
 
 	opt := engine.Options{DryRun: !o.yes, ContinueOnError: true, Log: log}
@@ -88,11 +88,14 @@ func cmdStatus(ctx context.Context, store state.Store, o options) error {
 func cmdRestore(ctx context.Context, cfg aws.Config, store state.Store, log *audit.Log, planID string, o options) error {
 	snap, err := store.Get(ctx, planID)
 	if err != nil {
+		if errors.Is(err, state.ErrNotFound) {
+			return failWith(exitNoInput, err)
+		}
 		return err
 	}
 	changed := snap.Changed()
 	if len(changed) == 0 {
-		return errors.New("this snapshot records no changes to undo")
+		return failWith(exitNoInput, errors.New("this snapshot records no changes to undo"))
 	}
 
 	clients := map[string]*awsx.Clients{}
