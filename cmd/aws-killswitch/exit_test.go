@@ -26,7 +26,7 @@ func TestMissingPolicyFileExitsNoInput(t *testing.T) {
 	}
 }
 
-func TestUnparseablePolicyExitsDataErr(t *testing.T) {
+func TestUnparsablePolicyExitsDataErr(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "killswitch.json")
 	if err := os.WriteFile(path, []byte(`{"scope": `), 0o600); err != nil {
 		t.Fatal(err)
