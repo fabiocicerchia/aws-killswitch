@@ -79,7 +79,9 @@ resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)
   availability_zone       = data.aws_availability_zones.available.names[count.index]
-  map_public_ip_on_launch = true
+  # Nothing is launched into these subnets that needs one: the NAT gateway
+  # carries its own EIP and the load balancer allocates its own addresses.
+  map_public_ip_on_launch = false
   tags                    = local.tags
 }
 
@@ -195,7 +197,10 @@ resource "aws_lambda_function" "main" {
   # restore has to put back "unset" rather than "zero" — which is exactly the
   # kind of contract mismatch `verify` is looking for.
   reserved_concurrent_executions = 5
-  tags                           = local.tags
+  tracing_config {
+    mode = "Active"
+  }
+  tags = local.tags
 }
 
 # --- KindECSService -----------------------------------------------------------
@@ -248,6 +253,12 @@ resource "aws_launch_template" "main" {
   name_prefix   = "${var.prefix}-"
   image_id      = data.aws_ssm_parameter.al2023.value
   instance_type = "t4g.micro"
+  # IMDSv2 only. Nothing here reads the metadata service, so requiring a
+  # session token costs nothing and keeps the example from teaching IMDSv1.
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
   tag_specifications {
     resource_type = "instance"
     tags          = local.tags
@@ -282,7 +293,11 @@ resource "aws_instance" "standalone" {
   instance_type          = "t4g.micro"
   subnet_id              = aws_subnet.private[0].id
   vpc_security_group_ids = [aws_security_group.open.id]
-  tags                   = local.tags
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+  tags = local.tags
 }
 
 # --- KindRDSInstance and KindRDSCluster ---------------------------------------
@@ -304,7 +319,11 @@ resource "aws_db_instance" "main" {
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.open.id]
   skip_final_snapshot    = true
-  tags                   = local.tags
+  # Ships the engine log to CloudWatch. Nothing in `verify` reads it — it is
+  # here so the example is not the one place in this repo that teaches a
+  # database with no audit trail.
+  enabled_cloudwatch_logs_exports = ["postgresql"]
+  tags                            = local.tags
 }
 
 resource "aws_rds_cluster" "main" {
