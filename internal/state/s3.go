@@ -39,9 +39,9 @@ func ParseURI(uri string) (bucket, prefix string, ok bool) {
 
 func (s S3) key(planID string) string {
 	if s.Prefix == "" {
-		return planID + ".json"
+		return planID + snapshotExt
 	}
-	return s.Prefix + "/" + planID + ".json"
+	return s.Prefix + "/" + planID + snapshotExt
 }
 
 func (s S3) Put(ctx context.Context, snap model.Snapshot) error {
@@ -88,10 +88,10 @@ func (s S3) List(ctx context.Context) ([]model.Snapshot, error) {
 		}
 		for _, obj := range page.Contents {
 			key := aws.ToString(obj.Key)
-			if !strings.HasSuffix(key, ".json") {
+			if !strings.HasSuffix(key, snapshotExt) {
 				continue
 			}
-			id := strings.TrimSuffix(key[strings.LastIndex(key, "/")+1:], ".json")
+			id := strings.TrimSuffix(key[strings.LastIndex(key, "/")+1:], snapshotExt)
 			snap, err := s.Get(ctx, id)
 			if err != nil {
 				continue
