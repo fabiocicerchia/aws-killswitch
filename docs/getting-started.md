@@ -216,6 +216,23 @@ pass `{"force": true}` if that is genuinely what you want — and fire without a
 usable state store, because a killswitch with no restore path is the thing this
 repo exists not to be.
 
+## Exit codes
+
+A cron, a Budgets action or a CI job gets one number, so each refusal has its
+own rather than sharing 1:
+
+| Code | Means |
+|---|---|
+| 0 | it worked |
+| 1 | the run failed, or the check did — resources could not be stopped, nothing was in scope |
+| 3 | `spend --threshold`: month-to-date is over the threshold |
+| 64 | wrong invocation: no command, an unknown one, `restore` with no plan id, or a `fire` refused for want of `--force` |
+| 65 | the policy file could not be parsed |
+| 66 | the policy file, or the snapshot you asked to restore, does not exist |
+| 78 | the policy or the credentials are unusable — no scope, a `state_uri` that is not `s3://` |
+
+Anything unclassified is 1, so a code never means more than it was given.
+
 ## IAM
 
 Policies in `docs/`, deliberately split:
@@ -239,4 +256,5 @@ make lint   # vet + gofmt
 
 `internal/plan` decides what happens and is pure. `internal/engine` enforces the
 ordering and the write-first rule. `internal/awsx` is the only package that
-talks to AWS. The first two hold the tests, because they hold the decisions.
+talks to AWS, one `discover_<phase>.go` per phase. The first two hold the tests,
+because they hold the decisions.

@@ -6,7 +6,8 @@ Guidance for Claude Code (and other AI agents) working in this repo.
 
 **Stop an AWS account spending, without losing anything.** Cuts
 ingress, drains compute, and records exactly how to put it all back. Go CLI in
-`cmd/`, logic in `internal/` (`awsx`, `engine`, `model`, `plan`, `policy`,
+`cmd/` (`main.go` flags and dispatch, `commands.go`, `render.go`, `wiring.go`,
+`exit.go`), logic in `internal/` (`awsx`, `engine`, `model`, `plan`, `policy`,
 `state`). The restore path is the product — a killswitch nobody dares press is
 worthless.
 

@@ -35,6 +35,11 @@ type Store interface {
 
 var ErrNotFound = errors.New("no snapshot with that plan id")
 
+// snapshotExt is the extension every store writes and every listing looks for.
+// Named once because Put and List have to agree: a store that writes one suffix
+// and scans for another loses the restore record without failing.
+const snapshotExt = ".json"
+
 // PutVerified writes and reads back, comparing what returned against what was
 // sent. A store that accepts a write and loses it is the one failure this tool
 // cannot survive, and it is cheap to rule out.
@@ -136,7 +141,7 @@ func sorted(m map[string]model.Snapshot) []model.Snapshot {
 type Local struct{ Dir string }
 
 func (l Local) path(planID string) string {
-	return filepath.Join(l.Dir, planID+".json")
+	return filepath.Join(l.Dir, planID+snapshotExt)
 }
 
 func (l Local) Put(ctx context.Context, s model.Snapshot) error {
@@ -196,10 +201,10 @@ func (l Local) List(ctx context.Context) ([]model.Snapshot, error) {
 	}
 	var out []model.Snapshot
 	for _, e := range entries {
-		if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), snapshotExt) {
 			continue
 		}
-		s, err := l.Get(ctx, strings.TrimSuffix(e.Name(), ".json"))
+		s, err := l.Get(ctx, strings.TrimSuffix(e.Name(), snapshotExt))
 		if err != nil {
 			continue
 		}

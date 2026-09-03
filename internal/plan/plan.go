@@ -61,12 +61,14 @@ func Build(in Input, p policy.Policy) model.Plan {
 	return out
 }
 
+// refuse is the other half of actionFor's answer: leave this resource alone,
+// and record why so the plan can print it.
+func refuse(r model.Resource, reason string) (model.Action, model.Refusal, bool) {
+	return model.Action{}, model.Refusal{Resource: r, Reason: reason}, false
+}
+
 // actionFor decides what stopping one resource means, or refuses it.
 func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, bool) {
-	refuse := func(reason string) (model.Action, model.Refusal, bool) {
-		return model.Action{}, model.Refusal{Resource: r, Reason: reason}, false
-	}
-
 	switch r.Kind {
 	case model.KindALBListener:
 		return model.Action{
@@ -83,8 +85,8 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 		}, model.Refusal{}, true
 
 	case model.KindECSService:
-		if n, ok := model.PriorInt(r.Prior, "desired_count"); ok && n == 0 {
-			return refuse("already at zero")
+		if alreadyZero(r.Prior, "desired_count") {
+			return refuse(r, "already at zero")
 		}
 		return model.Action{
 			Resource: r, Phase: model.PhaseCompute,
@@ -92,8 +94,8 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 		}, model.Refusal{}, true
 
 	case model.KindASG:
-		if n, ok := model.PriorInt(r.Prior, "desired_capacity"); ok && n == 0 {
-			return refuse("already at zero")
+		if alreadyZero(r.Prior, "desired_capacity") {
+			return refuse(r, "already at zero")
 		}
 		return model.Action{
 			Resource: r, Phase: model.PhaseCompute,
@@ -101,27 +103,11 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 		}, model.Refusal{}, true
 
 	case model.KindEC2Instance:
-		if s, ok := model.PriorString(r.Prior, "state"); ok && s != "running" {
-			return refuse("not running (" + s + ")")
-		}
-		if r.HasInstanceStore && !p.AllowInstanceStoreLoss {
-			// The API stops it happily and says nothing. Refusing by default is
-			// the only way this does not eventually erase someone's scratch
-			// data during a cost incident.
-			return refuse("has instance-store volumes, which a stop erases; set allow_instance_store_loss to accept that")
-		}
-		act := model.Action{
-			Resource: r, Phase: model.PhaseCompute,
-			Op: "stop the instance (EBS is kept)",
-		}
-		if r.HasInstanceStore {
-			act.Warning = fmt.Sprintf("%s: instance-store data will be lost permanently", r.Ref())
-		}
-		return act, model.Refusal{}, true
+		return instanceAction(r, p)
 
 	case model.KindEKSNodegroup:
 		if n, ok := model.PriorInt(r.Prior, "desired_size"); ok && n == 0 {
-			return refuse("already at zero")
+			return refuse(r, "already at zero")
 		}
 		return model.Action{
 			Resource: r, Phase: model.PhaseCompute,
@@ -133,7 +119,7 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 
 	case model.KindCloudFront:
 		if on, ok := model.PriorBool(r.Prior, "enabled"); ok && !on {
-			return refuse("already disabled")
+			return refuse(r, "already disabled")
 		}
 		return model.Action{
 			Resource: r, Phase: model.PhaseIngress,
@@ -145,7 +131,7 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 
 	case model.KindAPIGatewayStage:
 		if rate, ok := model.PriorFloat(r.Prior, "rate_limit"); ok && rate == 0 {
-			return refuse("already throttled to zero")
+			return refuse(r, "already throttled to zero")
 		}
 		return model.Action{
 			Resource: r, Phase: model.PhaseIngress,
@@ -155,7 +141,7 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 
 	case model.KindNATGateway:
 		if !p.DeleteNATGateways {
-			return refuse("NAT gateways can only be deleted, not stopped; set delete_nat_gateways to include them")
+			return refuse(r, "NAT gateways can only be deleted, not stopped; set delete_nat_gateways to include them")
 		}
 		return model.Action{
 			Resource: r, Phase: model.PhaseNetwork,
@@ -164,23 +150,64 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 		}, model.Refusal{}, true
 
 	case model.KindRDSInstance, model.KindRDSCluster:
-		if !p.IncludeDatabases {
-			return refuse("database: excluded unless include_databases is set")
-		}
-		if s, ok := model.PriorString(r.Prior, "status"); ok && s != "available" {
-			return refuse("not available (" + s + ")")
-		}
-		op := "stop the database"
-		if p.FinalSnapshot {
-			op = "snapshot, then stop the database"
-		}
-		return model.Action{
-			Resource: r, Phase: model.PhaseData, Op: op,
-			Warning: fmt.Sprintf("%s: AWS restarts a stopped database by itself after 7 days", r.Ref()),
-		}, model.Refusal{}, true
+		return databaseAction(r, p)
 	}
 
-	return refuse("unsupported kind " + string(r.Kind))
+	return refuse(r, "unsupported kind "+string(r.Kind))
+}
+
+// alreadyZero reports that a resource is already at the capacity the plan would
+// set it to. ECS and ASG both need this and have to agree on it, or one of them
+// proposes a change that does nothing and pads the blast radius a person is
+// about to read under pressure.
+func alreadyZero(prior map[string]any, key string) bool {
+	n, ok := model.PriorInt(prior, key)
+	return ok && n == 0
+}
+
+// instanceAction decides a loose EC2 instance. The instance-store refusal is
+// the reason this is its own function: stopping such an instance erases its
+// local NVMe, the API gives no warning, so it is refused unless the policy has
+// accepted that loss in writing — and even then it needs acknowledgement.
+func instanceAction(r model.Resource, p policy.Policy) (model.Action, model.Refusal, bool) {
+	if s, ok := model.PriorString(r.Prior, "state"); ok && s != "running" {
+		return refuse(r, "not running ("+s+")")
+	}
+	if r.HasInstanceStore && !p.AllowInstanceStoreLoss {
+		// The API stops it happily and says nothing. Refusing by default is
+		// the only way this does not eventually erase someone's scratch
+		// data during a cost incident.
+		return refuse(r, "has instance-store volumes, which a stop erases; set allow_instance_store_loss to accept that")
+	}
+	act := model.Action{
+		Resource: r, Phase: model.PhaseCompute,
+		Op: "stop the instance (EBS is kept)",
+	}
+	if r.HasInstanceStore {
+		act.Warning = fmt.Sprintf("%s: instance-store data will be lost permanently", r.Ref())
+	}
+	return act, model.Refusal{}, true
+}
+
+// databaseAction decides an RDS instance or cluster. Databases are out unless
+// the policy opts in, and even then every one carries the seven-day warning:
+// AWS restarts a stopped database by itself, so a kill switch nobody is
+// watching un-kills a week later.
+func databaseAction(r model.Resource, p policy.Policy) (model.Action, model.Refusal, bool) {
+	if !p.IncludeDatabases {
+		return refuse(r, "database: excluded unless include_databases is set")
+	}
+	if s, ok := model.PriorString(r.Prior, "status"); ok && s != "available" {
+		return refuse(r, "not available ("+s+")")
+	}
+	op := "stop the database"
+	if p.FinalSnapshot {
+		op = "snapshot, then stop the database"
+	}
+	return model.Action{
+		Resource: r, Phase: model.PhaseData, Op: op,
+		Warning: fmt.Sprintf("%s: AWS restarts a stopped database by itself after 7 days", r.Ref()),
+	}, model.Refusal{}, true
 }
 
 // sortPlan puts the actions in the order they will run: by phase, then by kind
