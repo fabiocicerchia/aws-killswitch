@@ -5,6 +5,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0](https://github.com/fabiocicerchia/aws-killswitch/compare/v1.9.1...v1.10.0) (2026-09-03)
+
+
+### Features
+
+* EKS/CloudFront/API Gateway kinds, a Budgets-action Lambda, and `verify` ([#71](https://github.com/fabiocicerchia/aws-killswitch/issues/71)) ([84bf810](https://github.com/fabiocicerchia/aws-killswitch/commit/84bf81090345b1ce95dd399f9559e5e924876fcc))
+
 ## [1.9.1](https://github.com/fabiocicerchia/aws-killswitch/compare/v1.9.0...v1.9.1) (2026-08-29)
 
 
