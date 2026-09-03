@@ -1,0 +1,31 @@
+# Trivy picks this up automatically from the working directory, so the CI
+# workflow needs no change to honour it.
+#
+# WHY THIS FILE EXISTS: `examples/scratch-account/` is Terraform that builds a
+# deliberately exposed account, because that is the only kind of account this
+# tool can be exercised against. `aws-killswitch` cuts ingress and drains
+# compute; proving it does needs ingress to cut — a load balancer answering on
+# :80, public subnets, a CloudFront distribution on the default certificate.
+# Trivy is right about every one of those, and every one of them is the point.
+#
+# THIS IS NOT A BLANKET EXCUSE. Everything the scanners flagged that was not
+# inherent has been fixed rather than skipped: IMDSv2 is required on both the
+# launch template and the standalone instance, the Lambda has X-Ray tracing on,
+# the database exports its engine log, and the public subnets no longer
+# auto-assign addresses to anything launched into them. What remains is the
+# exposure the example exists to provide.
+#
+# Skipped by path rather than by rule id on purpose: an id-based ignore would
+# also silence the same finding if it ever appeared in `internal/` or in a
+# policy this tool ships, which is exactly where it would matter. Narrowing it
+# to the one directory keeps the rest of the tree scanned as before —
+# vulnerabilities, misconfiguration and secrets alike.
+#
+# The module is a throwaway. Its README says so twice, it is tagged
+# `killswitch = scratch` so the policy cannot reach anything else, and it is
+# meant to be destroyed the moment `aws-killswitch verify` has finished. If it
+# is ever adopted as a template for a real account, delete this skip first and
+# fix what Trivy then reports.
+scan:
+  skip-dirs:
+    - examples/scratch-account

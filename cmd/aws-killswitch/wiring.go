@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/sts"
 
 	"github.com/fabiocicerchia/aws-killswitch/internal/awsx"
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
@@ -56,8 +55,13 @@ func discoverAll(ctx context.Context, cfg aws.Config, pol policy.Policy) ([]stri
 	clients := map[string]*awsx.Clients{}
 	var resources []model.Resource
 	var discoveryErrs []error
-	for _, region := range regions {
+	for i, region := range regions {
 		c := awsx.NewClients(cfg, region)
+		if i == 0 {
+			// CloudFront is global. Exactly one region walks it, or a run across
+			// five regions plans the same five disables.
+			c = c.WithCloudFront(cfg)
+		}
 		clients[region] = c
 		rs, errs := c.Discover(ctx)
 		resources = append(resources, rs...)
@@ -113,14 +117,6 @@ func buildStore(ctx context.Context, cfg aws.Config, pol policy.Policy, localDir
 		state.S3{Client: s3.NewFromConfig(cfg), Bucket: bucket, Prefix: prefix},
 		local,
 	}}, nil
-}
-
-func accountID(ctx context.Context, cfg aws.Config) string {
-	out, err := sts.NewFromConfig(cfg).GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
-	if err != nil {
-		return "unknown"
-	}
-	return aws.ToString(out.Account)
 }
 
 func (o options) auditPathOrDefault() string {

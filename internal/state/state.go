@@ -21,6 +21,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 )
 
@@ -230,4 +232,31 @@ func From(p model.Plan) model.Snapshot {
 		})
 	}
 	return snap
+}
+
+// Build assembles the store a run should use: the durable one first, so a
+// rebuilt laptop still finds the record, with the local directory behind it.
+//
+// localDir may be empty, which is the Lambda's case — there is no durable
+// filesystem there, and a local copy that dies with the execution environment
+// would be a restore record that does not exist.
+func Build(s3c *s3.Client, uri, localDir string) (Store, error) {
+	var stores []Store
+	if uri != "" {
+		bucket, prefix, ok := ParseURI(uri)
+		if !ok {
+			return nil, fmt.Errorf("state_uri must be s3://bucket/prefix, got %q", uri)
+		}
+		stores = append(stores, S3{Client: s3c, Bucket: bucket, Prefix: prefix})
+	}
+	if localDir != "" {
+		stores = append(stores, Local{Dir: localDir})
+	}
+	switch len(stores) {
+	case 0:
+		return nil, errors.New("no state store: set state_uri, or pass a local directory")
+	case 1:
+		return stores[0], nil
+	}
+	return Multi{Stores: stores}, nil
 }

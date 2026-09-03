@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
+	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 )
 
@@ -216,4 +217,74 @@ func (c *Clients) instanceStore(ctx context.Context, instanceType string, cache 
 	}
 	cache[instanceType] = has
 	return has, nil
+}
+
+// --- EKS, CloudFront, API Gateway --------------------------------------------
+
+// nodegroups finds managed node groups, which are ASGs the EKS control plane
+// owns. Scaling the underlying ASG directly does not work: the control plane
+// reconciles it straight back, so the nodegroup itself is the thing to scale.
+func (c *Clients) nodegroups(ctx context.Context) ([]model.Resource, error) {
+	var out []model.Resource
+	clusters := eks.NewListClustersPaginator(c.EKS, &eks.ListClustersInput{})
+	for clusters.HasMorePages() {
+		page, err := clusters.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, cluster := range page.Clusters {
+			groups := eks.NewListNodegroupsPaginator(c.EKS,
+				&eks.ListNodegroupsInput{ClusterName: aws.String(cluster)})
+			for groups.HasMorePages() {
+				gp, err := groups.NextPage(ctx)
+				if err != nil {
+					return nil, err
+				}
+				for _, name := range gp.Nodegroups {
+					r, err := c.nodegroup(ctx, cluster, name)
+					if err != nil {
+						return nil, err
+					}
+					if r != nil {
+						out = append(out, *r)
+					}
+				}
+			}
+		}
+	}
+	return out, nil
+}
+
+func (c *Clients) nodegroup(ctx context.Context, cluster, name string) (*model.Resource, error) {
+	d, err := c.EKS.DescribeNodegroup(ctx, &eks.DescribeNodegroupInput{
+		ClusterName: aws.String(cluster), NodegroupName: aws.String(name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	ng := d.Nodegroup
+	if ng == nil || ng.ScalingConfig == nil {
+		return nil, nil
+	}
+	// A Fargate profile or a self-managed group has no scaling config and does
+	// not arrive here; a nodegroup mid-update does, and scaling one of those
+	// races the update. Leave it to the operator rather than fighting EKS.
+	if ng.Status != "" && ng.Status != "ACTIVE" && ng.Status != "DEGRADED" {
+		return nil, nil
+	}
+	return &model.Resource{
+		// The cluster is part of the identity: two clusters can each have a
+		// nodegroup called "default", and restore has to know which.
+		ID:   cluster + "/" + name,
+		ARN:  aws.ToString(ng.NodegroupArn),
+		Kind: model.KindEKSNodegroup, Name: name, Region: c.Region,
+		Tags: ng.Tags,
+		Prior: map[string]any{
+			"cluster_name": cluster,
+			"nodegroup":    name,
+			"desired_size": int(aws.ToInt32(ng.ScalingConfig.DesiredSize)),
+			"min_size":     int(aws.ToInt32(ng.ScalingConfig.MinSize)),
+			"max_size":     int(aws.ToInt32(ng.ScalingConfig.MaxSize)),
+		},
+	}, nil
 }

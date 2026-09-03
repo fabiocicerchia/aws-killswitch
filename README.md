@@ -73,6 +73,36 @@ Snapshots go to S3 *and* a local copy, and both must accept the write. S3 is in
 the never-touch set on purpose: the kill switch must not be able to destroy its
 own restore record. Turn on bucket versioning for the same reason.
 
+## Proving the restore works
+
+A killswitch nobody dares press is worthless, and "the API returned no error"
+is not evidence that anything stopped. `aws-killswitch verify` fires, **reads
+the account back**, restores, and reads it back again — reporting every place
+what was planned and what actually happened diverged:
+
+```sh
+aws-killswitch verify --config killswitch.json --plan-only   # coverage, changes nothing
+aws-killswitch verify --config killswitch.json --yes         # the real cycle
+```
+
+The second read is the point. `fire` succeeding means the calls were accepted;
+it does not mean the desired count is actually zero, the listener actually
+blocked, or the concurrency actually pinned. Only reading the account back can
+tell you that, and only comparing against the *pre-fire* state can tell you the
+restore put back what was there rather than merely something different.
+
+**Scratch accounts only** — it fires for real.
+[`examples/scratch-account/`](examples/scratch-account/) is a Terraform module
+that seeds one minimal resource of every supported kind, so a run has something
+to exercise; a kind the account does not hold is reported as `NOT EXERCISED`,
+because "no divergence" over a kind that was never present is not evidence of
+anything.
+
+The report is counts and kinds and nothing else, so it can be pasted into an
+issue: ARNs, account ids and resource names have nowhere in the report type to
+live, and a test asserts they cannot reach the output even when they are the
+subject of a finding.
+
 ## Documentation
 
 Full docs live in [`docs/`](docs/). Runnable examples live in [`examples/`](examples/).

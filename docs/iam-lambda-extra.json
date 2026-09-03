@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Comment": "What the Lambda needs *on top of* iam-plan-readonly.json and iam-fire.json, which carry everything about discovering and stopping. Attach all three to the execution role. Nothing here can change a resource.",
+  "Statement": [
+    {
+      "Sid": "WriteItsOwnLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:log-group:/aws/lambda/aws-killswitch*"
+    },
+    {
+      "Sid": "ReadItsOwnFireHistory",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::CHANGE-ME-ops-bucket",
+      "Comment": "The idempotency guard lists snapshots to find out whether something was already fired inside the cooldown. Without this the guard degrades to allowing the fire, which is the safe direction but loses the protection."
+    }
+  ]
+}

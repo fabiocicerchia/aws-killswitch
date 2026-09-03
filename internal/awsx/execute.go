@@ -18,6 +18,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
+	"strconv"
+
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	apigwtypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
+	ekstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 )
 
 // Executor applies and undoes changes. Every Apply has a matching Restore, and
@@ -32,6 +39,18 @@ func NewExecutor(clients map[string]*Clients) *Executor {
 }
 
 func (e *Executor) client(region string) (*Clients, error) {
+	// CloudFront has no region, so its resources are recorded as "global" and
+	// there is no entry under that key. Route them to whichever client was
+	// given the global service, rather than failing on a region that was never
+	// meant to be looked up.
+	if region == model.GlobalRegion {
+		for _, c := range e.byRegion {
+			if c.CloudFront != nil {
+				return c, nil
+			}
+		}
+		return nil, errors.New("no client configured for the global services (CloudFront)")
+	}
 	c, ok := e.byRegion[region]
 	if !ok {
 		return nil, fmt.Errorf("no client configured for region %s", region)
@@ -57,6 +76,14 @@ func (e *Executor) Apply(ctx context.Context, a model.Action) error {
 	case model.KindEC2Instance:
 		_, err := c.EC2.StopInstances(ctx, &ec2.StopInstancesInput{InstanceIds: []string{r.ID}})
 		return err
+	case model.KindEKSNodegroup:
+		return scaleNodegroup(ctx, c, r.Prior, 0, 0)
+	case model.KindCloudFront:
+		return setDistributionEnabled(ctx, c, r.ID, false)
+	case model.KindAPIGatewayStage:
+		// 0 rps, 0 burst. Both are needed: a burst allowance with a zero rate
+		// still lets a burst through.
+		return throttleStage(ctx, c, r.Prior, 0, 0)
 	case model.KindNATGateway:
 		_, err := c.EC2.DeleteNatGateway(ctx, &ec2.DeleteNatGatewayInput{NatGatewayId: aws.String(r.ID)})
 		return err
@@ -91,6 +118,32 @@ func (e *Executor) Restore(ctx context.Context, en model.Entry) error {
 	case model.KindEC2Instance:
 		_, err := c.EC2.StartInstances(ctx, &ec2.StartInstancesInput{InstanceIds: []string{en.ID}})
 		return err
+	case model.KindEKSNodegroup:
+		min, okMin := model.PriorInt32(en.Prior, "min_size")
+		des, okDes := model.PriorInt32(en.Prior, "desired_size")
+		if !okMin || !okDes {
+			return errors.New("incomplete or unusable recorded node counts; refusing to guess")
+		}
+		return scaleNodegroup(ctx, c, en.Prior, min, des)
+	case model.KindCloudFront:
+		on, ok := model.PriorBool(en.Prior, "enabled")
+		if !ok {
+			return errors.New("no recorded enabled state; refusing to guess")
+		}
+		if !on {
+			// It was already disabled when we found it, so the planner refused
+			// it and nothing was done. Re-disabling would be harmless but the
+			// state file should never have carried it here.
+			return nil
+		}
+		return setDistributionEnabled(ctx, c, en.ID, true)
+	case model.KindAPIGatewayStage:
+		rate, okRate := model.PriorFloat(en.Prior, "rate_limit")
+		burst, okBurst := model.PriorInt(en.Prior, "burst_limit")
+		if !okRate || !okBurst {
+			return errors.New("no usable recorded throttle; refusing to guess")
+		}
+		return throttleStage(ctx, c, en.Prior, rate, burst)
 	case model.KindNATGateway:
 		return restoreNATGateway(ctx, c, en)
 	case model.KindRDSInstance:
@@ -313,4 +366,98 @@ func repointRoutes(ctx context.Context, c *Clients, newID string, routes []any) 
 
 func snapshotName(id string) string {
 	return fmt.Sprintf("killswitch-%s-%d", id, time.Now().UTC().Unix())
+}
+
+// --- EKS, CloudFront, API Gateway --------------------------------------------
+
+// scaleNodegroup writes min and desired on a managed node group.
+//
+// maxSize is deliberately not touched. EKS rejects a nodegroup whose max is 0,
+// so a scale-to-zero that also zeroed max would fail outright; and on restore,
+// a max nobody changed needs no putting back.
+func scaleNodegroup(ctx context.Context, c *Clients, prior map[string]any, min, desired int32) error {
+	cluster, okCluster := model.PriorString(prior, "cluster_name")
+	name, okName := model.PriorString(prior, "nodegroup")
+	if !okCluster || !okName {
+		return errors.New("recorded state names no cluster or nodegroup")
+	}
+	_, err := c.EKS.UpdateNodegroupConfig(ctx, &eks.UpdateNodegroupConfigInput{
+		ClusterName:   aws.String(cluster),
+		NodegroupName: aws.String(name),
+		ScalingConfig: &ekstypes.NodegroupScalingConfig{
+			MinSize:     aws.Int32(min),
+			DesiredSize: aws.Int32(desired),
+		},
+	})
+	return err
+}
+
+// setDistributionEnabled flips a distribution on or off.
+//
+// CloudFront has no "disable" call: the whole config is read, one field is
+// changed, and the config is written back with the ETag that came with it. The
+// ETag is re-fetched here rather than recorded at discovery on purpose — it
+// changes on every update, and a stale one fails with PreconditionFailed. The
+// read is also what makes this safe: everything else in the config goes back
+// exactly as it was found, including changes made between fire and restore.
+func setDistributionEnabled(ctx context.Context, c *Clients, id string, enabled bool) error {
+	if c.CloudFront == nil {
+		return errors.New("no CloudFront client on this executor")
+	}
+	cur, err := c.CloudFront.GetDistributionConfig(ctx,
+		&cloudfront.GetDistributionConfigInput{Id: aws.String(id)})
+	if err != nil {
+		return err
+	}
+	if cur.DistributionConfig == nil {
+		return fmt.Errorf("distribution %s returned no config", id)
+	}
+	if aws.ToBool(cur.DistributionConfig.Enabled) == enabled {
+		return nil // already there; an update would only burn a propagation cycle
+	}
+	cfg := *cur.DistributionConfig
+	cfg.Enabled = aws.Bool(enabled)
+	_, err = c.CloudFront.UpdateDistribution(ctx, &cloudfront.UpdateDistributionInput{
+		Id: aws.String(id), IfMatch: cur.ETag, DistributionConfig: &cfg,
+	})
+	return err
+}
+
+// throttleStage sets the stage-wide default method throttle.
+//
+// A rate of -1 means "there was no stage default, so the account limit applied"
+// — the state discovery records for a stage that never had one. Restoring that
+// removes the override rather than writing a number AWS never had, which is the
+// difference between putting it back and pinning it to today's account limit.
+func throttleStage(ctx context.Context, c *Clients, prior map[string]any, rate float64, burst int) error {
+	apiID, okAPI := model.PriorString(prior, "rest_api_id")
+	stage, okStage := model.PriorString(prior, "stage_name")
+	if !okAPI || !okStage {
+		return errors.New("recorded state names no API or stage")
+	}
+
+	var ops []apigwtypes.PatchOperation
+	if rate < 0 || burst < 0 {
+		ops = []apigwtypes.PatchOperation{
+			{Op: apigwtypes.OpRemove, Path: aws.String("/*/*/throttling/rateLimit")},
+			{Op: apigwtypes.OpRemove, Path: aws.String("/*/*/throttling/burstLimit")},
+		}
+	} else {
+		ops = []apigwtypes.PatchOperation{
+			{
+				Op:    apigwtypes.OpReplace,
+				Path:  aws.String("/*/*/throttling/rateLimit"),
+				Value: aws.String(strconv.FormatFloat(rate, 'f', -1, 64)),
+			},
+			{
+				Op:    apigwtypes.OpReplace,
+				Path:  aws.String("/*/*/throttling/burstLimit"),
+				Value: aws.String(strconv.Itoa(burst)),
+			},
+		}
+	}
+	_, err := c.APIGateway.UpdateStage(ctx, &apigateway.UpdateStageInput{
+		RestApiId: aws.String(apiID), StageName: aws.String(stage), PatchOperations: ops,
+	})
+	return err
 }

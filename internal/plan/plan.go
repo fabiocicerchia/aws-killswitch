@@ -105,6 +105,40 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 	case model.KindEC2Instance:
 		return instanceAction(r, p)
 
+	case model.KindEKSNodegroup:
+		if n, ok := model.PriorInt(r.Prior, "desired_size"); ok && n == 0 {
+			return refuse(r, "already at zero")
+		}
+		return model.Action{
+			Resource: r, Phase: model.PhaseCompute,
+			// maxSize is left alone: EKS refuses a nodegroup whose max is 0, and
+			// scaling to zero only needs min and desired. Restoring a value the
+			// API would have rejected is not a restore.
+			Op: "set min/desired node count to 0",
+		}, model.Refusal{}, true
+
+	case model.KindCloudFront:
+		if on, ok := model.PriorBool(r.Prior, "enabled"); ok && !on {
+			return refuse(r, "already disabled")
+		}
+		return model.Action{
+			Resource: r, Phase: model.PhaseIngress,
+			Op: "disable the distribution",
+			// Worth saying out loud: a disable is not instant, and someone
+			// watching the bill needs to know why nothing changed for a while.
+			Warning: r.Ref() + ": CloudFront takes minutes to propagate a disable to every edge, and returns errors to users while it does",
+		}, model.Refusal{}, true
+
+	case model.KindAPIGatewayStage:
+		if rate, ok := model.PriorFloat(r.Prior, "rate_limit"); ok && rate == 0 {
+			return refuse(r, "already throttled to zero")
+		}
+		return model.Action{
+			Resource: r, Phase: model.PhaseIngress,
+			Op:      "throttle the stage to 0 requests/second",
+			Warning: r.Ref() + ": callers get 429, not a connection error — a client with retries will keep trying",
+		}, model.Refusal{}, true
+
 	case model.KindNATGateway:
 		if !p.DeleteNATGateways {
 			return refuse(r, "NAT gateways can only be deleted, not stopped; set delete_nat_gateways to include them")
@@ -184,14 +218,25 @@ func databaseAction(r model.Resource, p policy.Policy) (model.Action, model.Refu
 // an ASG will otherwise replace an instance stopped underneath it.
 func sortPlan(p *model.Plan) {
 	rank := map[model.Kind]int{
-		model.KindALBListener: 0,
-		model.KindLambda:      1,
-		model.KindECSService:  2,
-		model.KindASG:         3,
-		model.KindEC2Instance: 4,
-		model.KindNATGateway:  5,
-		model.KindRDSCluster:  6,
-		model.KindRDSInstance: 7,
+		// Ingress. CloudFront first: it is the outermost edge and the slowest to
+		// take effect, so starting it early means it has propagated by the time
+		// the rest is done. API Gateway before the ALB for the same reason it
+		// sits in front of one.
+		model.KindCloudFront:      0,
+		model.KindAPIGatewayStage: 1,
+		model.KindALBListener:     2,
+		// Compute. Lambda first because it is instantaneous. Then the two
+		// managed groups before loose instances, because a group replaces an
+		// instance stopped underneath it — an EKS nodegroup does this exactly as
+		// an ASG does, and for the same reason.
+		model.KindLambda:       3,
+		model.KindECSService:   4,
+		model.KindEKSNodegroup: 5,
+		model.KindASG:          6,
+		model.KindEC2Instance:  7,
+		model.KindNATGateway:   8,
+		model.KindRDSCluster:   9,
+		model.KindRDSInstance:  10,
 	}
 	sort.SliceStable(p.Actions, func(i, j int) bool {
 		a, b := p.Actions[i], p.Actions[j]

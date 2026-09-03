@@ -1,8 +1,9 @@
 BINARY  := aws-killswitch
 BIN_DIR := bin
 PKG     := ./cmd/aws-killswitch
+LAMBDA_PKG := ./cmd/killswitch-lambda
 
-.PHONY: all build test lint tidy clean help
+.PHONY: all build lambda test lint tidy clean help
 
 .DEFAULT_GOAL := help
 
@@ -18,6 +19,15 @@ all: build
 ## build: compile the binary into ./bin
 build:
 	go build -o $(BIN_DIR)/$(BINARY) $(PKG)
+
+## lambda: build the Budgets-action handler and zip it for upload
+lambda:
+	@# provided.al2023 execs a file called exactly "bootstrap", and nothing else.
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 \
+		go build -tags lambda.norpc -trimpath -ldflags="-s -w" \
+		-o $(BIN_DIR)/bootstrap $(LAMBDA_PKG)
+	cd $(BIN_DIR) && zip -q -X killswitch-lambda.zip bootstrap
+	@echo "built $(BIN_DIR)/killswitch-lambda.zip  (runtime provided.al2023, arch arm64)"
 
 ## test: run tests
 test:

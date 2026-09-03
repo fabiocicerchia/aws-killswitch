@@ -48,5 +48,9 @@ make clean        # remove build artifacts
   reviewed, then executed.
 - Every action must write its inverse into the state file *before* it runs.
 - No new action type without a restore path and a test proving it round-trips.
+  Add it to `verify.AllKinds` too, and to `examples/scratch-account/main.tf` —
+  a kind absent from either is one `aws-killswitch verify` reports as
+  UNEXERCISED, and "no divergence" over a kind that was never present is not
+  evidence of anything.
 - Don't touch generated files or lockfiles by hand.
 - Ask before large refactors or destructive operations.

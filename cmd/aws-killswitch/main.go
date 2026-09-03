@@ -18,6 +18,9 @@ import (
 	"github.com/fabiocicerchia/aws-killswitch/internal/audit"
 	"github.com/fabiocicerchia/aws-killswitch/internal/awsx"
 	"github.com/fabiocicerchia/aws-killswitch/internal/plan"
+	"github.com/fabiocicerchia/aws-killswitch/internal/policy"
+	"github.com/fabiocicerchia/aws-killswitch/internal/state"
+	"github.com/fabiocicerchia/aws-killswitch/internal/verify"
 )
 
 const usage = `aws-killswitch — stop an account spending, without losing anything
@@ -27,6 +30,9 @@ const usage = `aws-killswitch — stop an account spending, without losing anyth
   aws-killswitch status           what is currently stopped, and any deadlines
   aws-killswitch restore <plan>   put everything back
   aws-killswitch spend            month-to-date cost against the threshold
+  aws-killswitch verify           fire, read the account back, restore, read it
+                                  back again, and report every divergence.
+                                  SCRATCH ACCOUNTS ONLY — this fires for real.
 
 Flags
   -config PATH        policy file (default ./killswitch.json)
@@ -37,6 +43,9 @@ Flags
   -yes                actually make changes; without it everything is a dry run
   -force              proceed past the blast-radius threshold and any warnings
   -json               machine-readable output
+  -settle DURATION    for ` + "`verify`" + `: how long to let the account settle
+                      before reading it back (default 90s)
+  -plan-only          for ` + "`verify`" + `: plan and report coverage, change nothing
 
 Nothing changes without --yes. Stateful storage — S3, EFS, DynamoDB, EBS
 volumes, snapshots, backups — is never touched under any flag.
@@ -57,6 +66,11 @@ func main() {
 	yes := fs.Bool("yes", false, "")
 	force := fs.Bool("force", false, "")
 	asJSON := fs.Bool("json", false, "")
+	// verify only. The settle window is long by default because AWS is
+	// eventually consistent on most of these and a verifier that read too
+	// early would report a divergence that is only its own impatience.
+	verifySettle := fs.Duration("settle", 90*time.Second, "")
+	verifyPlanOnly := fs.Bool("plan-only", false, "")
 	fs.Usage = func() { fmt.Print(usage) }
 
 	cmd := os.Args[1]
@@ -78,6 +92,7 @@ func main() {
 		configPath: *configPath, stateURI: *stateURI, localDir: *localDir,
 		auditPath: *auditPath, threshold: *threshold,
 		yes: *yes, force: *force, asJSON: *asJSON,
+		verifySettle: *verifySettle, verifyPlanOnly: *verifyPlanOnly,
 	}); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(exitCode(err))
@@ -88,11 +103,13 @@ type options struct {
 	configPath, stateURI, localDir, auditPath string
 	threshold                                 float64
 	yes, force, asJSON                        bool
+	verifySettle                              time.Duration
+	verifyPlanOnly                            bool
 }
 
 func run(ctx context.Context, cmd string, args []string, o options) error {
 	switch cmd {
-	case "plan", "fire", "status", "restore", "spend":
+	case "plan", "fire", "status", "restore", "spend", "verify":
 	default:
 		fmt.Print(usage)
 		return failWith(exitUsage, errors.New("unknown command "+cmd))
@@ -134,7 +151,7 @@ func run(ctx context.Context, cmd string, args []string, o options) error {
 		return cmdRestore(ctx, cfg, store, log, args[0], o)
 	}
 
-	account := accountID(ctx, cfg)
+	account := awsx.AccountID(ctx, cfg)
 	regions, clients, resources := discoverAll(ctx, cfg, pol)
 
 	now := time.Now().UTC()
@@ -146,5 +163,68 @@ func run(ctx context.Context, cmd string, args []string, o options) error {
 	if cmd == "plan" {
 		return printPlan(p, pol, o)
 	}
+	if cmd == "verify" {
+		return cmdVerify(ctx, clients, regions, account, store, pol, o)
+	}
 	return cmdFire(ctx, p, pol, store, awsx.NewExecutor(clients), log, o)
+}
+
+// cmdVerify runs the whole cycle against a SCRATCH account and reports what
+// the account read back afterwards.
+//
+// This is not a safety check to run against anything you care about: it fires,
+// waits, and restores, for real. --yes is required for the same reason `fire`
+// requires it, and the region and account are printed first so a wrong profile
+// is visible before anything happens.
+func cmdVerify(
+	ctx context.Context,
+	clients map[string]*awsx.Clients,
+	regions []string,
+	account string,
+	store state.Store,
+	pol policy.Policy,
+	o options,
+) error {
+	if !o.yes && !o.verifyPlanOnly {
+		return errors.New("verify fires and restores for real: pass --yes, " +
+			"or --plan-only to see what it would do")
+	}
+	if len(regions) != 1 {
+		// Discovery is per-region and the verifier reads one account back; a
+		// multi-region run would need a merged discoverer, and pretending
+		// otherwise would silently verify a subset.
+		return fmt.Errorf("verify runs one region at a time; this policy names %d", len(regions))
+	}
+	region := regions[0]
+	c := clients[region]
+
+	fmt.Fprintf(os.Stderr,
+		"aws-killswitch verify — account %s, region %s\n"+
+			"This FIRES and then RESTORES, for real. Use a scratch account.\n\n",
+		account, region)
+
+	rep, err := verify.Run(ctx, c, awsx.NewExecutor(clients), store, pol, verify.Options{
+		Settle:    o.verifySettle,
+		SkipFire:  o.verifyPlanOnly,
+		Region:    region,
+		AccountID: account,
+	})
+	if rep != nil {
+		if o.asJSON {
+			if e := emit(rep); e != nil {
+				return e
+			}
+		} else {
+			fmt.Print(rep.Text())
+		}
+	}
+	if err != nil {
+		return err
+	}
+	if !rep.OK() {
+		// Non-zero, so this is usable in CI against a scratch account: a
+		// divergence has to fail something or nobody will notice it.
+		return errors.New("verification found divergences; each is its own bug to file")
+	}
+	return nil
 }

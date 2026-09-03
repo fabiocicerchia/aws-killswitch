@@ -21,6 +21,7 @@ and read it back.
 | `internal/engine` | Executes a plan and enforces the write-first rule. |
 | `internal/awsx` | The only package that talks to AWS. |
 | `internal/audit` | Append-only record of everything attempted. |
+| `internal/trip` | One discover → plan → fire cycle, with nothing in it that belongs to a particular way of being invoked. |
 
 ## The invariants
 
@@ -158,12 +159,34 @@ lands on nothing.
 | ECS service | desired count 0 | prior count |
 | Auto Scaling group | min/desired/max 0 | all three prior bounds |
 | EC2 instance | stop (EBS kept) | start |
+| EKS managed nodegroup | min/desired node count 0 | prior min and desired |
+| CloudFront distribution | disable | re-enable |
+| API Gateway stage | stage-wide throttle to 0 rps | prior rate and burst, or the override *removed* if there was none |
 | NAT gateway | delete (opt-in) | recreate with the same Elastic IP, and repoint every route |
 | RDS instance / cluster | stop (opt-in) | start |
 
-Two of those are worth calling out. A Lambda that had *no* reservation must have
+Four of those are worth calling out. A Lambda that had *no* reservation must have
 the reservation removed on restore, not set to a number — recording which case
 it was is the difference between restoring it and quietly changing its
-behaviour. And recreating a NAT gateway without repointing the route tables
+behaviour. **An API Gateway stage is the same shape of problem**: a stage with
+no default throttle is running at the *account* limit, and "restoring" it to
+today's account limit as a number would pin it there forever — so the absence is
+recorded as `-1` and restore removes the override instead of writing one.
+
+And recreating a NAT gateway without repointing the route tables
 leaves private subnets with no egress and a restore that reported success, so
 the routes are recorded at discovery and replayed.
+
+**An EKS nodegroup's `maxSize` is deliberately not touched.** EKS rejects a
+nodegroup whose max is 0, so zeroing it would fail the fire outright; and a
+value nobody changed needs no putting back. Scaling to zero only needs min and
+desired.
+
+**CloudFront is global**, so exactly one region's client walks it — otherwise a
+run across five regions finds every distribution five times and plans five
+identical disables. Its resources record `region: "global"`, which the executor
+routes deliberately rather than looking up a region that does not exist. And a
+distribution is disabled by reading the whole config, changing one field, and
+writing it back with the ETag that came with the read: the ETag is re-fetched
+at fire time rather than recorded at discovery, because it changes on every
+update and a stale one fails with `PreconditionFailed`.
