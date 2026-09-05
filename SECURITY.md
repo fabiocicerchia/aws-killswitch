@@ -2,10 +2,10 @@
 
 ## Supported Versions
 
-| Version | Supported |
-| ------- | --------- |
-| latest  | ✅        |
-| < latest| ❌        |
+| Version  | Supported |
+| -------- | --------- |
+| latest   | ✅        |
+| < latest | ❌        |
 
 ## Reporting a Vulnerability
 
@@ -23,8 +23,8 @@ public issue that says only "unacknowledged security report" — no details.
 ## Response process
 
 1. **Triage** (within 48h) — confirm, reproduce, and rate severity.
-2. **Fix** — developed on a private fork, with a regression test.
-3. **Disclose** — advisory published with a patched release and a CVE where
+1. **Fix** — developed on a private fork, with a regression test.
+1. **Disclose** — advisory published with a patched release and a CVE where
    one applies. Reporters are credited unless they ask not to be.
 
 Targets are 7 days to a fix for critical issues (remote impact on an AWS

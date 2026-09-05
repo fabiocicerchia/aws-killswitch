@@ -13,7 +13,7 @@ is the failure this guards against.
 
 ## What `verify` does
 
-```
+```text
 discover ──► plan ──► fire ──► DISCOVER AGAIN ──► did each action land?
     │                                                    │
     └── pre-state ◄──────── DISCOVER AGAIN ◄── restore ◄──┘
@@ -66,7 +66,7 @@ the guarantee is structural rather than a filter: the report type has nowhere
 to put them, and a test asserts that an ARN, an account id and a resource name
 cannot reach the text even when they are the subject of a finding.
 
-```
+```text
 kind                         found  planned  refused
 ----------------------------------------------------
 alb-listener                     1        1        0

@@ -2,7 +2,7 @@
 
 Four stages, and a hard rule between the third and the fourth.
 
-```
+```text
 awsx.Discover ──► plan.Build ──► state.PutVerified ──► awsx.Executor
   (read-only)       (pure)        (must succeed)         (mutates)
 ```
@@ -12,16 +12,16 @@ and read it back.
 
 ## Packages
 
-| Package | Responsibility |
-|---|---|
-| `internal/model` | The vocabulary: kinds, phases, the never-touch set, the snapshot format. |
-| `internal/policy` | Scope, protection, thresholds. Refuses to validate an unscoped policy. |
-| `internal/plan` | Decides what happens and in what order. Pure. |
-| `internal/state` | Snapshot persistence: S3, local, and both together. |
-| `internal/engine` | Executes a plan and enforces the write-first rule. |
-| `internal/awsx` | The only package that talks to AWS. |
-| `internal/audit` | Append-only record of everything attempted. |
-| `internal/trip` | One discover → plan → fire cycle, with nothing in it that belongs to a particular way of being invoked. |
+| Package           | Responsibility                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------------- |
+| `internal/model`  | The vocabulary: kinds, phases, the never-touch set, the snapshot format.                                |
+| `internal/policy` | Scope, protection, thresholds. Refuses to validate an unscoped policy.                                  |
+| `internal/plan`   | Decides what happens and in what order. Pure.                                                           |
+| `internal/state`  | Snapshot persistence: S3, local, and both together.                                                     |
+| `internal/engine` | Executes a plan and enforces the write-first rule.                                                      |
+| `internal/awsx`   | The only package that talks to AWS.                                                                     |
+| `internal/audit`  | Append-only record of everything attempted.                                                             |
+| `internal/trip`   | One discover → plan → fire cycle, with nothing in it that belongs to a particular way of being invoked. |
 
 ## The invariants
 
@@ -57,14 +57,14 @@ instance is stopped so the group does not replace it.
 ## Adding a resource kind
 
 1. A `Kind` in `internal/model`, and a phase for it.
-2. A case in `plan.actionFor` — including what makes it *refuse*, which is
+1. A case in `plan.actionFor` — including what makes it *refuse*, which is
    usually the more important half. A kind whose refusal is more than a line
    gets its own function next to it, as `instanceAction` and `databaseAction`
    already do.
-3. Discovery in the matching `internal/awsx/discover_<phase>.go`, recording enough prior state to
+1. Discovery in the matching `internal/awsx/discover_<phase>.go`, recording enough prior state to
    restore it exactly.
-4. `Apply` and `Restore` in `internal/awsx/execute.go`.
-5. A test in `internal/plan` for the refusal, and one for the ordering if it
+1. `Apply` and `Restore` in `internal/awsx/execute.go`.
+1. A test in `internal/plan` for the refusal, and one for the ordering if it
    interacts with an existing kind.
 
 Step 3 is where mistakes hide. The question to answer is not "what do I need to
@@ -136,7 +136,7 @@ after seven days. A kill switch that silently un-kills a week later is worse
 than none, because nobody is watching by then. Databases are excluded by
 default; when included, the plan warns, and `status` counts down:
 
-```
+```text
 ks-20260802-021500  fired 2026-08-02T02:15:00Z  6 changed of 6
     ! rds-instance orders-prod: AWS restarts this in 5.0 days (2026-08-09T02:15:00Z)
 ```
@@ -152,18 +152,18 @@ lands on nothing.
 
 ## What it covers
 
-| | Stop | Restore |
-|---|---|---|
-| ALB/NLB listener | fixed 503 response | prior default actions, verbatim |
-| Lambda | reserved concurrency 0 | prior reservation, or *removed* if there was none |
-| ECS service | desired count 0 | prior count |
-| Auto Scaling group | min/desired/max 0 | all three prior bounds |
-| EC2 instance | stop (EBS kept) | start |
-| EKS managed nodegroup | min/desired node count 0 | prior min and desired |
-| CloudFront distribution | disable | re-enable |
-| API Gateway stage | stage-wide throttle to 0 rps | prior rate and burst, or the override *removed* if there was none |
-| NAT gateway | delete (opt-in) | recreate with the same Elastic IP, and repoint every route |
-| RDS instance / cluster | stop (opt-in) | start |
+|                         | Stop                         | Restore                                                           |
+| ----------------------- | ---------------------------- | ----------------------------------------------------------------- |
+| ALB/NLB listener        | fixed 503 response           | prior default actions, verbatim                                   |
+| Lambda                  | reserved concurrency 0       | prior reservation, or *removed* if there was none                 |
+| ECS service             | desired count 0              | prior count                                                       |
+| Auto Scaling group      | min/desired/max 0            | all three prior bounds                                            |
+| EC2 instance            | stop (EBS kept)              | start                                                             |
+| EKS managed nodegroup   | min/desired node count 0     | prior min and desired                                             |
+| CloudFront distribution | disable                      | re-enable                                                         |
+| API Gateway stage       | stage-wide throttle to 0 rps | prior rate and burst, or the override *removed* if there was none |
+| NAT gateway             | delete (opt-in)              | recreate with the same Elastic IP, and repoint every route        |
+| RDS instance / cluster  | stop (opt-in)                | start                                                             |
 
 Four of those are worth calling out. A Lambda that had *no* reservation must have
 the reservation removed on restore, not set to a number — recording which case
