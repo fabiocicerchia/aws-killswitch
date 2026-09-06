@@ -16,6 +16,8 @@ import (
 	"github.com/fabiocicerchia/aws-killswitch/internal/policy"
 )
 
+// Input is the inventory a plan is built from, plus the identity the plan
+// is recorded under.
 type Input struct {
 	Account   string
 	Regions   []string

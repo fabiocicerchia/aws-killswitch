@@ -17,8 +17,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 
-	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 	"strconv"
+
+	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	apigwtypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
@@ -34,6 +35,8 @@ type Executor struct {
 	FinalSnapshot bool
 }
 
+// NewExecutor takes the clients keyed by region. A resource in a region
+// that is not in the map fails loudly rather than being skipped.
 func NewExecutor(clients map[string]*Clients) *Executor {
 	return &Executor{byRegion: clients}
 }
@@ -58,6 +61,8 @@ func (e *Executor) client(region string) (*Clients, error) {
 	return c, nil
 }
 
+// Apply makes one change. Every kind handled here has a matching case in
+// Restore -- an apply with no undo is a change this tool does not make.
 func (e *Executor) Apply(ctx context.Context, a model.Action) error {
 	c, err := e.client(a.Resource.Region)
 	if err != nil {
@@ -101,6 +106,8 @@ func (e *Executor) Apply(ctx context.Context, a model.Action) error {
 	return fmt.Errorf("no apply implemented for %s", r.Kind)
 }
 
+// Restore undoes one change from the recorded prior state, not from what
+// the account looks like now: the account is the thing being repaired.
 func (e *Executor) Restore(ctx context.Context, en model.Entry) error {
 	c, err := e.client(en.Region)
 	if err != nil {
@@ -233,7 +240,7 @@ func throttleLambda(ctx context.Context, c *Clients, name string) error {
 // changes the function's behaviour: a function that had no reservation must
 // have the reservation *removed*, not set back to some number.
 func restoreLambda(ctx context.Context, c *Clients, en model.Entry) error {
-	had, _ := en.Prior["had_reservation"].(bool)
+	had, _ := model.PriorBool(en.Prior, "had_reservation")
 	if !had {
 		_, err := c.Lambda.DeleteFunctionConcurrency(ctx, &lambda.DeleteFunctionConcurrencyInput{
 			FunctionName: aws.String(en.ID),
@@ -330,7 +337,9 @@ func restoreNATGateway(ctx context.Context, c *Clients, en model.Entry) error {
 		return fmt.Errorf("created %s but it did not become available: %w", newID, err)
 	}
 
-	routes, _ := en.Prior["routes"].([]any)
+	// A record with no routes restores the gateway and repoints nothing,
+	// which is the right outcome for a gateway that had no routes.
+	routes, _ := en.Prior["routes"].([]any) //nolint:errcheck // see above
 	return repointRoutes(ctx, c, newID, routes)
 }
 
@@ -343,8 +352,8 @@ func repointRoutes(ctx context.Context, c *Clients, newID string, routes []any) 
 		if !ok {
 			continue
 		}
-		rtb, _ := r["route_table_id"].(string)
-		dst, _ := r["destination"].(string)
+		rtb, _ := model.PriorString(r, "route_table_id")
+		dst, _ := model.PriorString(r, "destination")
 		if rtb == "" || dst == "" {
 			continue
 		}
@@ -365,7 +374,9 @@ func repointRoutes(ctx context.Context, c *Clients, newID string, routes []any) 
 }
 
 func snapshotName(id string) string {
-	return fmt.Sprintf("killswitch-%s-%d", id, time.Now().UTC().Unix())
+	// A snapshot name has to be unique per attempt, which is what the clock
+	// is for here; nothing reads it back as a time.
+	return fmt.Sprintf("killswitch-%s-%d", id, time.Now().UTC().Unix()) //nolint:forbidigo // see above
 }
 
 // --- EKS, CloudFront, API Gateway --------------------------------------------

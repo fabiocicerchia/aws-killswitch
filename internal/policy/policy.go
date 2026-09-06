@@ -20,6 +20,9 @@ import (
 // has made a decision the incident does not get to revisit.
 const ProtectTag = "killswitch:protect"
 
+// Policy is the written-down version of what this account allows. It lives
+// in a file rather than in flags: every dangerous option here should have
+// been decided before the incident, not typed during one.
 type Policy struct {
 	// Scope selects what may be touched. Empty means nothing.
 	Scope Scope `json:"scope"`
@@ -49,6 +52,8 @@ type Policy struct {
 	StateURI string `json:"state_uri"`
 }
 
+// Scope selects what is in range. The default is nothing: a kill switch
+// that defaults to the whole account is a footgun with a countdown.
 type Scope struct {
 	// Tags that a resource must carry to be in scope. All must match.
 	Tags map[string]string `json:"tags"`
@@ -60,8 +65,11 @@ type Scope struct {
 	Everything bool `json:"everything"`
 }
 
+// DefaultConfirmAbove is the plan size beyond which a fire needs an
+// explicit force flag.
 const DefaultConfirmAbove = 25
 
+// Threshold is ConfirmAbove, or the default when it was left unset.
 func (p Policy) Threshold() int {
 	if p.ConfirmAbove > 0 {
 		return p.ConfirmAbove

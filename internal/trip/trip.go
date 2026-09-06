@@ -107,7 +107,7 @@ func PlanID(now time.Time) string { return now.UTC().Format("20060102-150405") }
 func Fire(ctx context.Context, cfg aws.Config, pol policy.Policy, account string, st state.Store, log *audit.Log, opt Options) (Result, error) {
 	now := opt.Now
 	if now.IsZero() {
-		now = time.Now().UTC()
+		now = time.Now().UTC() //nolint:forbidigo // the default for Options.Now
 	}
 
 	if !opt.SkipCooldown && !opt.DryRun {

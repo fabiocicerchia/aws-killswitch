@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	apigwtypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 )
 

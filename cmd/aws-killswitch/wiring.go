@@ -101,7 +101,7 @@ const samplePolicy = `{
 }
 `
 
-func buildStore(ctx context.Context, cfg aws.Config, pol policy.Policy, localDir string) (state.Store, error) {
+func buildStore(cfg aws.Config, pol policy.Policy, localDir string) (state.Store, error) {
 	local := state.Local{Dir: localDir}
 	if pol.StateURI == "" {
 		fmt.Fprintf(os.Stderr,

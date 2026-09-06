@@ -11,8 +11,10 @@ import (
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 )
 
-func snap(id string, n int) model.Snapshot {
-	s := model.Snapshot{PlanID: id, CreatedAt: time.Unix(1700000000, 0).UTC(), Account: "1234"}
+// Every test here works with the one plan, so the id is fixed rather than
+// repeated at each call.
+func snap(n int) model.Snapshot {
+	s := model.Snapshot{PlanID: "p1", CreatedAt: time.Unix(1700000000, 0).UTC(), Account: "1234"}
 	for i := 0; i < n; i++ {
 		s.Entries = append(s.Entries, model.Entry{
 			Kind: model.KindASG, ID: "asg-" + string(rune('a'+i)), Region: "eu-west-1",
@@ -27,7 +29,7 @@ func snap(id string, n int) model.Snapshot {
 func TestLocalStoreRoundTripsPriorStateAsNumbers(t *testing.T) {
 	l := Local{Dir: t.TempDir()}
 	ctx := context.Background()
-	if err := l.Put(ctx, snap("p1", 1)); err != nil {
+	if err := l.Put(ctx, snap(1)); err != nil {
 		t.Fatal(err)
 	}
 	got, err := l.Get(ctx, "p1")
@@ -59,10 +61,10 @@ func TestWriteIsAtomicAndPrivate(t *testing.T) {
 	dir := t.TempDir()
 	l := Local{Dir: dir}
 	ctx := context.Background()
-	if err := l.Put(ctx, snap("p1", 3)); err != nil {
+	if err := l.Put(ctx, snap(3)); err != nil {
 		t.Fatal(err)
 	}
-	if err := l.Put(ctx, snap("p1", 5)); err != nil {
+	if err := l.Put(ctx, snap(5)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -86,13 +88,13 @@ func TestWriteIsAtomicAndPrivate(t *testing.T) {
 // is the one failure the tool cannot survive, and it is cheap to rule out.
 func TestPutVerifiedCatchesALossyStore(t *testing.T) {
 	ctx := context.Background()
-	if err := PutVerified(ctx, Local{Dir: t.TempDir()}, snap("p1", 2)); err != nil {
+	if err := PutVerified(ctx, Local{Dir: t.TempDir()}, snap(2)); err != nil {
 		t.Errorf("a working store should verify: %v", err)
 	}
-	if err := PutVerified(ctx, lossy{}, snap("p1", 2)); err == nil {
+	if err := PutVerified(ctx, lossy{}, snap(2)); err == nil {
 		t.Error("a store that drops entries must fail verification")
 	}
-	if err := PutVerified(ctx, unreadable{}, snap("p1", 2)); err == nil {
+	if err := PutVerified(ctx, unreadable{}, snap(2)); err == nil {
 		t.Error("a store that cannot read back must fail verification")
 	}
 }
@@ -119,7 +121,7 @@ func (unreadable) Describe() string                               { return "unre
 // the local copy can disagree about what was stopped.
 func TestMultiRequiresEveryStoreToAcceptTheWrite(t *testing.T) {
 	m := Multi{Stores: []Store{Local{Dir: t.TempDir()}, failing{}}}
-	if err := m.Put(context.Background(), snap("p1", 1)); err == nil {
+	if err := m.Put(context.Background(), snap(1)); err == nil {
 		t.Error("one failing store must fail the write")
 	}
 }
@@ -128,7 +130,7 @@ func TestMultiRequiresEveryStoreToAcceptTheWrite(t *testing.T) {
 // you are restoring may be that the machine holding the local copy is gone.
 func TestMultiReadsFromWhicheverStoreHasIt(t *testing.T) {
 	local := Local{Dir: t.TempDir()}
-	if err := local.Put(context.Background(), snap("p1", 1)); err != nil {
+	if err := local.Put(context.Background(), snap(1)); err != nil {
 		t.Fatal(err)
 	}
 	m := Multi{Stores: []Store{failing{}, local}}

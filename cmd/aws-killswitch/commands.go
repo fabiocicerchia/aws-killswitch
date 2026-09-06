@@ -15,11 +15,10 @@ import (
 	"github.com/fabiocicerchia/aws-killswitch/internal/engine"
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 	"github.com/fabiocicerchia/aws-killswitch/internal/plan"
-	"github.com/fabiocicerchia/aws-killswitch/internal/policy"
 	"github.com/fabiocicerchia/aws-killswitch/internal/state"
 )
 
-func cmdFire(ctx context.Context, p model.Plan, pol policy.Policy, store state.Store, ex engine.Executor, log *audit.Log, o options) error {
+func cmdFire(ctx context.Context, p model.Plan, store state.Store, ex engine.Executor, log *audit.Log, o options) error {
 	if p.IsEmpty() {
 		return errors.New("nothing in scope to stop")
 	}
@@ -33,7 +32,7 @@ func cmdFire(ctx context.Context, p model.Plan, pol policy.Policy, store state.S
 
 	opt := engine.Options{DryRun: !o.yes, ContinueOnError: true, Log: log}
 	if !o.yes {
-		if err := printPlan(p, pol, o); err != nil {
+		if err := printPlan(p, o); err != nil {
 			return err
 		}
 		fmt.Println("\nThis was a dry run — --yes was not passed, so nothing changed.")

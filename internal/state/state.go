@@ -26,6 +26,9 @@ import (
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 )
 
+// Store is where the record that makes a fire reversible lives. Every
+// implementation must survive the machine that wrote it: a restore usually
+// happens somewhere else, later, under pressure.
 type Store interface {
 	Put(ctx context.Context, s model.Snapshot) error
 	Get(ctx context.Context, planID string) (model.Snapshot, error)
@@ -33,6 +36,8 @@ type Store interface {
 	Describe() string
 }
 
+// ErrNotFound is returned when a plan id has no snapshot. Callers match on
+// it to tell "nothing to restore" from "the store is broken".
 var ErrNotFound = errors.New("no snapshot with that plan id")
 
 // snapshotExt is the extension every store writes and every listing looks for.
@@ -62,6 +67,8 @@ func PutVerified(ctx context.Context, s Store, snap model.Snapshot) error {
 // local copy and the durable copy cannot disagree about what was stopped.
 type Multi struct{ Stores []Store }
 
+// Put writes to every store and fails if any of them does: a durable copy
+// and a local copy that disagree are worse than one copy.
 func (m Multi) Put(ctx context.Context, s model.Snapshot) error {
 	for _, st := range m.Stores {
 		if err := st.Put(ctx, s); err != nil {
@@ -88,6 +95,9 @@ func (m Multi) Get(ctx context.Context, planID string) (model.Snapshot, error) {
 	return model.Snapshot{}, lastErr
 }
 
+// List merges every store's listing, keeping the freshest copy of each
+// plan. A store that cannot be read is skipped: half a listing beats none
+// when someone is looking for what to restore.
 func (m Multi) List(ctx context.Context) ([]model.Snapshot, error) {
 	seen := map[string]model.Snapshot{}
 	for _, st := range m.Stores {
@@ -105,6 +115,8 @@ func (m Multi) List(ctx context.Context) ([]model.Snapshot, error) {
 	return sorted(seen), nil
 }
 
+// Describe names every underlying store, so an error says which of them
+// the run was actually talking to.
 func (m Multi) Describe() string {
 	parts := make([]string, 0, len(m.Stores))
 	for _, s := range m.Stores {
@@ -138,12 +150,18 @@ func sorted(m map[string]model.Snapshot) []model.Snapshot {
 
 // --- local -------------------------------------------------------------------
 
+// Local is the on-disk store. It is always present, even when a durable
+// store is configured: a laptop that loses its network mid-incident still
+// has the record of what it stopped.
 type Local struct{ Dir string }
 
 func (l Local) path(planID string) string {
 	return filepath.Join(l.Dir, planID+snapshotExt)
 }
 
+// Put writes the snapshot atomically -- temp file, sync, rename -- so a
+// crash mid-write cannot leave a truncated record where a complete one
+// used to be.
 func (l Local) Put(ctx context.Context, s model.Snapshot) error {
 	if err := os.MkdirAll(l.Dir, 0o700); err != nil {
 		return err
@@ -158,13 +176,15 @@ func (l Local) Put(ctx context.Context, s model.Snapshot) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = os.Remove(tmp.Name()) }()
+	// Removes the temp file on every path that did not rename it away. The
+	// successful path renames first, so this finds nothing.
+	defer func() { _ = os.Remove(tmp.Name()) }() //nolint:errcheck // see above
 	if _, err := tmp.Write(b); err != nil {
-		_ = tmp.Close()
+		_ = tmp.Close() //nolint:errcheck // the write already failed; this file is going to be removed
 		return err
 	}
 	if err := tmp.Sync(); err != nil {
-		_ = tmp.Close()
+		_ = tmp.Close() //nolint:errcheck // as above
 		return err
 	}
 	if err := tmp.Close(); err != nil {
@@ -176,6 +196,8 @@ func (l Local) Put(ctx context.Context, s model.Snapshot) error {
 	return os.Rename(tmp.Name(), l.path(s.PlanID))
 }
 
+// Get reads one snapshot. A corrupt file is reported as corrupt rather
+// than as missing: those need different reactions.
 func (l Local) Get(ctx context.Context, planID string) (model.Snapshot, error) {
 	b, err := os.ReadFile(l.path(planID))
 	if err != nil {
@@ -191,6 +213,8 @@ func (l Local) Get(ctx context.Context, planID string) (model.Snapshot, error) {
 	return s, nil
 }
 
+// List returns the snapshots in the directory, newest first. A missing
+// directory is an empty list, not an error: nothing has been fired yet.
 func (l Local) List(ctx context.Context) ([]model.Snapshot, error) {
 	entries, err := os.ReadDir(l.Dir)
 	if err != nil {
@@ -214,6 +238,7 @@ func (l Local) List(ctx context.Context) ([]model.Snapshot, error) {
 	return out, nil
 }
 
+// Describe names this store in errors and in warnings.
 func (l Local) Describe() string { return "file://" + l.Dir }
 
 // --- building the snapshot ---------------------------------------------------

@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 
 	"github.com/aws/aws-sdk-go-v2/service/eks"
+
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 )
 

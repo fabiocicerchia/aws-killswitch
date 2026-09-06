@@ -56,7 +56,7 @@ func TestUnscopedPolicyExitsConfig(t *testing.T) {
 
 func TestUnusableStateURIExitsConfig(t *testing.T) {
 	pol := policy.Policy{StateURI: "gs://not-s3/x"}
-	_, err := buildStore(context.Background(), aws.Config{}, pol, t.TempDir())
+	_, err := buildStore(aws.Config{}, pol, t.TempDir())
 	if err == nil {
 		t.Fatal("a state_uri that is not s3:// must be refused")
 	}

@@ -26,6 +26,9 @@ import (
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 )
 
+// Clients is one region's worth of AWS service clients, built once and
+// shared by discovery and execution so both look at the same account
+// through the same credentials.
 type Clients struct {
 	Region     string
 	EC2        *ec2.Client
@@ -42,6 +45,8 @@ type Clients struct {
 	CloudFront *cloudfront.Client
 }
 
+// NewClients builds the per-region clients from a base config. CloudFront
+// is left nil here: it is global, and exactly one Clients gets it.
 func NewClients(cfg aws.Config, region string) *Clients {
 	c := cfg.Copy()
 	if region != "" {
