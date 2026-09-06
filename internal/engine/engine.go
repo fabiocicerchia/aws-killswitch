@@ -119,7 +119,9 @@ func Fire(ctx context.Context, p model.Plan, st state.Store, ex Executor, opt Op
 			opt.Log.Event("snapshot.write_failed", map[string]any{"error": perr.Error()})
 			// The change is already made; losing the record from here is worse
 			// than stopping, so stop rather than change anything further.
-			return res, fmt.Errorf("changed %s but could not update the restore record (%w) — stopping here; run `restore` against plan %s",
+			return res, fmt.Errorf(
+				"changed %s but could not update the restore record (%w) — "+
+					"stopping here; run `restore` against plan %s",
 				a.Resource.Ref(), perr, p.ID)
 		}
 		if err != nil && !opt.ContinueOnError {

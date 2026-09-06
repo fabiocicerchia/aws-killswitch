@@ -251,7 +251,8 @@ func TestRestoreRunsInReversePhaseOrder(t *testing.T) {
 func TestRestoreIsIdempotent(t *testing.T) {
 	ex := &fakeExec{}
 	st := newMem()
-	if _, err := Fire(context.Background(), testPlan(action(model.KindASG, "asg-1", model.PhaseCompute)), st, ex, opts()); err != nil {
+	p := testPlan(action(model.KindASG, "asg-1", model.PhaseCompute))
+	if _, err := Fire(context.Background(), p, st, ex, opts()); err != nil {
 		t.Fatal(err)
 	}
 	saved, _ := st.Get(context.Background(), "plan-1")

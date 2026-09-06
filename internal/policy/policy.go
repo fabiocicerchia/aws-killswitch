@@ -81,7 +81,8 @@ func (p Policy) Threshold() int {
 // not intend. Called before discovery, so a mistake costs nothing.
 func (p Policy) Validate() error {
 	if !p.Scope.Everything && len(p.Scope.Tags) == 0 {
-		return errors.New("no scope: set scope.tags to select what may be stopped, or scope.everything if this account really is single-purpose")
+		return errors.New("no scope: set scope.tags to select what may be stopped, " +
+			"or scope.everything if this account really is single-purpose")
 	}
 	if p.Scope.Everything && len(p.Scope.Tags) > 0 {
 		return errors.New("scope.everything and scope.tags are mutually exclusive — pick one")

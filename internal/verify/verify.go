@@ -261,7 +261,8 @@ func Run(
 		}
 	}
 	// NAT gateways by count, since their ids change.
-	if wantNAT, gotNAT := countKind(before, model.KindNATGateway), countKind(final, model.KindNATGateway); wantNAT != gotNAT {
+	wantNAT, gotNAT := countKind(before, model.KindNATGateway), countKind(final, model.KindNATGateway)
+	if wantNAT != gotNAT {
 		rep.Findings = append(rep.Findings, Finding{
 			Stage: "restore", Kind: model.KindNATGateway, Ref: "nat-gateway (by count)",
 			Want: fmt.Sprintf("%d", wantNAT), Got: fmt.Sprintf("%d", gotNAT),

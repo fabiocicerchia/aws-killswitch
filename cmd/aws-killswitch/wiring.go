@@ -47,7 +47,9 @@ func policyFor(o options) (policy.Policy, error) {
 // Per-region, per-service failures are reported and not returned: a missing
 // permission on one service should degrade the plan and say so, not leave the
 // operator with nothing during an incident.
-func discoverAll(ctx context.Context, cfg aws.Config, pol policy.Policy) ([]string, map[string]*awsx.Clients, []model.Resource) {
+func discoverAll(
+	ctx context.Context, cfg aws.Config, pol policy.Policy,
+) ([]string, map[string]*awsx.Clients, []model.Resource) {
 	regions := pol.Scope.Regions
 	if len(regions) == 0 {
 		regions = []string{cfg.Region}
@@ -105,7 +107,8 @@ func buildStore(cfg aws.Config, pol policy.Policy, localDir string) (state.Store
 	local := state.Local{Dir: localDir}
 	if pol.StateURI == "" {
 		fmt.Fprintf(os.Stderr,
-			"warning: no state_uri — snapshots are only in %s. Lose that directory and the restore record goes with it.\n", localDir)
+			"warning: no state_uri — snapshots are only in %s. "+
+				"Lose that directory and the restore record goes with it.\n", localDir)
 		return local, nil
 	}
 	bucket, prefix, ok := state.ParseURI(pol.StateURI)

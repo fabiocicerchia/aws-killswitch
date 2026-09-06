@@ -25,7 +25,8 @@ import (
 // the prior state would restore a block.
 func (c *Clients) listeners(ctx context.Context) ([]model.Resource, error) {
 	var out []model.Resource
-	lbPager := elasticloadbalancingv2.NewDescribeLoadBalancersPaginator(c.ELB, &elasticloadbalancingv2.DescribeLoadBalancersInput{})
+	lbPager := elasticloadbalancingv2.NewDescribeLoadBalancersPaginator(
+		c.ELB, &elasticloadbalancingv2.DescribeLoadBalancersInput{})
 	for lbPager.HasMorePages() {
 		page, err := lbPager.NextPage(ctx)
 		if err != nil {

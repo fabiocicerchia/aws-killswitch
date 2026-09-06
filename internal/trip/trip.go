@@ -67,7 +67,9 @@ type Result struct {
 // Per-service failures are collected rather than returned: a missing permission
 // on one service should degrade the plan and say so, not leave the operator
 // with nothing during an incident.
-func Discover(ctx context.Context, cfg aws.Config, regions []string) ([]model.Resource, map[string]*awsx.Clients, []error) {
+func Discover(
+	ctx context.Context, cfg aws.Config, regions []string,
+) ([]model.Resource, map[string]*awsx.Clients, []error) {
 	clients := map[string]*awsx.Clients{}
 	var resources []model.Resource
 	var errs []error
@@ -87,7 +89,9 @@ func Discover(ctx context.Context, cfg aws.Config, regions []string) ([]model.Re
 }
 
 // Plan discovers and builds, without changing anything.
-func Plan(ctx context.Context, cfg aws.Config, pol policy.Policy, account string, now time.Time) (model.Plan, map[string]*awsx.Clients, []error) {
+func Plan(
+	ctx context.Context, cfg aws.Config, pol policy.Policy, account string, now time.Time,
+) (model.Plan, map[string]*awsx.Clients, []error) {
 	regions := pol.Scope.Regions
 	if len(regions) == 0 {
 		regions = []string{cfg.Region}
@@ -104,7 +108,9 @@ func Plan(ctx context.Context, cfg aws.Config, pol policy.Policy, account string
 func PlanID(now time.Time) string { return now.UTC().Format("20060102-150405") }
 
 // Fire runs the whole cycle. This is the path both front ends take.
-func Fire(ctx context.Context, cfg aws.Config, pol policy.Policy, account string, st state.Store, log *audit.Log, opt Options) (Result, error) {
+func Fire(
+	ctx context.Context, cfg aws.Config, pol policy.Policy, account string, st state.Store, log *audit.Log, opt Options,
+) (Result, error) {
 	now := opt.Now
 	if now.IsZero() {
 		now = time.Now().UTC() //nolint:forbidigo // the default for Options.Now
