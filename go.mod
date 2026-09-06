@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.76.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.68.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.324.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.328.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.94.0
 	github.com/aws/aws-sdk-go-v2/service/eks v1.96.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.61.0
