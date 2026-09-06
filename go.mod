@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.45.1
 	github.com/aws/aws-sdk-go-v2/config v1.32.36
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.45.0
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.72.2
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.76.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.68.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.324.0
