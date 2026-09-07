@@ -1,0 +1,10 @@
+{
+  "Exclude": [
+    "^LICENSE$",
+    "^cmd/aws\\-killswitch/main\\.go$",
+    "^cmd/aws\\-killswitch/wiring\\.go$"
+  ],
+  "Disable": {
+    "IndentSize": true
+  }
+}
