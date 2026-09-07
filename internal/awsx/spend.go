@@ -26,6 +26,9 @@ type Spend struct {
 	Stale          bool
 }
 
+// MonthToDate reads this month's spend and forecast from Cost Explorer.
+// The numbers lag by hours, which is why Spend carries Stale: an incident
+// decided on stale spend is a decision made on yesterday's account.
 func MonthToDate(ctx context.Context, c *costexplorer.Client, now time.Time) (Spend, error) {
 	start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 	// Cost Explorer's end date is exclusive, and it rejects a range that ends

@@ -130,7 +130,9 @@ func handle(ctx context.Context, ev Event) (Response, error) {
 	for _, e := range res.Discovery {
 		out.Warnings = append(out.Warnings, e.Error())
 	}
-	body, _ := json.Marshal(out)
+	// The struct is strings and ints; Marshal fails on an unsupported type
+	// or a cycle, and neither is reachable from here.
+	body, _ := json.Marshal(out) //nolint:errcheck // see above
 	log.Printf("killswitch: %s", body)
 	return out, nil
 }

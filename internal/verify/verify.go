@@ -50,6 +50,8 @@ type Discoverer interface {
 	Discover(ctx context.Context) ([]model.Resource, []error)
 }
 
+// Options tunes how patient the verifier is.
+//
 // Settle is how long to wait after a change before reading it back. AWS is
 // eventually consistent on most of these — an ECS service reports its old
 // desired count for a moment, an ASG takes a beat to reflect a scale — and a
@@ -143,7 +145,7 @@ func Run(
 	pol policy.Policy,
 	opt Options,
 ) (*Report, error) {
-	now := time.Now
+	now := time.Now //nolint:forbidigo // the default for Options.Now
 	if opt.Now != nil {
 		now = opt.Now
 	}
@@ -259,7 +261,8 @@ func Run(
 		}
 	}
 	// NAT gateways by count, since their ids change.
-	if wantNAT, gotNAT := countKind(before, model.KindNATGateway), countKind(final, model.KindNATGateway); wantNAT != gotNAT {
+	wantNAT, gotNAT := countKind(before, model.KindNATGateway), countKind(final, model.KindNATGateway)
+	if wantNAT != gotNAT {
 		rep.Findings = append(rep.Findings, Finding{
 			Stage: "restore", Kind: model.KindNATGateway, Ref: "nat-gateway (by count)",
 			Want: fmt.Sprintf("%d", wantNAT), Got: fmt.Sprintf("%d", gotNAT),
@@ -280,13 +283,17 @@ func (rep *Report) reread(ctx context.Context, d Discoverer, opt Options) []mode
 	if poll == 0 {
 		poll = defaultPoll
 	}
-	deadline := time.Now().Add(settle)
+	now := time.Now //nolint:forbidigo // the default for Options.Now
+	if opt.Now != nil {
+		now = opt.Now
+	}
+	deadline := now().Add(settle)
 	var last []model.Resource
 	for {
 		res, errs := d.Discover(ctx)
 		rep.addErrs(errs)
 		last = res
-		if !time.Now().Before(deadline) {
+		if !now().Before(deadline) {
 			return last
 		}
 		select {

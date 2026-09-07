@@ -16,6 +16,8 @@ import (
 	"github.com/fabiocicerchia/aws-killswitch/internal/policy"
 )
 
+// Input is the inventory a plan is built from, plus the identity the plan
+// is recorded under.
 type Input struct {
 	Account   string
 	Regions   []string
@@ -126,7 +128,8 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 			Op: "disable the distribution",
 			// Worth saying out loud: a disable is not instant, and someone
 			// watching the bill needs to know why nothing changed for a while.
-			Warning: r.Ref() + ": CloudFront takes minutes to propagate a disable to every edge, and returns errors to users while it does",
+			Warning: r.Ref() + ": CloudFront takes minutes to propagate a disable to every edge, " +
+				"and returns errors to users while it does",
 		}, model.Refusal{}, true
 
 	case model.KindAPIGatewayStage:

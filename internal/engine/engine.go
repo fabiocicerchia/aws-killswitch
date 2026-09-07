@@ -27,6 +27,9 @@ type Executor interface {
 	Restore(ctx context.Context, e model.Entry) error
 }
 
+// Options is how a caller says what kind of run this is. The zero value is
+// the safe one everywhere except ContinueOnError, which each entry point
+// sets deliberately.
 type Options struct {
 	// DryRun prints what would happen and touches nothing. The default
 	// everywhere: firing has to be the thing you asked for explicitly.
@@ -44,9 +47,11 @@ func (o Options) now() time.Time {
 	if o.Now != nil {
 		return o.Now()
 	}
-	return time.Now().UTC()
+	return time.Now().UTC() //nolint:forbidigo // the default for Options.Now above
 }
 
+// Result is what happened: the snapshot as it now stands, and the counts a
+// caller reports.
 type Result struct {
 	Snapshot model.Snapshot
 	Changed  int
@@ -114,7 +119,9 @@ func Fire(ctx context.Context, p model.Plan, st state.Store, ex Executor, opt Op
 			opt.Log.Event("snapshot.write_failed", map[string]any{"error": perr.Error()})
 			// The change is already made; losing the record from here is worse
 			// than stopping, so stop rather than change anything further.
-			return res, fmt.Errorf("changed %s but could not update the restore record (%w) — stopping here; run `restore` against plan %s",
+			return res, fmt.Errorf(
+				"changed %s but could not update the restore record (%w) — "+
+					"stopping here; run `restore` against plan %s",
 				a.Resource.Ref(), perr, p.ID)
 		}
 		if err != nil && !opt.ContinueOnError {
@@ -156,7 +163,11 @@ func Restore(ctx context.Context, snap model.Snapshot, st state.Store, ex Execut
 			opt.Log.Event("restore.failed", map[string]any{
 				"kind": e.Kind, "id": e.ID, "error": err.Error(),
 			})
-			_ = st.Put(ctx, snap)
+			if perr := st.Put(ctx, snap); perr != nil {
+				opt.Log.Event("restore.record_failed", map[string]any{
+					"id": e.ID, "error": perr.Error(),
+				})
+			}
 			if !opt.ContinueOnError {
 				return res, fmt.Errorf("restoring %s failed: %w", e.ID, err)
 			}
@@ -176,7 +187,12 @@ func Restore(ctx context.Context, snap model.Snapshot, st state.Store, ex Execut
 	if res.Failed == 0 {
 		done := opt.now()
 		snap.Restored = &done
-		_ = st.Put(ctx, snap)
+		if perr := st.Put(ctx, snap); perr != nil {
+			// The account is restored; only the record of it is missing. A
+			// silent success here would let a later restore run it all again.
+			res.Snapshot = snap
+			return res, fmt.Errorf("restored %d resources but could not record it: %w", res.Changed, perr)
+		}
 	}
 	res.Snapshot = snap
 	opt.Log.Event("restore.end", map[string]any{"restored": res.Changed, "failed": res.Failed})

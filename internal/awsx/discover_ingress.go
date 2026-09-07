@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	apigwtypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 )
 
@@ -24,7 +25,8 @@ import (
 // the prior state would restore a block.
 func (c *Clients) listeners(ctx context.Context) ([]model.Resource, error) {
 	var out []model.Resource
-	lbPager := elasticloadbalancingv2.NewDescribeLoadBalancersPaginator(c.ELB, &elasticloadbalancingv2.DescribeLoadBalancersInput{})
+	lbPager := elasticloadbalancingv2.NewDescribeLoadBalancersPaginator(
+		c.ELB, &elasticloadbalancingv2.DescribeLoadBalancersInput{})
 	for lbPager.HasMorePages() {
 		page, err := lbPager.NextPage(ctx)
 		if err != nil {

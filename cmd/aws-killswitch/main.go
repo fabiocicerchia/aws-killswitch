@@ -136,7 +136,7 @@ func run(ctx context.Context, cmd string, args []string, o options) error {
 		fmt.Fprintf(os.Stderr, "warning: audit log unavailable (%v); continuing\n", logErr)
 	}
 
-	store, err := buildStore(ctx, cfg, pol, o.localDir)
+	store, err := buildStore(cfg, pol, o.localDir)
 	if err != nil {
 		return err
 	}
@@ -161,12 +161,12 @@ func run(ctx context.Context, cmd string, args []string, o options) error {
 	}, pol)
 
 	if cmd == "plan" {
-		return printPlan(p, pol, o)
+		return printPlan(p, o)
 	}
 	if cmd == "verify" {
 		return cmdVerify(ctx, clients, regions, account, store, pol, o)
 	}
-	return cmdFire(ctx, p, pol, store, awsx.NewExecutor(clients), log, o)
+	return cmdFire(ctx, p, store, awsx.NewExecutor(clients), log, o)
 }
 
 // cmdVerify runs the whole cycle against a SCRATCH account and reports what

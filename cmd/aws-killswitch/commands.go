@@ -15,11 +15,12 @@ import (
 	"github.com/fabiocicerchia/aws-killswitch/internal/engine"
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 	"github.com/fabiocicerchia/aws-killswitch/internal/plan"
-	"github.com/fabiocicerchia/aws-killswitch/internal/policy"
 	"github.com/fabiocicerchia/aws-killswitch/internal/state"
 )
 
-func cmdFire(ctx context.Context, p model.Plan, pol policy.Policy, store state.Store, ex engine.Executor, log *audit.Log, o options) error {
+func cmdFire(
+	ctx context.Context, p model.Plan, store state.Store, ex engine.Executor, log *audit.Log, o options,
+) error {
 	if p.IsEmpty() {
 		return errors.New("nothing in scope to stop")
 	}
@@ -33,7 +34,7 @@ func cmdFire(ctx context.Context, p model.Plan, pol policy.Policy, store state.S
 
 	opt := engine.Options{DryRun: !o.yes, ContinueOnError: true, Log: log}
 	if !o.yes {
-		if err := printPlan(p, pol, o); err != nil {
+		if err := printPlan(p, o); err != nil {
 			return err
 		}
 		fmt.Println("\nThis was a dry run — --yes was not passed, so nothing changed.")
@@ -85,7 +86,9 @@ func cmdStatus(ctx context.Context, store state.Store, o options) error {
 	return nil
 }
 
-func cmdRestore(ctx context.Context, cfg aws.Config, store state.Store, log *audit.Log, planID string, o options) error {
+func cmdRestore(
+	ctx context.Context, cfg aws.Config, store state.Store, log *audit.Log, planID string, o options,
+) error {
 	snap, err := store.Get(ctx, planID)
 	if err != nil {
 		if errors.Is(err, state.ErrNotFound) {
@@ -139,7 +142,8 @@ func cmdSpend(ctx context.Context, cfg aws.Config, o options) error {
 	fmt.Printf("month to date: $%.2f (%s to %s)\n",
 		s.MonthToDateUSD, s.Start.Format("2006-01-02"), s.End.Format("2006-01-02"))
 	if s.Stale {
-		fmt.Println("  figures are estimated and lag by hours — for a fast trip, drive this from a Budgets action, not from polling")
+		fmt.Println("  figures are estimated and lag by hours — for a fast trip, " +
+			"drive this from a Budgets action, not from polling")
 	}
 	if o.threshold > 0 {
 		if s.MonthToDateUSD > o.threshold {

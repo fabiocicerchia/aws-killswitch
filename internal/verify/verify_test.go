@@ -89,7 +89,7 @@ func (a *account) Restore(_ context.Context, en model.Entry) error {
 		}
 		fresh := model.Resource{
 			ID: en.ID + "-recreated", ARN: "arn:aws:test:::" + en.ID + "-recreated",
-			Kind: model.Kind(en.Kind), Name: en.ID, Region: "eu-west-1",
+			Kind: en.Kind, Name: en.ID, Region: "eu-west-1",
 			Tags: map[string]string{}, Prior: en.Prior,
 		}
 		a.res[fresh.ID] = &fresh

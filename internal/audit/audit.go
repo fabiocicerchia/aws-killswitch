@@ -15,6 +15,9 @@ import (
 	"time"
 )
 
+// Log is the append-only record of what this tool was asked to do and what
+// it did. It is the answer to "who stopped production", so every event
+// carries who and when and nothing can overwrite them.
 type Log struct {
 	mu  sync.Mutex
 	w   io.Writer
@@ -44,10 +47,16 @@ func New(path string) (*Log, error) {
 	return &Log{w: f, who: whoami()}, nil
 }
 
+// Discard is the log for a run with nowhere to write: events are formed and
+// dropped, so a failed open never changes the caller's control flow.
 func Discard() *Log { return &Log{w: io.Discard, who: whoami()} }
 
+// To logs to an arbitrary writer, which is how a test reads what was
+// recorded without going through a file.
 func To(w io.Writer) *Log { return &Log{w: w, who: whoami()} }
 
+// Event appends one JSON record. A nil Log is usable and writes nothing, so
+// no caller has to check before logging.
 func (l *Log) Event(kind string, fields map[string]any) {
 	if l == nil || l.w == nil {
 		return
@@ -71,20 +80,26 @@ func (l *Log) Event(kind string, fields map[string]any) {
 	if err != nil {
 		return
 	}
-	_, _ = l.w.Write(append(b, '\n'))
+	// An audit file that cannot be written must not be the reason a cost
+	// incident goes unhandled -- that is the same decision New makes when the
+	// file will not open.
+	_, _ = l.w.Write(append(b, '\n')) //nolint:errcheck // see above
 }
 
 func (l *Log) clock() time.Time {
 	if l.now != nil {
 		return l.now()
 	}
-	return time.Now()
+	return time.Now() //nolint:forbidigo // the default for l.now, which a test sets
 }
 
 func whoami() string {
 	if u, err := user.Current(); err == nil && u.Username != "" {
 		return u.Username
 	}
+	//nolint:forbidigo // the fallback identity for a container with no passwd
+	// entry. Read here because it is only needed when user.Current fails,
+	// and an audit record with no author is worse than one from $USER.
 	if v := os.Getenv("USER"); v != "" {
 		return v
 	}

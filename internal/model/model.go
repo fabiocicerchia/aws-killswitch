@@ -26,8 +26,13 @@ import (
 // route it deliberately instead of by accident.
 const GlobalRegion = "global"
 
+// Kind is what sort of thing a resource is. It decides how it is stopped,
+// how it is restored, and what phase it belongs to.
 type Kind string
 
+// The resource kinds this tool acts on. Nothing outside this list is
+// touched, and every entry here is stopped by a change that can be undone
+// from the recorded prior state.
 const (
 	KindALBListener Kind = "alb-listener"
 	KindLambda      Kind = "lambda"
@@ -38,9 +43,10 @@ const (
 	KindRDSInstance Kind = "rds-instance"
 	KindRDSCluster  Kind = "rds-cluster"
 
-	// Three services discovery could not see, so a trip left them running.
-	// Each is stopped by writing a number the service already has a field for,
-	// which is why all three restore exactly: there is nothing to recreate.
+	// KindEKSNodegroup, KindCloudFront and KindAPIGatewayStage are three
+	// services discovery could not see, so a trip left them running. Each is
+	// stopped by writing a number the service already has a field for, which
+	// is why all three restore exactly: there is nothing to recreate.
 	KindEKSNodegroup    Kind = "eks-nodegroup"
 	KindCloudFront      Kind = "cloudfront-distribution"
 	KindAPIGatewayStage Kind = "apigateway-stage"
@@ -54,6 +60,7 @@ const (
 // fleet. Cut the traffic and the rest goes quietly.
 type Phase int
 
+// The phases, in the order they run. See Phase for why the order matters.
 const (
 	PhaseIngress Phase = iota
 	PhaseCompute
@@ -75,6 +82,8 @@ func (p Phase) String() string {
 	return "unknown"
 }
 
+// Why is the one-line reason this phase exists, printed beside the plan so
+// the order is something an operator can check rather than trust.
 func (p Phase) Why() string {
 	switch p {
 	case PhaseIngress:
@@ -113,6 +122,8 @@ type Resource struct {
 	EstimatedHourlyUSD float64
 }
 
+// Ref is how a resource is named in output: the name when there is one,
+// with the id beside it, because a console search needs the id.
 func (r Resource) Ref() string {
 	if r.Name != "" && r.Name != r.ID {
 		return fmt.Sprintf("%s (%s)", r.Name, r.ID)
@@ -187,6 +198,9 @@ type BlastRadius struct {
 	UnpricedByKind map[Kind]int
 }
 
+// BlastRadius totals what the plan would do. Savings and unpriced
+// resources are counted separately: an unpriced resource is unknown, not
+// free.
 func (p Plan) BlastRadius() BlastRadius {
 	b := BlastRadius{
 		ByKind:         map[Kind]int{},
@@ -212,6 +226,8 @@ func (p Plan) BlastRadius() BlastRadius {
 	return b
 }
 
+// IsEmpty reports a plan with nothing to do, which is a valid outcome and
+// not an error: the refusals say why.
 func (p Plan) IsEmpty() bool { return len(p.Actions) == 0 }
 
 // --- what is never touched ---------------------------------------------------
@@ -263,6 +279,9 @@ type Snapshot struct {
 	Restored  *time.Time `json:"restored_at,omitempty"`
 }
 
+// Entry is one resource in a snapshot: what it was, and what it takes to
+// put it back. This is the record a restore reads, so it holds the prior
+// state rather than a reference to where the prior state might be found.
 type Entry struct {
 	Kind   Kind           `json:"kind"`
 	ID     string         `json:"id"`
@@ -277,6 +296,9 @@ type Entry struct {
 	Error  string `json:"error,omitempty"`
 }
 
+// What happened to one entry. Recorded per entry rather than per run so a
+// partial fire can be restored without re-running against resources that
+// were never changed.
 const (
 	ResultChanged   = "changed"
 	ResultSkipped   = "skipped"
@@ -356,6 +378,9 @@ func PriorInt32(prior map[string]any, key string) (int32, bool) {
 	return int32(n), true
 }
 
+// PriorString reads a string out of the recorded prior state. The false
+// result means the field was absent or not a string -- never that it was
+// empty, which is a value a caller may need to restore.
 func PriorString(prior map[string]any, key string) (string, bool) {
 	v, ok := prior[key]
 	if !ok {

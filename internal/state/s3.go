@@ -44,6 +44,9 @@ func (s S3) key(planID string) string {
 	return s.Prefix + "/" + planID + snapshotExt
 }
 
+// Put writes the snapshot, server-side encrypted. The bucket is in the
+// never-touch set, so the kill switch cannot destroy its own restore
+// record.
 func (s S3) Put(ctx context.Context, snap model.Snapshot) error {
 	b, err := json.MarshalIndent(snap, "", "  ")
 	if err != nil {
@@ -57,6 +60,8 @@ func (s S3) Put(ctx context.Context, snap model.Snapshot) error {
 	return err
 }
 
+// Get reads one snapshot. A missing object and a denied one both come back
+// as ErrNotFound: from a restore's point of view the record is not there.
 func (s S3) Get(ctx context.Context, planID string) (model.Snapshot, error) {
 	out, err := s.Client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(s.Bucket), Key: aws.String(s.key(planID)),
@@ -64,6 +69,8 @@ func (s S3) Get(ctx context.Context, planID string) (model.Snapshot, error) {
 	if err != nil {
 		return model.Snapshot{}, fmt.Errorf("%w: %s", ErrNotFound, planID)
 	}
+	//nolint:errcheck // the body is read below either way; a failed close
+	// only costs a pooled connection
 	defer func() { _ = out.Body.Close() }()
 	b, err := io.ReadAll(out.Body)
 	if err != nil {
@@ -76,6 +83,9 @@ func (s S3) Get(ctx context.Context, planID string) (model.Snapshot, error) {
 	return snap, nil
 }
 
+// List returns the snapshots under the prefix, newest first. An object
+// that cannot be read is skipped rather than failing the listing -- one
+// corrupt record must not hide the others.
 func (s S3) List(ctx context.Context) ([]model.Snapshot, error) {
 	var out []model.Snapshot
 	pager := s3.NewListObjectsV2Paginator(s.Client, &s3.ListObjectsV2Input{
@@ -103,4 +113,6 @@ func (s S3) List(ctx context.Context) ([]model.Snapshot, error) {
 	return out, nil
 }
 
+// Describe names this store in errors and in the warning printed when
+// there is no durable one.
 func (s S3) Describe() string { return "s3://" + s.Bucket + "/" + s.Prefix }

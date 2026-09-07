@@ -372,7 +372,8 @@ func TestPolicyWithNoScopeIsInvalid(t *testing.T) {
 	if err := (policy.Policy{}).Validate(); err == nil {
 		t.Error("an unscoped policy must not validate")
 	}
-	if err := (policy.Policy{Scope: policy.Scope{Everything: true, Tags: map[string]string{"a": "b"}}}).Validate(); err == nil {
+	both := policy.Policy{Scope: policy.Scope{Everything: true, Tags: map[string]string{"a": "b"}}}
+	if err := both.Validate(); err == nil {
 		t.Error("everything and tags together is a contradiction and must be rejected")
 	}
 	if err := (policy.Policy{Scope: policy.Scope{

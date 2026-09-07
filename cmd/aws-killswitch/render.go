@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
-	"github.com/fabiocicerchia/aws-killswitch/internal/policy"
 )
 
 const (
@@ -21,7 +20,7 @@ const (
 	refWidth      = 40
 )
 
-func printPlan(p model.Plan, pol policy.Policy, o options) error {
+func printPlan(p model.Plan, o options) error {
 	if o.asJSON {
 		return emit(p)
 	}
