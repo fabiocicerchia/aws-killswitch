@@ -221,15 +221,15 @@ repo exists not to be.
 A cron, a Budgets action or a CI job gets one number, so each refusal has its
 own rather than sharing 1:
 
-| Code | Means |
-|---|---|
-| 0 | it worked |
-| 1 | the run failed, or the check did — resources could not be stopped, nothing was in scope |
-| 3 | `spend --threshold`: month-to-date is over the threshold |
-| 64 | wrong invocation: no command, an unknown one, `restore` with no plan id, or a `fire` refused for want of `--force` |
-| 65 | the policy file could not be parsed |
-| 66 | the policy file, or the snapshot you asked to restore, does not exist |
-| 78 | the policy or the credentials are unusable — no scope, a `state_uri` that is not `s3://` |
+| Code | Means                                                                                                              |
+| ---- | ------------------------------------------------------------------------------------------------------------------ |
+| 0    | it worked                                                                                                          |
+| 1    | the run failed, or the check did — resources could not be stopped, nothing was in scope                            |
+| 3    | `spend --threshold`: month-to-date is over the threshold                                                           |
+| 64   | wrong invocation: no command, an unknown one, `restore` with no plan id, or a `fire` refused for want of `--force` |
+| 65   | the policy file could not be parsed                                                                                |
+| 66   | the policy file, or the snapshot you asked to restore, does not exist                                              |
+| 78   | the policy or the credentials are unusable — no scope, a `state_uri` that is not `s3://`                           |
 
 Anything unclassified is 1, so a code never means more than it was given.
 
@@ -237,12 +237,12 @@ Anything unclassified is 1, so a code never means more than it was given.
 
 Policies in `docs/`, deliberately split:
 
-| File | What it is |
-| --- | --- |
+| File                     | What it is                                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- |
 | `iam-plan-readonly.json` | everything `plan`, `status` and `spend` need, and nothing that can change a resource — attach it widely |
-| `iam-fire.json` | the write half, tag-conditioned, with an explicit `Deny` on every destructive action |
-| `iam-lambda-trust.json` | the execution role's trust policy |
-| `iam-lambda-extra.json` | what the Lambda needs on top of the other two: its own logs, and `s3:ListBucket` for the cooldown check |
+| `iam-fire.json`          | the write half, tag-conditioned, with an explicit `Deny` on every destructive action                    |
+| `iam-lambda-trust.json`  | the execution role's trust policy                                                                       |
+| `iam-lambda-extra.json`  | what the Lambda needs on top of the other two: its own logs, and `s3:ListBucket` for the cooldown check |
 
 Attach all four to the Lambda's execution role; the first two are enough for a
 person at a terminal.
