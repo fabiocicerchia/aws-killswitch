@@ -3,7 +3,7 @@ BIN_DIR := bin
 PKG     := ./cmd/aws-killswitch
 LAMBDA_PKG := ./cmd/killswitch-lambda
 
-.PHONY: all build lambda test lint tidy clean help
+.PHONY: all build lambda test lint tidy clean help setup install run format analyze
 
 .DEFAULT_GOAL := help
 
@@ -34,9 +34,8 @@ test:
 	go test -race -count=1 ./...
 
 ## lint: vet and formatting check
-lint:
-	go vet ./...
-	@test -z "$$(gofmt -l . )" || { echo "gofmt needed:"; gofmt -l .; exit 1; }
+lint: ## Run the whole gate — every hook, every file
+	pre-commit run --all-files
 
 ## tidy: tidy modules
 tidy:
@@ -45,3 +44,18 @@ tidy:
 ## clean: remove build artifacts
 clean:
 	rm -rf $(BIN_DIR)
+
+setup: ## Install the pre-commit hook
+	pre-commit install
+
+install: ## Install the binary into GOBIN
+	go install ./...
+
+run: ## Run the binary
+	go run ./cmd/aws-killswitch $(ARGS)
+
+format: ## Rewrite the sources to gofmt form
+	gofmt -w .
+
+analyze: ## Lint with the house rule set
+	golangci-lint run ./...
