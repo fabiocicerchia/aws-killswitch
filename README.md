@@ -118,6 +118,22 @@ issue: ARNs, account ids and resource names have nowhere in the report type to
 live, and a test asserts they cannot reach the output even when they are the
 subject of a finding.
 
+## Verify the download
+
+Every release is signed with [cosign][cosign], keyless: the identity is the
+workflow that published it, not a key anybody holds.
+
+```sh
+cosign verify-blob \
+  --bundle checksums.txt.bundle \
+  --certificate-identity-regexp 'https://github.com/fabiocicerchia/aws-killswitch' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  checksums.txt
+sha256sum --ignore-missing -c checksums.txt
+```
+
+[cosign]: https://docs.sigstore.dev/
+
 ## Documentation
 
 Full docs live in [`docs/`](docs/). Runnable examples live in [`examples/`](examples/).
