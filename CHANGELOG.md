@@ -5,6 +5,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0](https://github.com/fabiocicerchia/aws-killswitch/compare/v1.10.1...v1.11.0) (2026-09-09)
+
+
+### Features
+
+* **packaging:** man page, OS packages and a staged install ([#91](https://github.com/fabiocicerchia/aws-killswitch/issues/91)) ([e37ffe6](https://github.com/fabiocicerchia/aws-killswitch/commit/e37ffe676d1f05b4d0364fec9e7572807d8c9570))
+
 ## [1.10.1](https://github.com/fabiocicerchia/aws-killswitch/compare/v1.10.0...v1.10.1) (2026-09-04)
 
 ### Bug Fixes
