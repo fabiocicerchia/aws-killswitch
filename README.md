@@ -35,6 +35,21 @@ Nothing has changed. Run `fire --yes` to apply.
 
 ## Install
 
+macOS, via Homebrew:
+
+```sh
+brew install fabiocicerchia/tap/aws-killswitch
+```
+
+Linux — a `.deb`, `.rpm`, `.apk` or Arch package from the
+[latest release](https://github.com/fabiocicerchia/aws-killswitch/releases/latest):
+
+```sh
+sudo dpkg -i aws-killswitch_*_linux_amd64.deb     # or rpm -i / apk add --allow-untrusted
+```
+
+Or with Go:
+
 ```sh
 go install github.com/fabiocicerchia/aws-killswitch/cmd/aws-killswitch@latest
 ```
