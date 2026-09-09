@@ -1,0 +1,119 @@
+.TH AWS-KILLSWITCH 1 "2026-09" "aws-killswitch" "User Commands"
+.SH NAME
+aws-killswitch \- stop an AWS account spending, without losing anything
+.SH SYNOPSIS
+.B aws-killswitch
+.I command
+.RI [ flags ]
+.SH DESCRIPTION
+.B aws-killswitch
+stops the parts of an AWS account that cost money \(em compute, not storage \(em
+and records enough state to put every one of them back. Stateful storage (S3,
+EFS, DynamoDB, EBS volumes, snapshots and backups) is never touched under any
+flag.
+.PP
+Nothing changes without
+.BR \-\-yes .
+Without it every command is a dry run that reports what it would have done.
+.SH COMMANDS
+.TP
+.B plan
+Report what would be stopped, and what would deliberately not be.
+.TP
+.B fire
+Stop it. Requires
+.BR \-\-yes .
+.TP
+.B status
+What is currently stopped, and any deadlines attached to it.
+.TP
+.BI restore " plan"
+Put everything back, from the named plan id (see
+.BR "aws-killswitch status" ).
+.TP
+.B spend
+Month-to-date cost against the configured threshold.
+.TP
+.B verify
+Fire, read the account back, restore, read it back again, and report every
+divergence.
+.B "SCRATCH ACCOUNTS ONLY"
+\(em this fires for real.
+.SH OPTIONS
+.TP
+.BI \-config " PATH"
+Policy file (default
+.IR ./killswitch.json ).
+.TP
+.BI \-state " URI"
+Where snapshots live:
+.IR s3://bucket/prefix .
+Overrides the config.
+.TP
+.BI \-local " DIR"
+Local snapshot copy (default
+.IR ~/.aws-killswitch ).
+.TP
+.BI \-audit " PATH"
+Append-only log (default
+.IR ~/.aws-killswitch/audit.jsonl ).
+.TP
+.BI \-threshold " USD"
+For
+.BR spend :
+exit non-zero above this figure.
+.TP
+.B \-yes
+Actually make changes. Without it everything is a dry run.
+.TP
+.B \-force
+Proceed past the blast-radius threshold and any warnings.
+.TP
+.B \-json
+Machine-readable output.
+.TP
+.BI \-settle " DURATION"
+For
+.BR verify :
+how long to let the account settle before reading it back (default 90s).
+.TP
+.B \-plan\-only
+For
+.BR verify :
+plan and report coverage, change nothing.
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 64
+Usage error: wrong invocation, or a refusal to run as asked.
+.SH FILES
+.TP
+.I ./killswitch.json
+Default policy file.
+.TP
+.I ~/.aws-killswitch/audit.jsonl
+Append-only record of every run.
+.SH EXAMPLES
+.PP
+See what firing would stop, changing nothing:
+.PP
+.RS
+.B aws-killswitch plan
+.RE
+.PP
+Stop the account, for real:
+.PP
+.RS
+.B aws-killswitch fire \-\-yes
+.RE
+.PP
+Put it back:
+.PP
+.RS
+.B aws-killswitch restore \fIPLAN-ID\fB
+.RE
+.SH SEE ALSO
+Project documentation:
+https://github.com/fabiocicerchia/aws-killswitch
