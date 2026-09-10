@@ -1,8 +1,8 @@
 {
   "Exclude": [
     "^LICENSE$",
-    "^apply\\-settings\\.sh$",
-    "^check\\-drift\\.sh$"
+    "^cmd/aws\\-killswitch/main\\.go$",
+    "^cmd/aws\\-killswitch/wiring\\.go$"
   ],
   "Disable": {
     "IndentSize": true
