@@ -1,8 +1,8 @@
 name: security
 
 on:
-  push:
-    branches: [main]
+  # No push trigger: the pull request already ran this on the identical
+  # tree. What a merge cannot tell you, the schedule below can.
   pull_request:
   schedule:
     - cron: "0 6 * * 1" # weekly, catches newly disclosed CVEs
@@ -10,6 +10,10 @@ on:
 permissions:
   pull-requests: read # gitleaks reads PR commits
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   secrets:
@@ -24,6 +28,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   vulns:
+    # A github-actions bump cannot introduce a CVE here; dependency-review still runs.
+    if: ${{ !startsWith(github.head_ref, 'dependabot/github_actions/') }}
     name: filesystem & dependency scan (trivy)
     runs-on: ubuntu-latest
     permissions:
@@ -60,8 +66,9 @@ jobs:
       - run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 
   codeql:
+    # A github-actions bump cannot introduce a CVE here; dependency-review still runs.
     # GitHub Advanced Security is required for this on private repos; skip instead of failing red.
-    if: ${{ !github.event.repository.private }}
+    if: ${{ !github.event.repository.private && !startsWith(github.head_ref, 'dependabot/github_actions/') }}
     name: codeql
     runs-on: ubuntu-latest
     permissions:
@@ -72,7 +79,7 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e  # v7.0.0
         with:
           go-version-file: go.mod
-      - uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938  # v4.37.9
+      - uses: github/codeql-action/init@b96794f015dfd88f77b49b1c93e0fa7110f94c63  # v4.38.0
         with:
           languages: go
       - uses: github/codeql-action/analyze@b96794f015dfd88f77b49b1c93e0fa7110f94c63  # v4.38.0
