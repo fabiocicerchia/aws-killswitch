@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.2](https://github.com/fabiocicerchia/aws-killswitch/compare/v1.12.1...v1.12.2) (2026-09-20)
+
+
+### Bug Fixes
+
+* **ci:** align codeql-action init to v4.38.0 ([#123](https://github.com/fabiocicerchia/aws-killswitch/issues/123)) ([226648e](https://github.com/fabiocicerchia/aws-killswitch/commit/226648e49cfc33607380ee20796283da7a42f4c6))
+* **ci:** keep actions: read on the job that uploads sarif ([#122](https://github.com/fabiocicerchia/aws-killswitch/issues/122)) ([d765cf1](https://github.com/fabiocicerchia/aws-killswitch/commit/d765cf1dd3d8a7a8be32e4b5e4a6991dfc6e19b0))
+
 ## [1.12.1](https://github.com/fabiocicerchia/aws-killswitch/compare/v1.12.0...v1.12.1) (2026-09-11)
 
 
