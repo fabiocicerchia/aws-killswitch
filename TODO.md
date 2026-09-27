@@ -10,4 +10,3 @@ is the record of what shipped.
       or restore has ever executed**. Point it at a scratch account first. Three
       kinds and a Lambda front end have been added since that was last true, so
       there is more unproven surface now, not less.
-- [ ] Cost estimates beyond NAT gateways
