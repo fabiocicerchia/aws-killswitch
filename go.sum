@@ -22,8 +22,8 @@ github.com/aws/aws-sdk-go-v2/service/autoscaling v1.78.1 h1:nKss1SHiv0fjLRpgy9Ry
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.78.1/go.mod h1:4roDw8gYFhAVo1b2ckuzEa0QPtpRXgU4o+dn44IvNF0=
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.73.1 h1:/U9s1rmIvfAzSP9kg3k9CIB9wYM1l8ukje/+tx1J7yk=
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.73.1/go.mod h1:LTDZxT77siIgcH1AsJLiEmNkwycK4V0pmbwk8UUqdDc=
-github.com/aws/aws-sdk-go-v2/service/costexplorer v1.73.1 h1:sN3yaXPPRc9fwl4CYg7wB+iAcyN5RBpS5q0bxsj0uxg=
-github.com/aws/aws-sdk-go-v2/service/costexplorer v1.73.1/go.mod h1:+9oAaJsNabskbcw3tYLXX1ttNfexxtp95VF1MCbjokU=
+github.com/aws/aws-sdk-go-v2/service/costexplorer v1.74.1 h1:TK+Hfn2ayR5g1ZrOHHFVg033F0brKyiKk16VDXn9ZIw=
+github.com/aws/aws-sdk-go-v2/service/costexplorer v1.74.1/go.mod h1:KwwGgz0pLqX+tuHBZzvQMh8rHgm2m/SYRIdYyufDmb8=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.338.4 h1:1PZfVMz36He601uRm1PiKyDcsEKBk76QYwyISwjOjjY=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.338.4/go.mod h1:RttUwBa++DWLLpzTAQdcQzqI9uBF9cfRI/ek8gXzLR4=
 github.com/aws/aws-sdk-go-v2/service/ecs v1.100.0 h1:kmyHs4PWLEEXRLS57M/kkIWCurEBiDAG6Iz9atEp/TU=
