@@ -2,7 +2,7 @@ module github.com/fabiocicerchia/aws-killswitch
 
 go 1.26
 
-toolchain go1.26.6
+toolchain go1.26.10
 
 require (
 	github.com/aws/aws-lambda-go v1.55.1
