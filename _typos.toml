@@ -1,0 +1,3 @@
+# release-please writes CHANGELOG.md with short commit hashes; typos reads "ede39ae" as a misspelt "edge".
+[files]
+extend-exclude = ["CHANGELOG.md"]
