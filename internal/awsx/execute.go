@@ -41,41 +41,18 @@ func (e *Executor) client(region string) (*Clients, error) {
 	return c, nil
 }
 
-// Apply makes one change. Every kind handled here has a matching case in
-// Restore -- an apply with no undo is a change this tool does not make.
+// Apply makes one change. Every kind in appliers has a matching entry in
+// restorers -- an apply with no undo is a change this tool does not make.
 func (e *Executor) Apply(ctx context.Context, a model.Action) error {
 	c, err := e.client(a.Resource.Region)
 	if err != nil {
 		return err
 	}
-	r := a.Resource
-	switch r.Kind {
-	case model.KindALBListener:
-		return blockListener(ctx, c, r.ID)
-	case model.KindLambda:
-		return throttleLambda(ctx, c, r.ID)
-	case model.KindECSService:
-		return scaleService(ctx, c, r.Prior, 0)
-	case model.KindASG:
-		return scaleASG(ctx, c, r.ID, 0, 0, 0)
-	case model.KindEC2Instance:
-		return stopInstance(ctx, c, r.ID)
-	case model.KindEKSNodegroup:
-		return scaleNodegroup(ctx, c, r.Prior, 0, 0)
-	case model.KindCloudFront:
-		return setDistributionEnabled(ctx, c, r.ID, false)
-	case model.KindAPIGatewayStage:
-		// 0 rps, 0 burst. Both are needed: a burst allowance with a zero rate
-		// still lets a burst through.
-		return throttleStage(ctx, c, r.Prior, 0, 0)
-	case model.KindNATGateway:
-		return deleteNATGateway(ctx, c, r.ID)
-	case model.KindRDSInstance:
-		return stopDBInstance(ctx, c, r.ID, e.FinalSnapshot)
-	case model.KindRDSCluster:
-		return stopDBCluster(ctx, c, r.ID)
+	apply, ok := appliers[a.Resource.Kind]
+	if !ok {
+		return fmt.Errorf("no apply implemented for %s", a.Resource.Kind)
 	}
-	return fmt.Errorf("no apply implemented for %s", r.Kind)
+	return apply(ctx, c, a.Resource, e.FinalSnapshot)
 }
 
 // Restore undoes one change from the recorded prior state, not from what
@@ -85,29 +62,69 @@ func (e *Executor) Restore(ctx context.Context, en model.Entry) error {
 	if err != nil {
 		return err
 	}
-	switch en.Kind {
-	case model.KindALBListener:
-		return restoreListener(ctx, c, en)
-	case model.KindLambda:
-		return restoreLambda(ctx, c, en)
-	case model.KindECSService:
-		return restoreService(ctx, c, en)
-	case model.KindASG:
-		return restoreASG(ctx, c, en)
-	case model.KindEC2Instance:
-		return startInstance(ctx, c, en.ID)
-	case model.KindEKSNodegroup:
-		return restoreNodegroup(ctx, c, en)
-	case model.KindCloudFront:
-		return restoreDistribution(ctx, c, en)
-	case model.KindAPIGatewayStage:
-		return restoreStage(ctx, c, en)
-	case model.KindNATGateway:
-		return restoreNATGateway(ctx, c, en)
-	case model.KindRDSInstance:
-		return startDBInstance(ctx, c, en.ID)
-	case model.KindRDSCluster:
-		return startDBCluster(ctx, c, en.ID)
+	restore, ok := restorers[en.Kind]
+	if !ok {
+		return fmt.Errorf("no restore implemented for %s", en.Kind)
 	}
-	return fmt.Errorf("no restore implemented for %s", en.Kind)
+	return restore(ctx, c, en)
+}
+
+type applyFunc func(ctx context.Context, c *Clients, r model.Resource, finalSnapshot bool) error
+
+var appliers = map[model.Kind]applyFunc{
+	model.KindALBListener: func(ctx context.Context, c *Clients, r model.Resource, _ bool) error {
+		return blockListener(ctx, c, r.ID)
+	},
+	model.KindLambda: func(ctx context.Context, c *Clients, r model.Resource, _ bool) error {
+		return throttleLambda(ctx, c, r.ID)
+	},
+	model.KindECSService: func(ctx context.Context, c *Clients, r model.Resource, _ bool) error {
+		return scaleService(ctx, c, r.Prior, 0)
+	},
+	model.KindASG: func(ctx context.Context, c *Clients, r model.Resource, _ bool) error {
+		return scaleASG(ctx, c, r.ID, 0, 0, 0)
+	},
+	model.KindEC2Instance: func(ctx context.Context, c *Clients, r model.Resource, _ bool) error {
+		return stopInstance(ctx, c, r.ID)
+	},
+	model.KindEKSNodegroup: func(ctx context.Context, c *Clients, r model.Resource, _ bool) error {
+		return scaleNodegroup(ctx, c, r.Prior, 0, 0)
+	},
+	model.KindCloudFront: func(ctx context.Context, c *Clients, r model.Resource, _ bool) error {
+		return setDistributionEnabled(ctx, c, r.ID, false)
+	},
+	model.KindAPIGatewayStage: func(ctx context.Context, c *Clients, r model.Resource, _ bool) error {
+		// 0 rps, 0 burst. Both are needed: a burst allowance with a zero rate
+		// still lets a burst through.
+		return throttleStage(ctx, c, r.Prior, 0, 0)
+	},
+	model.KindNATGateway: func(ctx context.Context, c *Clients, r model.Resource, _ bool) error {
+		return deleteNATGateway(ctx, c, r.ID)
+	},
+	model.KindRDSInstance: func(ctx context.Context, c *Clients, r model.Resource, finalSnapshot bool) error {
+		return stopDBInstance(ctx, c, r.ID, finalSnapshot)
+	},
+	model.KindRDSCluster: func(ctx context.Context, c *Clients, r model.Resource, _ bool) error {
+		return stopDBCluster(ctx, c, r.ID)
+	},
+}
+
+var restorers = map[model.Kind]func(ctx context.Context, c *Clients, en model.Entry) error{
+	model.KindALBListener: restoreListener,
+	model.KindLambda:      restoreLambda,
+	model.KindECSService:  restoreService,
+	model.KindASG:         restoreASG,
+	model.KindEC2Instance: func(ctx context.Context, c *Clients, en model.Entry) error {
+		return startInstance(ctx, c, en.ID)
+	},
+	model.KindEKSNodegroup:    restoreNodegroup,
+	model.KindCloudFront:      restoreDistribution,
+	model.KindAPIGatewayStage: restoreStage,
+	model.KindNATGateway:      restoreNATGateway,
+	model.KindRDSInstance: func(ctx context.Context, c *Clients, en model.Entry) error {
+		return startDBInstance(ctx, c, en.ID)
+	},
+	model.KindRDSCluster: func(ctx context.Context, c *Clients, en model.Entry) error {
+		return startDBCluster(ctx, c, en.ID)
+	},
 }
