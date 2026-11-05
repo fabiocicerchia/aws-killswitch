@@ -15,12 +15,24 @@ import (
 	"github.com/fabiocicerchia/aws-killswitch/internal/engine"
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 	"github.com/fabiocicerchia/aws-killswitch/internal/plan"
+	"github.com/fabiocicerchia/aws-killswitch/internal/policy"
 	"github.com/fabiocicerchia/aws-killswitch/internal/state"
+	"github.com/fabiocicerchia/aws-killswitch/internal/trip"
 )
 
-func cmdFire(
-	ctx context.Context, p model.Plan, store state.Store, ex engine.Executor, log *audit.Log, o options,
-) error {
+// cmdDryFire is `fire` without --yes: the same refusals, then the plan.
+func cmdDryFire(p model.Plan, o options) error {
+	if err := refuseUnfireable(p, o); err != nil {
+		return err
+	}
+	if err := printPlan(p, o); err != nil {
+		return err
+	}
+	fmt.Println("\nThis was a dry run — --yes was not passed, so nothing changed.")
+	return nil
+}
+
+func refuseUnfireable(p model.Plan, o options) error {
 	if p.IsEmpty() {
 		return errors.New("nothing in scope to stop")
 	}
@@ -31,20 +43,29 @@ func cmdFire(
 		}
 		return failWith(exitUsage, errors.New("refusing to fire without acknowledgement"))
 	}
+	return nil
+}
 
-	opt := engine.Options{DryRun: !o.yes, ContinueOnError: true, Log: log}
-	if !o.yes {
-		if err := printPlan(p, o); err != nil {
-			return err
-		}
-		fmt.Println("\nThis was a dry run — --yes was not passed, so nothing changed.")
-		return nil
-	}
-
-	res, err := engine.Fire(ctx, p, store, ex, opt)
+// cmdFire is `fire --yes`, through trip.Fire like the Lambda — so a second
+// press inside the cooldown is refused rather than snapshotting a stopped
+// account as its prior state.
+func cmdFire(
+	ctx context.Context, cfg aws.Config, pol policy.Policy, account string, store state.Store, log *audit.Log, o options,
+) error {
+	res, err := trip.Fire(ctx, cfg, pol, account, store, log, trip.Options{Force: o.force})
+	warnDiscovery(res.Discovery)
 	if err != nil {
 		return err
 	}
+	if !res.Fired {
+		if res.Plan.ID != "" {
+			if err := refuseUnfireable(res.Plan, o); err != nil {
+				return err
+			}
+		}
+		return errors.New(res.Skipped)
+	}
+	p := res.Plan
 	fmt.Printf("plan %s: %d changed, %d failed\n", p.ID, res.Changed, res.Failed)
 	for _, d := range engine.Deadlines(res.Snapshot, time.Now().UTC()) {
 		fmt.Printf("  ! %s\n", d)

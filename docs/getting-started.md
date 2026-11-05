@@ -76,7 +76,7 @@ the README.
 
 ```sh
 ./bin/aws-killswitch status
-./bin/aws-killswitch restore ks-20260802-021500 --yes
+./bin/aws-killswitch restore 20260802-021500 --yes
 ```
 
 `status` also counts down the seven days before AWS restarts any stopped
@@ -196,7 +196,8 @@ stopped*, plan almost nothing, and write a second snapshot whose recorded prior
 state is the stopped one. Restoring that snapshot would put the account back
 exactly as it was after the first fire: down.
 
-So a fire inside the **one-hour cooldown** is refused, and the response says so:
+So a fire inside the **one-hour cooldown** is refused — from the Lambda and from
+`aws-killswitch fire --yes` alike — and the response says so:
 
 ```json
 {"fired":false,"skipped":"already fired 15m ago; inside the 1h0m0s cooldown"}

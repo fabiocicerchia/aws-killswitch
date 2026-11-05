@@ -17,9 +17,9 @@ import (
 
 	"github.com/fabiocicerchia/aws-killswitch/internal/audit"
 	"github.com/fabiocicerchia/aws-killswitch/internal/awsx"
-	"github.com/fabiocicerchia/aws-killswitch/internal/plan"
 	"github.com/fabiocicerchia/aws-killswitch/internal/policy"
 	"github.com/fabiocicerchia/aws-killswitch/internal/state"
+	"github.com/fabiocicerchia/aws-killswitch/internal/trip"
 	"github.com/fabiocicerchia/aws-killswitch/internal/verify"
 )
 
@@ -152,21 +152,21 @@ func run(ctx context.Context, cmd string, args []string, o options) error {
 	}
 
 	account := awsx.AccountID(ctx, cfg)
-	regions, clients, resources := discoverAll(ctx, cfg, pol)
+	if cmd == "fire" && o.yes {
+		// The same path, cooldown included, the Lambda takes.
+		return cmdFire(ctx, cfg, pol, account, store, log, o)
+	}
 
-	now := time.Now().UTC()
-	p := plan.Build(plan.Input{
-		Account: account, Regions: regions, Resources: resources,
-		Now: now, PlanID: planID(now),
-	}, pol)
+	p, clients, discoveryErrs := trip.Plan(ctx, cfg, pol, account, time.Now().UTC())
+	warnDiscovery(discoveryErrs)
 
-	if cmd == "plan" {
+	switch cmd {
+	case "plan":
 		return printPlan(p, o)
+	case "verify":
+		return cmdVerify(ctx, clients, p.Regions, account, store, pol, o)
 	}
-	if cmd == "verify" {
-		return cmdVerify(ctx, clients, regions, account, store, pol, o)
-	}
-	return cmdFire(ctx, p, store, awsx.NewExecutor(clients), log, o)
+	return cmdDryFire(p, o)
 }
 
 // cmdVerify runs the whole cycle against a SCRATCH account and reports what
