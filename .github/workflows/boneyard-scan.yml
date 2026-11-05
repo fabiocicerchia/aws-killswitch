@@ -43,6 +43,9 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Post to boneyard
+        # Telemetry to an external dashboard: boneyard being down, or
+        # BONEYARD_TOKEN unset, is not this repository's problem.
+        # Drop this once boneyard's uptime is something a red run should page on.
         continue-on-error: true
         env:
           TOKEN: ${{ secrets.BONEYARD_TOKEN }}
