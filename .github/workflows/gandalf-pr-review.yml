@@ -5,7 +5,8 @@
 # them into GitHub Code Scanning. Nothing is installed on the runner and no
 # secret beyond the built-in GITHUB_TOKEN is needed.
 #
-# Source: fabiocicerchia/gandalf -> examples/github-actions/gandalf-pr-review.yml
+# Source: fabiocicerchia/gandalf ->
+#   examples/github-actions/gandalf-pr-review.yml
 
 name: gandalf-pr-review
 
@@ -34,10 +35,12 @@ jobs:
     name: gandalf inline review
     runs-on: ubuntu-latest
     steps:
+      # yamllint disable-line rule:line-length
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0 # need base + head + their merge-base for the PR diff
 
+      # yamllint disable-line rule:line-length
       - uses: fabiocicerchia/gandalf@f8ab971db899bc8b70338cd6bcaaa1e002bfcfa4  # v0.15.0
         with:
           # Code scanning needs GitHub Advanced Security on a private repo.

@@ -27,10 +27,12 @@ jobs:
       # without one it dies with "could not read Username for github.com".
       # This job uploads no artifact, so there is nothing to leak the token
       # into, which is the whole of what artipacked is about.
+      # yamllint disable-line rule:line-length
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1  # zizmor: ignore[artipacked]
         with:
           fetch-depth: 0 # the base side is generated from the base ref
 
+      # yamllint disable-line rule:line-length
       - uses: fabiocicerchia/sbom-diff@f908506c6e70e3d5a8749b162c1188b6d2df24ee # v1.1.1
         with:
           # No comment and no gate: gandalf-pr-review.yml and dependency-review

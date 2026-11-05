@@ -16,14 +16,17 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
+      # yamllint disable-line rule:line-length
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       # Lint the GitHub Actions workflows themselves.
       - name: actionlint
+        # yamllint disable-line rule:line-length
         uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7  # v2.2.0
 
       # Enforce .editorconfig (indentation, EOL, trailing whitespace).
       - name: editorconfig-checker
+        # yamllint disable-line rule:line-length
         uses: editorconfig-checker/action-editorconfig-checker@51f63319f592f97930c73d9c46184d20bd206393  # v3.0.0
         with:
           # The action is pinned but the tool it downloads was not: it
@@ -41,20 +44,25 @@ jobs:
 
       # Catch common typos in code and docs.
       - name: typos
+        # yamllint disable-line rule:line-length
         uses: crate-ci/typos@7f9d0819ca1c008ade73f4b41fa9d258d48f605b  # branch master
 
       # pre-commit runs the language-specific hooks defined in
       # .pre-commit-config.yaml. It no-ops gracefully if none apply.
+      # yamllint disable-line rule:line-length
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version: "3.x"
       - name: pre-commit
+        # yamllint disable-line rule:line-length
         uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd  # v3.0.1
 
   go:
     runs-on: ubuntu-latest
     steps:
+      # yamllint disable-line rule:line-length
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      # yamllint disable-line rule:line-length
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e  # v7.0.0
         with:
           go-version-file: go.mod
@@ -67,6 +75,7 @@ jobs:
       - name: test
         run: go test -race -coverprofile=coverage.out ./...
       - name: golangci-lint
+        # yamllint disable-line rule:line-length
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a  # v9.3.0
         with:
           # Without this the action resolves whatever golangci-lint is

@@ -7,7 +7,8 @@ linters:
     - contextcheck      # FC-GO-009
     - errorlint         # FC-GO-005 - catches == on errors and missing %w
     - godox             # FC-GEN-010 - no TODO/FIXME/HACK markers
-    - forbidigo         # FC-GEN-055 - blocks time.Now, os.Getenv outside the root
+    - forbidigo         # FC-GEN-055 - blocks time.Now, os.Getenv outside the
+                        # root
     - noctx             # FC-GEN-032
     - nilerr
     - errname

@@ -36,12 +36,17 @@ jobs:
           q="sha=${GITHUB_REF_NAME}&since=${since}&per_page=1"
           n=$(gh api "repos/${GITHUB_REPOSITORY}/commits?${q}" --jq 'length')
           echo "recent=${n}" >> "$GITHUB_OUTPUT"
-          [ "${n}" != "0" ] || echo "No commits since ${since} — skipping the refresh."
+          [ "${n}" != "0" ] \
+            || echo "No commits since ${since} — skipping the refresh."
 
-      - if: steps.gate.outputs.recent != '0' || github.event_name == 'workflow_dispatch'
+      - if: steps.gate.outputs.recent != '0'
+          || github.event_name == 'workflow_dispatch'
+        # yamllint disable-line rule:line-length
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - if: steps.gate.outputs.recent != '0' || github.event_name == 'workflow_dispatch'
+      - if: steps.gate.outputs.recent != '0'
+          || github.event_name == 'workflow_dispatch'
+        # yamllint disable-line rule:line-length
         uses: fabiocicerchia/carbon-badge@c2a8960de4261881f7d8da3b1a632dc3c3f0859b  # v0.7.5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

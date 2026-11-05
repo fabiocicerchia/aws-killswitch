@@ -110,7 +110,8 @@ homebrew_casks:
     # With the release pipe disabled goreleaser cannot derive this, and
     # refuses rather than guessing.
     url:
-      template: "https://github.com/fabiocicerchia/aws-killswitch/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+      template: "https://github.com/fabiocicerchia/aws-killswitch/releases/\
+        download/{{ .Tag }}/{{ .ArtifactName }}"
     manpages: [man/aws-killswitch.1]
     homepage: https://github.com/fabiocicerchia/aws-killswitch
     description: Stop an AWS account spending, without losing anything
