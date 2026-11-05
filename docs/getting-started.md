@@ -76,7 +76,7 @@ the README.
 
 ```sh
 ./bin/aws-killswitch status
-./bin/aws-killswitch restore ks-20260802-021500 --yes
+./bin/aws-killswitch restore 20260802-021500 --yes
 ```
 
 `status` also counts down the seven days before AWS restarts any stopped
@@ -209,6 +209,9 @@ because the account is running again and a new spike is a real event. And if the
 store cannot be read at all, the fire is allowed: unreadable state is not
 permission to double-fire, but a killswitch that will not press is worse than
 one that presses twice.
+
+`fire --yes` from the CLI takes the same path and is refused the same way;
+`--force` fires anyway.
 
 Two other things the handler will not do unattended: fire a plan carrying
 acknowledgement-required warnings (instance-store data loss, NAT deletion) —

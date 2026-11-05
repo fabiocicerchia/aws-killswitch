@@ -17,9 +17,9 @@ import (
 
 	"github.com/fabiocicerchia/aws-killswitch/internal/audit"
 	"github.com/fabiocicerchia/aws-killswitch/internal/awsx"
-	"github.com/fabiocicerchia/aws-killswitch/internal/plan"
 	"github.com/fabiocicerchia/aws-killswitch/internal/policy"
 	"github.com/fabiocicerchia/aws-killswitch/internal/state"
+	"github.com/fabiocicerchia/aws-killswitch/internal/trip"
 	"github.com/fabiocicerchia/aws-killswitch/internal/verify"
 )
 
@@ -41,7 +41,8 @@ Flags
   -audit PATH         append-only log (default ~/.aws-killswitch/audit.jsonl)
   -threshold USD      for ` + "`spend`" + `: exit non-zero above this
   -yes                actually make changes; without it everything is a dry run
-  -force              proceed past the blast-radius threshold and any warnings
+  -force              proceed past the blast-radius threshold, any warnings,
+                      and the one-hour cooldown after a fire
   -json               machine-readable output
   -settle DURATION    for ` + "`verify`" + `: how long to let the account settle
                       before reading it back (default 90s)
@@ -152,21 +153,17 @@ func run(ctx context.Context, cmd string, args []string, o options) error {
 	}
 
 	account := awsx.AccountID(ctx, cfg)
-	regions, clients, resources := discoverAll(ctx, cfg, pol)
+	if cmd == "fire" {
+		return cmdFire(ctx, cfg, pol, account, store, log, o)
+	}
 
-	now := time.Now().UTC()
-	p := plan.Build(plan.Input{
-		Account: account, Regions: regions, Resources: resources,
-		Now: now, PlanID: planID(now),
-	}, pol)
+	p, clients, discoveryErrs := trip.Plan(ctx, cfg, pol, account, time.Now().UTC())
+	warnAll(discoveryErrs)
 
 	if cmd == "plan" {
 		return printPlan(p, o)
 	}
-	if cmd == "verify" {
-		return cmdVerify(ctx, clients, regions, account, store, pol, o)
-	}
-	return cmdFire(ctx, p, store, awsx.NewExecutor(clients), log, o)
+	return cmdVerify(ctx, clients, p.Regions, account, store, pol, o)
 }
 
 // cmdVerify runs the whole cycle against a SCRATCH account and reports what

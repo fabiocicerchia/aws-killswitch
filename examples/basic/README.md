@@ -40,7 +40,7 @@ aws-killswitch plan -config killswitch.json
 ```
 
 ```text
-plan ks-20260802-021500 — account 123456789012, regions eu-west-1
+plan 20260802-021500 — account 123456789012, regions eu-west-1
 
 INGRESS — stop the traffic that drives the spend, before draining what serves it
   alb-listener   api-dev:443            return a fixed 503 instead of forwarding
@@ -90,7 +90,7 @@ with no record of how to start it is an outage of unknown length.
 
 ```sh
 aws-killswitch status -config killswitch.json
-aws-killswitch restore -config killswitch.json ks-20260802-021500 --yes
+aws-killswitch restore -config killswitch.json 20260802-021500 --yes
 ```
 
 Do this in the same sitting as your first fire. A kill switch whose restore has
@@ -100,7 +100,7 @@ never been exercised is a switch nobody will be willing to pull.
 database by itself:
 
 ```text
-ks-20260802-021500  fired 2026-08-02T02:15:00Z  6 changed of 6
+20260802-021500  fired 2026-08-02T02:15:00Z  6 changed of 6
     ! rds-instance orders-dev: AWS restarts this in 5.0 days (2026-08-09T02:15:00Z)
 ```
 
