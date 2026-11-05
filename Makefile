@@ -31,7 +31,8 @@ lambda:
 
 ## test: run tests
 test:
-	go test -race -count=1 ./...
+	go test -race -count=1 -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out | tail -n 1
 
 ## lint: vet and formatting check
 lint: ## Run the whole gate — every hook, every file

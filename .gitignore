@@ -3,6 +3,7 @@ dist/
 reports/
 killswitch.json
 *.jsonl
+coverage.out
 
 # Docs site build
 site/
