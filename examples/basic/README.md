@@ -36,7 +36,7 @@ switch must not be able to destroy its own restore record.
 ## Plan — this changes nothing
 
 ```sh
-aws-killswitch -c killswitch.json plan
+aws-killswitch plan -config killswitch.json
 ```
 
 ```text
@@ -77,8 +77,8 @@ resource tagged protected with an empty value was tagged for a reason.
 ## Fire, against a scratch account
 
 ```sh
-aws-killswitch -c killswitch.json fire          # still a dry run
-aws-killswitch -c killswitch.json fire --yes    # actually stops things
+aws-killswitch fire -config killswitch.json          # still a dry run
+aws-killswitch fire -config killswitch.json --yes    # actually stops things
 ```
 
 The restore record is written and **read back** before anything changes. If
@@ -89,8 +89,8 @@ with no record of how to start it is an outage of unknown length.
 ## Put it back — the half that matters
 
 ```sh
-aws-killswitch -c killswitch.json status
-aws-killswitch -c killswitch.json restore ks-20260802-021500 --yes
+aws-killswitch status -config killswitch.json
+aws-killswitch restore ks-20260802-021500 -config killswitch.json --yes
 ```
 
 Do this in the same sitting as your first fire. A kill switch whose restore has
@@ -107,8 +107,8 @@ ks-20260802-021500  fired 2026-08-02T02:15:00Z  6 changed of 6
 ## Wire it to a threshold
 
 ```sh
-aws-killswitch -c killswitch.json spend --threshold 500 \
-  || aws-killswitch -c killswitch.json fire --yes
+aws-killswitch spend -config killswitch.json --threshold 500 \
+  || aws-killswitch fire -config killswitch.json --yes
 ```
 
 Cost Explorer lags by hours, so this catches slow burn and nothing sudden. For
