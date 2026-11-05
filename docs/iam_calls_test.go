@@ -90,6 +90,23 @@ func TestPoliciesGrantEveryCallTheToolMakes(t *testing.T) {
 		ex.Apply(ctx, model.Action{Resource: model.Resource{Kind: k, ID: "id", Region: region, Prior: prior}})
 		ex.Restore(ctx, model.Entry{Kind: k, ID: "id", Region: region, Prior: prior})
 	}
+	// The recorder stops each path at its first call, so the calls made only
+	// after one succeeds are never reached above. List them by hand.
+	for _, a := range []string{
+		"elasticloadbalancing:DescribeListeners", "elasticloadbalancing:DescribeTags",
+		"lambda:ListTags", "lambda:GetFunctionConcurrency",
+		"ecs:ListServices", "ecs:DescribeServices",
+		"ec2:DescribeInstanceTypes", "ec2:DescribeRouteTables",
+		"eks:ListNodegroups", "eks:DescribeNodegroup",
+	} {
+		readCalls[a] = true
+	}
+	for _, a := range []string{
+		"cloudfront:UpdateDistribution", "lambda:DeleteFunctionConcurrency",
+		"ec2:DescribeNatGateways", "ec2:ReplaceRoute", "ec2:CreateRoute",
+	} {
+		writeCalls[a] = true
+	}
 
 	readonly, fire := map[string]bool{}, map[string]bool{}
 	for _, a := range allowed(load(t, "iam-plan-readonly.json")) {
@@ -108,8 +125,9 @@ func TestPoliciesGrantEveryCallTheToolMakes(t *testing.T) {
 			t.Errorf("fire/restore call %q is in neither iam-plan-readonly.json nor iam-fire.json", a)
 		}
 	}
-	// Guard against the recorder silently seeing nothing.
-	if len(readCalls) < 10 || len(writeCalls) < 10 {
+	// Guard against the recorder silently seeing nothing: at least ten recorded
+	// calls each, on top of the ones listed by hand.
+	if len(readCalls) < 20 || len(writeCalls) < 15 {
 		t.Fatalf("recorded too few calls: read %v, write %v", readCalls, writeCalls)
 	}
 	t.Logf("checked %d read and %d write calls", len(readCalls), len(writeCalls))
