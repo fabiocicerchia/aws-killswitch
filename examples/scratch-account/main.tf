@@ -35,8 +35,9 @@ provider "aws" {
 }
 
 variable "region" {
-  type    = string
-  default = "eu-west-1"
+  type        = string
+  default     = "eu-west-1"
+  description = "Region the scratch resources are created in."
 }
 
 variable "prefix" {
@@ -49,8 +50,9 @@ variable "prefix" {
 # `verify` run cannot reach anything this module did not create — which is the
 # only thing standing between a mistyped profile and somebody's production.
 variable "scope_tag" {
-  type    = map(string)
-  default = { killswitch = "scratch" }
+  type        = map(string)
+  default     = { killswitch = "scratch" }
+  description = "Tag the killswitch policy scopes on; carried by every resource here."
 }
 
 locals {
@@ -110,15 +112,18 @@ resource "aws_nat_gateway" "main" {
 }
 
 resource "aws_security_group" "open" {
-  name   = "${var.prefix}-sg"
-  vpc_id = aws_vpc.main.id
+  name        = "${var.prefix}-sg"
+  description = "Scratch account: HTTP from inside the VPC, all egress."
+  vpc_id      = aws_vpc.main.id
   egress {
+    description = "All egress"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
+    description = "HTTP from inside the VPC"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -135,7 +140,9 @@ resource "aws_lb" "main" {
   load_balancer_type = "application"
   subnets            = aws_subnet.public[*].id
   security_groups    = [aws_security_group.open.id]
-  tags               = local.tags
+  # Malformed headers are dropped at the edge; nothing `verify` sends has any.
+  drop_invalid_header_fields = true
+  tags                       = local.tags
 }
 
 resource "aws_lb_target_group" "main" {
@@ -207,6 +214,10 @@ resource "aws_lambda_function" "main" {
 
 resource "aws_ecs_cluster" "main" {
   name = "${var.prefix}-cluster"
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
   tags = local.tags
 }
 
@@ -293,6 +304,9 @@ resource "aws_instance" "standalone" {
   instance_type          = "t4g.micro"
   subnet_id              = aws_subnet.private[0].id
   vpc_security_group_ids = [aws_security_group.open.id]
+  # Private subnet, so no public address either way; stated so it cannot drift.
+  associate_public_ip_address = false
+  monitoring                  = true
   metadata_options {
     http_endpoint = "enabled"
     http_tokens   = "required"
@@ -319,6 +333,13 @@ resource "aws_db_instance" "main" {
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.open.id]
   skip_final_snapshot    = true
+  # Encrypted, IAM auth, one day of backups and tagged snapshots: none of it
+  # changes what the killswitch stops and restores, and the example should not
+  # be the place in this repo that teaches a database without them.
+  storage_encrypted                   = true
+  iam_database_authentication_enabled = true
+  backup_retention_period             = 1
+  copy_tags_to_snapshot               = true
   # Ships the engine log to CloudWatch. Nothing in `verify` reads it — it is
   # here so the example is not the one place in this repo that teaches a
   # database with no audit trail.
@@ -336,6 +357,11 @@ resource "aws_rds_cluster" "main" {
   db_subnet_group_name        = aws_db_subnet_group.main.name
   vpc_security_group_ids      = [aws_security_group.open.id]
   skip_final_snapshot         = true
+
+  storage_encrypted                  = true
+  iam_database_authentication_enabled = true
+  backup_retention_period             = 1
+  copy_tags_to_snapshot               = true
   serverlessv2_scaling_configuration {
     min_capacity = 0.5
     max_capacity = 1
@@ -400,12 +426,40 @@ resource "aws_iam_role_policy_attachment" "node" {
   policy_arn = each.value
 }
 
+data "aws_caller_identity" "current" {}
+
+# Envelope key for EKS secrets. Seven-day deletion window, the minimum, so the
+# key does not outlive the rest of the module by a month.
+resource "aws_kms_key" "eks" {
+  description             = "${var.prefix} EKS secrets"
+  enable_key_rotation     = true
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "AccountAdmin"
+      Effect    = "Allow"
+      Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" }
+      Action    = "kms:*"
+      Resource  = "*"
+    }]
+  })
+  tags = local.tags
+}
+
 resource "aws_eks_cluster" "main" {
   name     = "${var.prefix}-eks"
   role_arn = aws_iam_role.eks.arn
   vpc_config {
     subnet_ids = concat(aws_subnet.public[*].id, aws_subnet.private[*].id)
   }
+  encryption_config {
+    resources = ["secrets"]
+    provider {
+      key_arn = aws_kms_key.eks.arn
+    }
+  }
+  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
   tags       = local.tags
   depends_on = [aws_iam_role_policy_attachment.eks_cluster]
 }
@@ -432,7 +486,8 @@ resource "aws_eks_node_group" "main" {
 # --- KindAPIGatewayStage ------------------------------------------------------
 
 resource "aws_api_gateway_rest_api" "main" {
-  name = "${var.prefix}-api"
+  name                     = "${var.prefix}-api"
+  minimum_compression_size = 1024
   body = jsonencode({
     openapi = "3.0.1"
     info    = { title = "${var.prefix}-api", version = "1" }
@@ -464,7 +519,27 @@ resource "aws_api_gateway_stage" "main" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
   deployment_id = aws_api_gateway_deployment.main.id
   stage_name    = "verify"
-  tags          = local.tags
+  # The integration is a MOCK, so the client certificate is never presented to
+  # anything; it is here so the example does not teach a stage without one.
+  client_certificate_id = aws_api_gateway_client_certificate.main.id
+  xray_tracing_enabled  = true
+  tags                  = local.tags
+}
+
+resource "aws_api_gateway_client_certificate" "main" {
+  description = "${var.prefix} backend client certificate"
+  tags        = local.tags
+}
+
+# No throttle or quota of its own, so it cannot mask the stage throttling the
+# killswitch sets and restores.
+resource "aws_api_gateway_usage_plan" "main" {
+  name = "${var.prefix}-plan"
+  api_stages {
+    api_id = aws_api_gateway_rest_api.main.id
+    stage  = aws_api_gateway_stage.main.stage_name
+  }
+  tags = local.tags
 }
 
 # Throttling set explicitly, so the killswitch has a prior value to put back.
@@ -475,6 +550,7 @@ resource "aws_api_gateway_method_settings" "main" {
   stage_name  = aws_api_gateway_stage.main.stage_name
   method_path = "*/*"
   settings {
+    metrics_enabled        = true
     throttling_rate_limit  = 100
     throttling_burst_limit = 50
   }
@@ -499,7 +575,7 @@ resource "aws_cloudfront_distribution" "main" {
 
   default_cache_behavior {
     target_origin_id       = "alb"
-    viewer_protocol_policy = "allow-all"
+    viewer_protocol_policy = "redirect-to-https"
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     forwarded_values {
@@ -524,7 +600,8 @@ resource "aws_cloudfront_distribution" "main" {
 }
 
 output "next" {
-  value = <<-EOT
+  description = "What to run once the account is seeded."
+  value       = <<-EOT
     Scratch account seeded. Now:
 
       aws-killswitch plan   --config killswitch.json
