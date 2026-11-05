@@ -5,9 +5,9 @@ the restore — in that order, because that is the order that keeps this safe.
 
 ## The policy
 
-[`killswitch.json`](killswitch.json) scopes to `Env=dev` in one region. The
-tool **refuses to run without a policy**, and this is the shape of the first
-one you should write:
+This policy scopes to `Env=dev` in one region; save it as `killswitch.json`,
+which the commands below read. The tool **refuses to run without a policy**,
+and this is the shape of the first one you should write:
 
 ```json
 {
