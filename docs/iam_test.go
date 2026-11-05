@@ -122,6 +122,34 @@ func TestFirePolicyDeletesOnlyNatGateways(t *testing.T) {
 	}
 }
 
+func TestOnlyLambdaAssumesTheExecutionRole(t *testing.T) {
+	b, err := os.ReadFile("iam-lambda-trust.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var p struct {
+		Statement []struct {
+			Effect    string
+			Action    actions
+			Principal json.RawMessage
+		}
+	}
+	if err := json.Unmarshal(b, &p); err != nil {
+		t.Fatal(err)
+	}
+	if len(p.Statement) != 1 {
+		t.Fatalf("trust policy has %d statements, want 1", len(p.Statement))
+	}
+	s := p.Statement[0]
+	if s.Effect != "Allow" || len(s.Action) != 1 || s.Action[0] != "sts:AssumeRole" {
+		t.Errorf("trust statement = %s %v, want Allow sts:AssumeRole", s.Effect, s.Action)
+	}
+	var principal map[string]string
+	if err := json.Unmarshal(s.Principal, &principal); err != nil || len(principal) != 1 || principal["Service"] != "lambda.amazonaws.com" {
+		t.Errorf("trust principal = %s, want only Service lambda.amazonaws.com", s.Principal)
+	}
+}
+
 func TestLambdaExtraCannotChangeAResource(t *testing.T) {
 	for _, a := range allowed(load(t, "iam-lambda-extra.json")) {
 		if !strings.HasPrefix(a, "logs:") && !strings.HasPrefix(a, "s3:List") && !strings.HasPrefix(a, "s3:Get") {
