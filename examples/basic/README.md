@@ -5,9 +5,9 @@ the restore — in that order, because that is the order that keeps this safe.
 
 ## The policy
 
-[`killswitch.json`](killswitch.json) scopes to `Env=dev` in one region. The
-tool **refuses to run without a policy**, and this is the shape of the first
-one you should write:
+This policy scopes to `Env=dev` in one region; save it as `killswitch.json`,
+which the commands below read by default. The tool **refuses to run without a
+policy**, and this is the shape of the first one you should write:
 
 ```json
 {
@@ -36,7 +36,7 @@ switch must not be able to destroy its own restore record.
 ## Plan — this changes nothing
 
 ```sh
-aws-killswitch plan -config killswitch.json
+aws-killswitch plan
 ```
 
 ```text
@@ -77,8 +77,8 @@ resource tagged protected with an empty value was tagged for a reason.
 ## Fire, against a scratch account
 
 ```sh
-aws-killswitch fire -config killswitch.json          # still a dry run
-aws-killswitch fire -config killswitch.json --yes    # actually stops things
+aws-killswitch fire          # still a dry run
+aws-killswitch fire --yes    # actually stops things
 ```
 
 The restore record is written and **read back** before anything changes. If
@@ -89,8 +89,8 @@ with no record of how to start it is an outage of unknown length.
 ## Put it back — the half that matters
 
 ```sh
-aws-killswitch status -config killswitch.json
-aws-killswitch restore -config killswitch.json 20260802-021500 --yes
+aws-killswitch status
+aws-killswitch restore 20260802-021500 --yes
 ```
 
 Do this in the same sitting as your first fire. A kill switch whose restore has
@@ -107,8 +107,8 @@ database by itself:
 ## Wire it to a threshold
 
 ```sh
-aws-killswitch spend -config killswitch.json --threshold 500 \
-  || aws-killswitch fire -config killswitch.json --yes
+aws-killswitch spend --threshold 500 \
+  || aws-killswitch fire --yes
 ```
 
 Cost Explorer lags by hours, so this catches slow burn and nothing sudden. For
