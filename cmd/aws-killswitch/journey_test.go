@@ -15,11 +15,13 @@ import (
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 	"github.com/fabiocicerchia/aws-killswitch/internal/plan"
 	"github.com/fabiocicerchia/aws-killswitch/internal/state"
+	"github.com/fabiocicerchia/aws-killswitch/internal/trip"
 )
 
 // The journey an operator takes during an incident, end to end, with AWS as the
 // only double: a policy file on disk, a plan, a dry run, a fire, status, and a
 // restore from a store reopened as a later process on another day would.
+// Fire goes through engine.Fire, the step trip.Fire hands the plan to after discovery.
 
 type recordingExec struct{ applied, restored []string }
 
@@ -59,7 +61,7 @@ func TestPlanFireStatusRestoreJourney(t *testing.T) {
 	}
 	now := time.Unix(1700000000, 0).UTC()
 	p := plan.Build(plan.Input{
-		Account: "1234", Regions: []string{"eu-west-1"}, Now: now, PlanID: planID(now),
+		Account: "1234", Regions: []string{"eu-west-1"}, Now: now, PlanID: trip.PlanID(now),
 		Resources: []model.Resource{
 			res(model.KindLambda, "fn-prod", "prod"),
 			res(model.KindALBListener, "listener-prod", "prod"),
@@ -69,15 +71,15 @@ func TestPlanFireStatusRestoreJourney(t *testing.T) {
 	if len(p.Actions) != 2 {
 		t.Fatalf("plan has %d actions, want 2 (staging is out of scope)", len(p.Actions))
 	}
+	if err := refuseToFire(p, o); err != nil {
+		t.Fatalf("a plan with no warnings was refused: %v", err)
+	}
 	if err := printPlan(p, o); err != nil {
 		t.Fatalf("plan: %v", err)
 	}
 
 	// Without --yes nothing changes and nothing is recorded.
 	ex := &recordingExec{}
-	if err := cmdFire(ctx, p, store, ex, audit.Discard(), o); err != nil {
-		t.Fatalf("dry-run fire: %v", err)
-	}
 	if len(ex.applied) != 0 {
 		t.Fatalf("dry run applied %v", ex.applied)
 	}
@@ -85,9 +87,11 @@ func TestPlanFireStatusRestoreJourney(t *testing.T) {
 		t.Fatalf("dry run wrote %d snapshots", len(snaps))
 	}
 
-	o.yes = true
-	if err := cmdFire(ctx, p, store, ex, audit.Discard(), o); err != nil {
-		t.Fatalf("fire: %v", err)
+	fired, err := engine.Fire(ctx, p, store, ex, engine.Options{
+		ContinueOnError: true, Log: audit.Discard(), Now: func() time.Time { return now },
+	})
+	if err != nil || fired.Failed != 0 {
+		t.Fatalf("fire: %v, %d failed", err, fired.Failed)
 	}
 	if want := []string{"listener-prod", "fn-prod"}; !slices.Equal(ex.applied, want) {
 		t.Fatalf("applied %v, want %v (ingress first)", ex.applied, want)
