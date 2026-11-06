@@ -194,9 +194,28 @@ func Run(
 
 	// The second read. Anything that reports itself unchanged after settling is
 	// a finding, whatever the API said when it was called.
-	after := rep.reread(ctx, d, opt)
+	rep.checkFire(p.Actions, before, rep.reread(ctx, d, opt))
+
+	// --- restore ------------------------------------------------------------
+	restored, err := engine.Restore(ctx, fired.Snapshot, st, ex, engine.Options{
+		Now: func() time.Time { return now().UTC() },
+	})
+	rep.RestoreOK, rep.RestoreFailed = restored.Changed, restored.Failed
+	if err != nil {
+		rep.Errors = append(rep.Errors, "restore: "+err.Error())
+		return rep, err
+	}
+
+	// The restore path is the product. Every resource has to read back as it
+	// was BEFORE the fire, not merely "different from during it".
+	rep.checkRestore(before, rep.reread(ctx, d, opt))
+	return rep, nil
+}
+
+// checkFire compares each fired resource with how it reads after the fire.
+func (rep *Report) checkFire(actions []model.Action, before, after []model.Resource) {
 	byID := indexByID(after)
-	for _, a := range p.Actions {
+	for _, a := range actions {
 		got, ok := byID[a.Resource.ID]
 		if !ok {
 			// Gone entirely. Correct for a NAT gateway, which cannot be stopped
@@ -223,20 +242,11 @@ func Run(
 		}
 		rep.FireVerified++
 	}
+}
 
-	// --- restore ------------------------------------------------------------
-	restored, err := engine.Restore(ctx, fired.Snapshot, st, ex, engine.Options{
-		Now: func() time.Time { return now().UTC() },
-	})
-	rep.RestoreOK, rep.RestoreFailed = restored.Changed, restored.Failed
-	if err != nil {
-		rep.Errors = append(rep.Errors, "restore: "+err.Error())
-		return rep, err
-	}
-
-	// The restore path is the product. Every resource has to read back as it
-	// was BEFORE the fire, not merely "different from during it".
-	final := rep.reread(ctx, d, opt)
+// checkRestore compares every resource found before the fire with how it
+// reads after the restore.
+func (rep *Report) checkRestore(before, final []model.Resource) {
 	finalByID := indexByID(final)
 	for _, r := range before {
 		got, ok := finalByID[r.ID]
@@ -269,7 +279,6 @@ func Run(
 			Detail: "a restored NAT gateway is a new one with a new id, so this is counted, not matched",
 		})
 	}
-	return rep, nil
 }
 
 // reread waits for the account to settle and then reads it. Polling rather
