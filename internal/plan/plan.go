@@ -72,12 +72,74 @@ func refuse(r model.Resource, reason string) (model.Action, model.Refusal, bool)
 // actionFor decides what stopping one resource means, or refuses it.
 func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, bool) {
 	switch r.Kind {
+	case model.KindALBListener, model.KindCloudFront, model.KindAPIGatewayStage:
+		return ingressAction(r)
+
+	case model.KindLambda, model.KindECSService, model.KindASG, model.KindEKSNodegroup:
+		return computeAction(r)
+
+	case model.KindEC2Instance:
+		return instanceAction(r, p)
+
+	case model.KindNATGateway:
+		if !p.DeleteNATGateways {
+			return refuse(r, "NAT gateways can only be deleted, not stopped; set delete_nat_gateways to include them")
+		}
+		return model.Action{
+			Resource: r, Phase: model.PhaseNetwork,
+			Op:      "delete the NAT gateway",
+			Warning: r.Ref() + ": deletion is not a stop — restore recreates it with a new address and repoints route tables",
+		}, model.Refusal{}, true
+
+	case model.KindRDSInstance, model.KindRDSCluster:
+		return databaseAction(r, p)
+	}
+
+	return refuse(r, "unsupported kind "+string(r.Kind))
+}
+
+// ingressAction decides the kinds that stop traffic at the edge: an ALB
+// listener, a CloudFront distribution, an API Gateway stage.
+func ingressAction(r model.Resource) (model.Action, model.Refusal, bool) {
+	switch r.Kind {
 	case model.KindALBListener:
 		return model.Action{
 			Resource: r, Phase: model.PhaseIngress,
 			Op: "return a fixed 503 instead of forwarding to the target group",
 		}, model.Refusal{}, true
 
+	case model.KindCloudFront:
+		if on, ok := model.PriorBool(r.Prior, "enabled"); ok && !on {
+			return refuse(r, "already disabled")
+		}
+		return model.Action{
+			Resource: r, Phase: model.PhaseIngress,
+			Op: "disable the distribution",
+			// Worth saying out loud: a disable is not instant, and someone
+			// watching the bill needs to know why nothing changed for a while.
+			Warning: r.Ref() + ": CloudFront takes minutes to propagate a disable to every edge, " +
+				"and returns errors to users while it does",
+		}, model.Refusal{}, true
+
+	case model.KindAPIGatewayStage:
+		if rate, ok := model.PriorFloat(r.Prior, "rate_limit"); ok && rate == 0 {
+			return refuse(r, "already throttled to zero")
+		}
+		return model.Action{
+			Resource: r, Phase: model.PhaseIngress,
+			Op:      "throttle the stage to 0 requests/second",
+			Warning: r.Ref() + ": callers get 429, not a connection error — a client with retries will keep trying",
+		}, model.Refusal{}, true
+
+	default:
+		return refuse(r, "unsupported kind "+string(r.Kind))
+	}
+}
+
+// computeAction decides the kinds that are stopped by scaling them to zero:
+// Lambda concurrency, an ECS service, an ASG, an EKS nodegroup.
+func computeAction(r model.Resource) (model.Action, model.Refusal, bool) {
+	switch r.Kind {
 	case model.KindLambda:
 		// The cleanest stop in AWS: instant, exact, and there is nothing to
 		// lose. In-flight invocations finish; new ones are throttled.
@@ -104,9 +166,6 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 			Op: "set min/desired/max to 0",
 		}, model.Refusal{}, true
 
-	case model.KindEC2Instance:
-		return instanceAction(r, p)
-
 	case model.KindEKSNodegroup:
 		if n, ok := model.PriorInt(r.Prior, "desired_size"); ok && n == 0 {
 			return refuse(r, "already at zero")
@@ -119,44 +178,9 @@ func actionFor(r model.Resource, p policy.Policy) (model.Action, model.Refusal, 
 			Op: "set min/desired node count to 0",
 		}, model.Refusal{}, true
 
-	case model.KindCloudFront:
-		if on, ok := model.PriorBool(r.Prior, "enabled"); ok && !on {
-			return refuse(r, "already disabled")
-		}
-		return model.Action{
-			Resource: r, Phase: model.PhaseIngress,
-			Op: "disable the distribution",
-			// Worth saying out loud: a disable is not instant, and someone
-			// watching the bill needs to know why nothing changed for a while.
-			Warning: r.Ref() + ": CloudFront takes minutes to propagate a disable to every edge, " +
-				"and returns errors to users while it does",
-		}, model.Refusal{}, true
-
-	case model.KindAPIGatewayStage:
-		if rate, ok := model.PriorFloat(r.Prior, "rate_limit"); ok && rate == 0 {
-			return refuse(r, "already throttled to zero")
-		}
-		return model.Action{
-			Resource: r, Phase: model.PhaseIngress,
-			Op:      "throttle the stage to 0 requests/second",
-			Warning: r.Ref() + ": callers get 429, not a connection error — a client with retries will keep trying",
-		}, model.Refusal{}, true
-
-	case model.KindNATGateway:
-		if !p.DeleteNATGateways {
-			return refuse(r, "NAT gateways can only be deleted, not stopped; set delete_nat_gateways to include them")
-		}
-		return model.Action{
-			Resource: r, Phase: model.PhaseNetwork,
-			Op:      "delete the NAT gateway",
-			Warning: r.Ref() + ": deletion is not a stop — restore recreates it with a new address and repoints route tables",
-		}, model.Refusal{}, true
-
-	case model.KindRDSInstance, model.KindRDSCluster:
-		return databaseAction(r, p)
+	default:
+		return refuse(r, "unsupported kind "+string(r.Kind))
 	}
-
-	return refuse(r, "unsupported kind "+string(r.Kind))
 }
 
 // alreadyZero reports that a resource is already at the capacity the plan would
