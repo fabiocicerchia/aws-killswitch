@@ -137,7 +137,7 @@ than none, because nobody is watching by then. Databases are excluded by
 default; when included, the plan warns, and `status` counts down:
 
 ```text
-ks-20260802-021500  fired 2026-08-02T02:15:00Z  6 changed of 6
+20260802-021500  fired 2026-08-02T02:15:00Z  6 changed of 6
     ! rds-instance orders-prod: AWS restarts this in 5.0 days (2026-08-09T02:15:00Z)
 ```
 

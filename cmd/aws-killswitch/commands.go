@@ -15,12 +15,60 @@ import (
 	"github.com/fabiocicerchia/aws-killswitch/internal/engine"
 	"github.com/fabiocicerchia/aws-killswitch/internal/model"
 	"github.com/fabiocicerchia/aws-killswitch/internal/plan"
+	"github.com/fabiocicerchia/aws-killswitch/internal/policy"
 	"github.com/fabiocicerchia/aws-killswitch/internal/state"
+	"github.com/fabiocicerchia/aws-killswitch/internal/trip"
 )
 
+// cmdFire takes the same internal/trip path as the Lambda, so the CLI gets the
+// same cooldown: a second `fire --yes` inside it would otherwise snapshot the
+// stopped account as its prior state. --force overrides it, for a human who
+// has decided that is what they want.
 func cmdFire(
-	ctx context.Context, p model.Plan, store state.Store, ex engine.Executor, log *audit.Log, o options,
+	ctx context.Context, cfg aws.Config, pol policy.Policy, account string, store state.Store, log *audit.Log, o options,
 ) error {
+	if !o.yes {
+		p, _, discoveryErrs := trip.Plan(ctx, cfg, pol, account, time.Now().UTC())
+		warnAll(discoveryErrs)
+		if err := refuseToFire(p, o); err != nil {
+			return err
+		}
+		if err := printPlan(p, o); err != nil {
+			return err
+		}
+		fmt.Println("\nThis was a dry run — --yes was not passed, so nothing changed.")
+		return nil
+	}
+
+	res, err := trip.Fire(ctx, cfg, pol, account, store, log, trip.Options{
+		Force: o.force, SkipCooldown: o.force,
+	})
+	warnAll(res.Discovery)
+	if err != nil {
+		return err
+	}
+	if !res.Fired {
+		if res.Plan.ID != "" { // planned, then refused; the cooldown refuses before planning
+			if err := refuseToFire(res.Plan, o); err != nil {
+				return err
+			}
+		}
+		return failWith(exitUsage, fmt.Errorf("%s; pass --force to fire anyway", res.Skipped))
+	}
+	p := res.Plan
+	fmt.Printf("plan %s: %d changed, %d failed\n", p.ID, res.Changed, res.Failed)
+	for _, d := range engine.Deadlines(res.Snapshot, time.Now().UTC()) {
+		fmt.Printf("  ! %s\n", d)
+	}
+	fmt.Printf("\nRestore with:  aws-killswitch restore %s --yes\n", p.ID)
+	if res.Failed > 0 {
+		return fmt.Errorf("%d resources could not be stopped; see the audit log", res.Failed)
+	}
+	return nil
+}
+
+// refuseToFire is why a plan must not be fired as asked, or nil.
+func refuseToFire(p model.Plan, o options) error {
 	if p.IsEmpty() {
 		return errors.New("nothing in scope to stop")
 	}
@@ -30,28 +78,6 @@ func cmdFire(
 			fmt.Fprintf(os.Stderr, "  ! %s\n", a)
 		}
 		return failWith(exitUsage, errors.New("refusing to fire without acknowledgement"))
-	}
-
-	opt := engine.Options{DryRun: !o.yes, ContinueOnError: true, Log: log}
-	if !o.yes {
-		if err := printPlan(p, o); err != nil {
-			return err
-		}
-		fmt.Println("\nThis was a dry run — --yes was not passed, so nothing changed.")
-		return nil
-	}
-
-	res, err := engine.Fire(ctx, p, store, ex, opt)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("plan %s: %d changed, %d failed\n", p.ID, res.Changed, res.Failed)
-	for _, d := range engine.Deadlines(res.Snapshot, time.Now().UTC()) {
-		fmt.Printf("  ! %s\n", d)
-	}
-	fmt.Printf("\nRestore with:  aws-killswitch restore %s --yes\n", p.ID)
-	if res.Failed > 0 {
-		return fmt.Errorf("%d resources could not be stopped; see the audit log", res.Failed)
 	}
 	return nil
 }

@@ -12,7 +12,7 @@ compute, and records exactly how to put it all back.
 
 ```console
 $ aws-killswitch plan
-plan ks-20260802-021500 — account 123456789012, regions eu-west-1
+plan 20260802-021500 — account 123456789012, regions eu-west-1
 
 INGRESS — stop the traffic that drives the spend, before draining what serves it
   alb-listener   api-prod:443                     return a fixed 503 instead of forwarding to the target group
@@ -67,7 +67,7 @@ aws-killswitch plan                        # read-only, safe against production
 aws-killswitch fire                        # still a dry run
 aws-killswitch fire --yes                  # actually stop it
 aws-killswitch status                      # what is stopped, and any deadlines
-aws-killswitch restore ks-20260802-021500 --yes
+aws-killswitch restore 20260802-021500 --yes
 aws-killswitch spend --threshold 500       # exit 3 when month-to-date is over
 ```
 
