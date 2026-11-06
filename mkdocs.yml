@@ -17,6 +17,7 @@ docs_dir: docs
 exclude_docs: |
   index.html
   requirements.txt
+  *_test.go
 
 theme:
   name: material

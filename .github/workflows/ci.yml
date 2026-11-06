@@ -33,3 +33,7 @@ jobs:
 
       - name: Test
         run: make test
+
+      # make test leaves coverage.out behind; publish its total on the run page.
+      - name: Coverage
+        run: go tool cover -func=coverage.out | tail -n 1 >> "$GITHUB_STEP_SUMMARY"
