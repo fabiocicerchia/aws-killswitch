@@ -115,7 +115,9 @@ func TestFirePolicyDeletesOnlyNatGateways(t *testing.T) {
 			}
 		}
 	}
-	for _, a := range []string{"s3:DeleteObject", "ec2:DeleteVolume", "ec2:DeleteSnapshot", "rds:DeleteDBInstance", "dynamodb:DeleteTable"} {
+	for _, a := range []string{
+		"s3:DeleteObject", "ec2:DeleteVolume", "ec2:DeleteSnapshot", "rds:DeleteDBInstance", "dynamodb:DeleteTable",
+	} {
 		if !denied[a] {
 			t.Errorf("fire policy does not explicitly deny %q", a)
 		}
@@ -145,7 +147,8 @@ func TestOnlyLambdaAssumesTheExecutionRole(t *testing.T) {
 		t.Errorf("trust statement = %s %v, want Allow sts:AssumeRole", s.Effect, s.Action)
 	}
 	var principal map[string]string
-	if err := json.Unmarshal(s.Principal, &principal); err != nil || len(principal) != 1 || principal["Service"] != "lambda.amazonaws.com" {
+	err = json.Unmarshal(s.Principal, &principal)
+	if err != nil || len(principal) != 1 || principal["Service"] != "lambda.amazonaws.com" {
 		t.Errorf("trust principal = %s, want only Service lambda.amazonaws.com", s.Principal)
 	}
 }

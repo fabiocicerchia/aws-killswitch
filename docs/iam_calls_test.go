@@ -43,7 +43,9 @@ func recordingConfig(calls map[string]bool) aws.Config {
 			// Serialize, not Initialize: the service and operation names are
 			// only on the context once Initialize has run.
 			return s.Serialize.Add(middleware.SerializeMiddlewareFunc("record",
-				func(ctx context.Context, _ middleware.SerializeInput, _ middleware.SerializeHandler) (middleware.SerializeOutput, middleware.Metadata, error) {
+				func(ctx context.Context, _ middleware.SerializeInput, _ middleware.SerializeHandler) (
+					middleware.SerializeOutput, middleware.Metadata, error,
+				) {
 					svc, op := awsmiddleware.GetServiceID(ctx), awsmiddleware.GetOperationName(ctx)
 					// API Gateway is authorised by HTTP verb, not operation name.
 					if svc == "API Gateway" {
