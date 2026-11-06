@@ -130,8 +130,10 @@ func ingressAction(r model.Resource) (model.Action, model.Refusal, bool) {
 			Op:      "throttle the stage to 0 requests/second",
 			Warning: r.Ref() + ": callers get 429, not a connection error — a client with retries will keep trying",
 		}, model.Refusal{}, true
+
+	default:
+		return refuse(r, "unsupported kind "+string(r.Kind))
 	}
-	return refuse(r, "unsupported kind "+string(r.Kind))
 }
 
 // computeAction decides the kinds that are stopped by scaling them to zero:
@@ -175,8 +177,10 @@ func computeAction(r model.Resource) (model.Action, model.Refusal, bool) {
 			// API would have rejected is not a restore.
 			Op: "set min/desired node count to 0",
 		}, model.Refusal{}, true
+
+	default:
+		return refuse(r, "unsupported kind "+string(r.Kind))
 	}
-	return refuse(r, "unsupported kind "+string(r.Kind))
 }
 
 // alreadyZero reports that a resource is already at the capacity the plan would
