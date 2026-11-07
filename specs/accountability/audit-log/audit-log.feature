@@ -36,6 +36,6 @@ Feature: Keeping an answerable audit log of what the killswitch did
   Scenario: An audit log that cannot be opened is reported but does not stop the run
     Given the audit log path points to a location the operator cannot write
     When the operator runs aws-killswitch fire
-    Then a warning "audit log unavailable (<reason>); continuing" is printed on standard error
+    Then a warning "warning: audit log unavailable (<reason>); continuing" is printed on standard error
     And the fire goes ahead
     And no audit entries are recorded for this run

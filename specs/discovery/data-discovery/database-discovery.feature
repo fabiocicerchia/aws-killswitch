@@ -46,6 +46,6 @@ Feature: Finding databases that can be paused
     Given the database listing in "eu-west-1" fails partway, for example because the cluster listing is denied
     And database instance "billing-db" was already listed before the failure
     When the operator runs a plan
-    Then the operator sees a discovery error starting "rds in eu-west-1:"
+    Then the operator sees a discovery warning starting "warning: rds in eu-west-1:"
     And the plan contains no database from "eu-west-1", including "billing-db"
     And resources from other services in "eu-west-1" still appear in the plan

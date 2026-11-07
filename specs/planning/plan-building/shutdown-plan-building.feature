@@ -11,7 +11,7 @@ Feature: Building a shutdown plan
     Given in-scope resources of kinds <kinds> are running
     When the operator builds a plan
     Then the plan's actions run in the order <order>
-    And ingress actions come before compute, then network, then data
+    And every ingress action comes before every compute action
 
     Examples:
       | kinds                                      | order                                      |

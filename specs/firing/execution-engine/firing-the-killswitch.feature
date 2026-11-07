@@ -38,9 +38,9 @@ Feature: Firing the killswitch with a restore record kept current
   @id:firing.execution-engine.004 @rule:firing.engine.halt-when-record-cannot-be-updated @verified @source:internal/engine/engine.go#Fire @test:internal/engine/engine_test.go#TestFireStopsWhenTheRecordCanNoLongerBeUpdated @questionable
   Scenario: A fire stops changing resources once its restore record can no longer be updated
     Given the plan stops functions fn-1, fn-2 and fn-3
-    And the state store starts failing after fn-1 has been stopped
+    And the state store records the change to fn-1, then fails every later write
     When the operator fires the plan
-    Then the fire stops before stopping fn-3
+    Then fn-2 is stopped but the fire stops before stopping fn-3
     And the fire fails with a message telling the operator to run restore against the plan
 
   @id:firing.execution-engine.005 @rule:firing.engine.dry-run-touches-nothing @verified @source:internal/engine/engine.go#Fire @test:internal/engine/engine_test.go#TestDryRunWritesNothingAndChangesNothing

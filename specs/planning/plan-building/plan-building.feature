@@ -3,7 +3,7 @@ Feature: Building a shutdown plan that is safe to run and to reverse
   Gives operators a reviewed plan that runs in a safe order, is the same every time it is built, and makes them confirm the risky parts.
 
   Background:
-    Given Given a scope policy selecting resources tagged Env=prod
+    Given a scope policy selecting resources tagged Env=prod
 
   @id:planning.plan-building.005 @rule:planning.order.ingress-before-compute-before-network-before-data @verified @source:internal/plan/plan.go#sortPlan @test:internal/plan/plan_test.go#TestIngressIsCutBeforeComputeIsDrained @test:internal/plan/plan_test.go#TestASGIsScaledBeforeLooseInstancesAreStopped @test:internal/plan/plan_test.go#TestNodegroupIsScaledBeforeLooseInstancesAndAfterLambda @test:internal/plan/plan_test.go#TestCloudFrontIsCutFirstOfAll
   Scenario: Traffic is cut before compute is drained, and managed groups go before loose instances

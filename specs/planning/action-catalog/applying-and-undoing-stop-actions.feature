@@ -19,7 +19,7 @@ Feature: Applying and undoing each stop action
       | ECS service             | web/api               | scaled to a desired count of 0                                                    |
       | auto-scaling group      | batch-asg             | set to minimum 0, maximum 0, desired 0                                            |
       | EC2 instance            | i-0abc1234def567890   | stopped                                                                           |
-      | EKS nodegroup           | prod/general          | scaled to 0 nodes                                                                 |
+      | EKS nodegroup           | prod/general          | scaled to a minimum and desired size of 0, maximum left unchanged                 |
       | CloudFront distribution | E2EXAMPLE123          | disabled                                                                          |
       | API Gateway stage       | shop-api/prod         | throttled to 0 requests per second with 0 burst                                   |
       | NAT gateway             | nat-0abc1234def567890 | deleted                                                                           |

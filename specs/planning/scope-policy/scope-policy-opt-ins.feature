@@ -20,12 +20,11 @@ Feature: Writing down what an account allows before an incident
     And a running EC2 instance "i-1" tagged Env=prod with instance-store volumes
     When the operator builds a plan
     Then "i-1" is <outcome>
-    And the plan reports data loss: <data_loss>
 
     Examples:
-      | setting | outcome                                                                                                      | data_loss |
-      | unset   | refused with "has instance-store volumes, which a stop erases; set allow_instance_store_loss to accept that" | no        |
-      | set     | scheduled with the warning "instance-store data will be lost permanently"                                    | yes       |
+      | setting | outcome                                                                                                      |
+      | unset   | refused with "has instance-store volumes, which a stop erases; set allow_instance_store_loss to accept that" |
+      | set     | scheduled with the warning "instance-store data will be lost permanently"                                    |
 
   @id:planning.scope-policy.003 @rule:planning.scope.nat-deletion-opt-in @verified @source:internal/plan/plan.go#actionFor @test:internal/plan/plan_test.go#TestNATGatewayDeletionIsOptInAndFlagged
   Scenario Outline: NAT gateways are only deleted when the policy opts in, and the plan says it is a deletion

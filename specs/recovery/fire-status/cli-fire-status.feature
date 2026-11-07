@@ -10,7 +10,7 @@ Feature: Listing past fires
     Given plan 20261107-104500 fired 3 of 4 resources in account 123456789012 and was not restored
     When the operator runs status
     Then "20261107-104500  fired 2026-11-07T10:45:00Z  3 changed of 4  (123456789012)" is printed
-    And each pending deadline is listed beneath on a "    ! " line
+    And each stopped database's restart deadline, passed or not, is listed beneath it on a "    ! " line
 
   @id:recovery.fire-status.002 @rule:recovery.status.empty-store-message @inferred @source:cmd/aws-killswitch/commands.go#cmdStatus
   Scenario: Status with no records says nothing has been fired from here

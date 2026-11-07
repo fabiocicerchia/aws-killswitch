@@ -32,7 +32,7 @@ Feature: Loading the policy, credentials and restore-record location
 
   @id:cli.configuration-wiring.003 @rule:cli.config.unusable-credentials-refused @inferred @source:cmd/aws-killswitch/main.go#run
   Scenario: Unusable AWS credentials stop every command
-    Given no usable AWS credentials are available
+    Given the AWS configuration cannot be loaded, for example the named profile does not exist
     When the operator runs plan
     Then the error begins "loading AWS credentials:"
     And the process exits 78
@@ -41,7 +41,7 @@ Feature: Loading the policy, credentials and restore-record location
   Scenario Outline: An unavailable audit log or a refused discovery call warns but does not stop the run
     Given <problem>
     When the operator runs plan
-    Then a line beginning "warning:" describing the problem is printed to stderr
+    Then the line "<warning>" is printed to stderr
     And the plan is still printed
     And the process exits 0
 

@@ -3,7 +3,7 @@ Feature: Deciding what the killswitch leaves alone
   Gives operators a guarantee that unrecoverable storage and deliberately protected resources are never stopped, and that the plan explains every resource it leaves alone.
 
   Background:
-    Given Given a scope policy selecting resources tagged Env=prod
+    Given a scope policy selecting resources tagged Env=prod
 
   @id:planning.protected-resources.008 @rule:planning.protected.stateful-storage-never-touched @verified @source:internal/plan/plan.go#Build @test:internal/plan/plan_test.go#TestStatefulStorageIsNeverTouched
   Scenario Outline: Stateful storage is never scheduled, whatever the scope
@@ -17,7 +17,7 @@ Feature: Deciding what the killswitch leaves alone
       | arn                                                               |
       | arn:aws:s3:::example-bucket                                       |
       | arn:aws:dynamodb:eu-west-1:123456789012:table/orders              |
-      | arn:aws:elasticfilesystem:eu-west-1:123456789012:file-system/fs-1 |
+      | arn:aws:fsx:eu-west-1:123456789012:file-system/fs-1               |
       | arn:aws:backup:eu-west-1:123456789012:vault/default               |
 
   @id:planning.protected-resources.009 @rule:planning.protected.protect-tag-unprotects-only-when-explicitly-false @verified @source:internal/policy/policy.go#isProtected @test:internal/plan/plan_test.go#TestProtectTagOnlyIgnoredWhenExplicitlyFalse

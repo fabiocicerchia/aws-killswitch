@@ -17,7 +17,7 @@ Feature: Protecting resources from the killswitch
       | resource                                                          |
       | arn:aws:s3:::example-bucket                                       |
       | arn:aws:dynamodb:eu-west-1:123456789012:table/orders              |
-      | arn:aws:elasticfilesystem:eu-west-1:123456789012:file-system/fs-1 |
+      | arn:aws:fsx:eu-west-1:123456789012:file-system/fs-1               |
       | arn:aws:backup:eu-west-1:123456789012:vault/default               |
 
   @id:planning.protected-resources.005 @rule:plan.protection.out-of-scope-explained @verified @source:internal/plan/plan.go#Build @test:internal/plan/plan_test.go#TestProtectTagWinsOverEveryScope @test:internal/plan/plan_test.go#TestProtectTagOnlyIgnoredWhenExplicitlyFalse @test:internal/plan/plan_test.go#TestOutOfScopeResourcesAreExplained

@@ -51,6 +51,6 @@ Feature: Provisioning a scratch account for verification
   @id:assurance.scratch-account.004 @rule:assurance.scratch-account.seed-output-next-steps @inferred @source:examples/scratch-account/main.tf#next
   Scenario: Seeding the scratch account tells the operator to plan, verify and then destroy
     When the operator applies the scratch-account module
-    Then the output lists "aws-killswitch plan --config killswitch.json"
+    Then the output lists "aws-killswitch plan   --config killswitch.json"
     And the output lists "aws-killswitch verify --config killswitch.json --yes"
     And the output tells the operator to run "terraform destroy" before the bill notices

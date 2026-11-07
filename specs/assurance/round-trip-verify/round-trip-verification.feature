@@ -12,7 +12,7 @@ Feature: Verifying a fire and restore round trip
     And stopping the ECS service fails with AccessDenied
     When the operator runs the verification
     Then the report counts 1 failed stop
-    And the Lambda function is still stopped and counted as changed
+    And the Lambda function is stopped anyway and counted as changed
     And the verification does not pass
 
   @id:assurance.round-trip-verify.006 @rule:assurance.round-trip.restore-halts-on-first-failure @inferred @source:internal/verify/verify.go#Run @questionable
@@ -21,7 +21,7 @@ Feature: Verifying a fire and restore round trip
     And restoring one of them fails
     When the operator runs the verification
     Then the report counts the restores done so far and 1 failed
-    And the report's errors begin with 'restore:'
+    And the report's errors include one beginning 'restore: restoring'
     And resources after the failed one are left stopped
     And no restore read-back is reported
 

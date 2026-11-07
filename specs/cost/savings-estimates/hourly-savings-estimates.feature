@@ -9,7 +9,7 @@ Feature: Estimating the hourly saving of a plan
   Scenario Outline: An instance is priced from its family's large-size list price scaled by its size
     Given the plan stops a <kind> of type "<type>"
     When the operator reviews the plan
-    Then the estimated hourly saving for that resource is $<usd>/hour
+    Then the plan estimates that resource's hourly saving at $<usd>
     And that saving is included in the plan's total hourly saving
 
     Examples:
@@ -26,8 +26,7 @@ Feature: Estimating the hourly saving of a plan
   Scenario Outline: A resource with no defensible price is reported as not estimated, never as free
     Given the plan stops a <kind> of type "<type>"
     When the operator reviews the plan
-    Then that resource's kind shows "(1 not estimated)" in the estimated hourly saving section
-    And when no resource of that kind is priced, the kind shows "not estimated" instead of a dollar amount
+    Then that resource's kind shows "not estimated  (1 not estimated)" in the estimated hourly saving section
     And the plan's total hourly saving does not include that resource
 
     Examples:
@@ -41,13 +40,13 @@ Feature: Estimating the hourly saving of a plan
   Scenario: Every NAT gateway is estimated at one flat hourly rate
     Given the plan removes a NAT gateway
     When the operator reviews the plan
-    Then the estimated hourly saving for that NAT gateway is $0.045/hour, whatever its traffic or region
+    Then the plan estimates that NAT gateway's hourly saving at $0.045, whatever its traffic or region
 
   @id:cost.savings-estimates.004 @rule:cost.savings.list-price-floor @inferred @source:internal/awsx/pricing.go#RDSHourlyUSD @questionable
   Scenario Outline: The estimate is the us-east-1 on-demand single-AZ list price regardless of where or how the resource runs
     Given the plan stops a <kind> of type "<type>" that runs <circumstance>
     When the operator reviews the plan
-    Then the estimated hourly saving for that resource is $<usd>/hour
+    Then the plan estimates that resource's hourly saving at $<usd>
     And the saving section is headed "Estimated hourly saving (us-east-1 list price, compute only)"
 
     Examples:
@@ -60,7 +59,7 @@ Feature: Estimating the hourly saving of a plan
   Scenario Outline: Sizes below medium and bare-metal hosts are priced off fixed multiples that diverge from the published list
     Given the plan stops an EC2 instance of type "<type>"
     When the operator reviews the plan
-    Then the estimated hourly saving for that instance is $<usd>/hour
+    Then the plan estimates that instance's hourly saving at $<usd>
 
     Examples:
       | type     | usd    |

@@ -27,14 +27,14 @@ Feature: Finding the public entry points that let traffic in
 
     Examples:
       | stage default throttle                                     | restored throttle                                                      |
-      | no stage-wide default throttle                             | has no stage-wide default throttle again, so the account limit applies |
+      | no stage-wide default throttle                             | stays throttled to 0, and its restore fails with "no usable recorded throttle; refusing to guess" |
       | a stage-wide default of 100 requests per second, burst 200 | has a stage-wide default of 100 requests per second, burst 200 again   |
 
   @id:discovery.ingress-discovery.003 @rule:discovery.ingress.entry-points-named-as-known @inferred @source:internal/awsx/discover_ingress.go#apiStage
   Scenario Outline: Entry points are named in the plan the way the operator knows them
     Given the account has <entry point>
     When the operator runs a plan
-    Then the plan names it "<shown as>"
+    Then the plan names it "<shown as>", followed by its ID in brackets
 
     Examples:
       | entry point                                                           | shown as                      |

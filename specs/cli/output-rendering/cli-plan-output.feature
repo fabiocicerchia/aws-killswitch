@@ -19,11 +19,11 @@ Feature: Reading a shutdown plan
   @id:cli.output-rendering.003 @rule:cli.render.unpriced-not-shown-as-free @inferred @source:cmd/aws-killswitch/render.go#printSavings
   Scenario: Resources with no price estimate are reported as not estimated, never as free
     Given 3 EC2 instances are priced at $0.42/hour in total
-    And 1 EC2 instance and 1 SageMaker endpoint have no price estimate
+    And 1 EC2 instance and 1 Lambda function have no price estimate
     When the operator runs plan
     Then "Estimated hourly saving (us-east-1 list price, compute only):" is printed
-    And the EC2 line shows "$0.42/hour  (1 not estimated)"
-    And the SageMaker line shows "not estimated  (1 not estimated)"
+    And the ec2-instance line shows "$0.42/hour  (1 not estimated)"
+    And the lambda line shows "not estimated  (1 not estimated)"
 
   @id:cli.output-rendering.004 @rule:cli.render.empty-plan @inferred @source:cmd/aws-killswitch/render.go#printPlan
   Scenario: An empty plan says nothing would change and offers no fire hint
@@ -37,7 +37,7 @@ Feature: Reading a shutdown plan
   Scenario Outline: --json prints the result as indented JSON instead of text
     When the operator runs <command> --json
     Then <result> is printed to stdout as two-space-indented JSON
-    And no human-readable text is printed
+    And no human-readable text is printed to stdout
 
     Examples:
       | command            | result                      |

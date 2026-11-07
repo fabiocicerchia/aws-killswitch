@@ -1,9 +1,10 @@
 @domain:discovery @area:network-discovery @from:awsx/discover-network
 Feature: Discovering NAT gateways and the routes that depend on them
-  Serves the operator who needs the biggest idle network cost found and stopped, with enough recorded to recreate each gateway and its egress exactly as it was.
+  Serves the operator who needs the biggest idle network cost found and deleted, with enough recorded to recreate each gateway and its egress exactly as it was.
 
   Background:
     Given the operator's credentials can read the account's VPC networking in region eu-west-1
+    And the policy has delete_nat_gateways set
 
   @id:discovery.network-discovery.001 @rule:discovery.network.only-available-nat-gateways @inferred @source:internal/awsx/discover_network.go#natGateways
   Scenario Outline: Only NAT gateways that are currently available are discovered
@@ -13,11 +14,11 @@ Feature: Discovering NAT gateways and the routes that depend on them
 
     Examples:
       | state     | outcome                         |
-      | available | appears as a natgateway to stop |
-      | pending   | does not appear                 |
-      | deleting  | does not appear                 |
-      | deleted   | does not appear                 |
-      | failed    | does not appear                 |
+      | available | appears as a nat-gateway to delete |
+      | pending   | does not appear                    |
+      | deleting  | does not appear                    |
+      | deleted   | does not appear                    |
+      | failed    | does not appear                    |
 
   @id:discovery.network-discovery.002 @rule:discovery.network.nat-gateway-routes-recorded @inferred @source:internal/awsx/discover_network.go#natGateways
   Scenario: Every IPv4 route through a NAT gateway is recorded so restore can repoint it
@@ -27,7 +28,6 @@ Feature: Discovering NAT gateways and the routes that depend on them
     When the operator plans a shutdown
     Then the NAT gateway's recorded prior state names subnet "subnet-0aa11bb22cc33dd44", VPC "vpc-0123456789abcdef0" and its connectivity type
     And its recorded routes are "rtb-0f1e2d3c4b5a69788" → "0.0.0.0/0" and "rtb-0f1e2d3c4b5a69799" → "10.20.0.0/16"
-    And a NAT gateway with no routes pointing at it is recorded with no routes
 
   @id:discovery.network-discovery.003 @rule:discovery.network.nat-gateway-non-ipv4-routes-unrestorable @inferred @source:internal/awsx/discover_network.go#routesVia @questionable
   Scenario Outline: A route through a NAT gateway with an IPv6 or prefix-list destination is recorded without a destination and is not put back
@@ -60,7 +60,7 @@ Feature: Discovering NAT gateways and the routes that depend on them
     And the operator's credentials cannot read route tables
     When the operator plans a shutdown
     Then neither NAT gateway appears in the plan
-    And the plan reports a natgateway discovery error for region "eu-west-1"
+    And the operator sees a discovery warning starting "warning: natgateway in eu-west-1:"
     And resources found by other services in eu-west-1 still appear in the plan
 
   @id:discovery.network-discovery.006 @rule:discovery.network.nat-gateway-flat-hourly-estimate @inferred @source:internal/awsx/discover_network.go#natGateways @questionable

@@ -3,7 +3,7 @@ Feature: Keeping restore records in S3
   Operators keep each fire's restore record in an S3 bucket they own, so a restore still works from another machine, later, under pressure.
 
   Background:
-    Given the operator's policy names a state_uri of s3://my-ops-bucket/killswitch
+    Given the operator has an otherwise valid policy file
 
   @id:recovery.state-storage.001 @rule:recovery.state-storage.state-uri-must-be-s3 @verified @source:internal/state/s3.go#ParseURI @test:internal/state/state_test.go#TestParseURI
   Scenario Outline: A state location that is not an S3 bucket address is refused

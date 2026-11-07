@@ -7,7 +7,7 @@ Feature: Refusing a duplicate trip after a recent fire
 
   @id:automation.trip-cycle.010 @rule:automation.trip-cycle.cooldown-only-counts-live-fires @verified @source:internal/trip/trip.go#FiredRecently @test:internal/trip/trip_test.go#TestAFireOlderThanTheCooldownDoesNotBlockANewOne @test:internal/trip/trip_test.go#TestARestoredSnapshotDoesNotBlockANewFire @test:internal/trip/trip_test.go#TestAPlannedButNeverFiredSnapshotDoesNotBlock @test:internal/trip/trip_test.go#TestAFireStampedInTheFutureIsIgnored
   Scenario Outline: Only a fire that is still in effect and under an hour old holds the cooldown
-    Given the most recent restore record is <prior_record>
+    Given the only earlier restore record is <prior_record>
     When the budget alarm trips the killswitch
     Then the trip goes ahead and discovers, plans and fires as usual
 

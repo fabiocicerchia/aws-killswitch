@@ -9,7 +9,7 @@ Feature: Checking month-to-date spend against a threshold
   Scenario Outline: Spend above the threshold exits 3; at or below it reports what is left
     Given month-to-date spend is $<spend>
     When the operator runs spend --threshold 500
-    Then "month to date: $<spend> (<start> to <end>)" is printed
+    Then a "month to date: $<spend>" line with the reporting period is printed
     And <verdict line> is printed
     And the process exits <code>
 

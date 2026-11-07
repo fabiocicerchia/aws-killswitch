@@ -83,5 +83,5 @@ Feature: Firing and restoring from the command line
     Examples:
       | situation                                            | command                       | message                                               | code |
       | no plan id is given                                  | restore --yes                 | restore needs a plan id — see `aws-killswitch status` | 64   |
-      | no record exists for plan 20200101-000000            | restore 20200101-000000 --yes | the store's not-found error                           | 66   |
+      | no record exists for plan 20200101-000000            | restore 20200101-000000 --yes | no snapshot with that plan id: 20200101-000000        | 66   |
       | plan 20261107-104500 has already been fully restored | restore 20261107-104500 --yes | this snapshot records no changes to undo              | 66   |

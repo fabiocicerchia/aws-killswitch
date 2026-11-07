@@ -1,6 +1,6 @@
 @domain:assurance @area:coverage-report @from:verify/verify-test
 Feature: Reading a verification report
-  Gives an operator a verification summary they can paste into a public issue, which shows what the run did not cover and leaves out anything that identifies the account.
+  Gives an operator a verification summary they can paste into a public issue, which shows what the run did not cover and whose counts and findings leave out anything that identifies the account.
 
   Background:
     Given a scratch account whose policy puts everything in scope

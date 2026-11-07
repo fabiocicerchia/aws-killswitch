@@ -9,12 +9,12 @@ Feature: Naming discovered resources in the plan
   Scenario Outline: A resource is shown by its Name tag, or by its id when it has none
     Given a <kind> with id <id> whose Name tag is <name_tag>
     When the operator builds a plan for the account
-    Then the plan lists the <kind> under the name <shown_as>
+    Then the plan row for the <kind> reads <shown_as>
 
     Examples:
-      | kind         | id                    | name_tag     | shown_as              |
-      | EC2 instance | i-0abc123def4567890   | web-frontend | web-frontend          |
-      | EC2 instance | i-0abc123def4567890   | (absent)     | i-0abc123def4567890   |
-      | EC2 instance | i-0abc123def4567890   | (empty)      | i-0abc123def4567890   |
-      | NAT gateway  | nat-0123456789abcdef0 | egress-a     | egress-a              |
-      | NAT gateway  | nat-0123456789abcdef0 | (absent)     | nat-0123456789abcdef0 |
+      | kind         | id                    | name_tag     | shown_as                           |
+      | EC2 instance | i-0abc123def4567890   | web-frontend | web-frontend (i-0abc123def4567890) |
+      | EC2 instance | i-0abc123def4567890   | (absent)     | i-0abc123def4567890                |
+      | EC2 instance | i-0abc123def4567890   | (empty)      | i-0abc123def4567890                |
+      | NAT gateway  | nat-0123456789abcdef0 | egress-a     | egress-a (nat-0123456789abcdef0)   |
+      | NAT gateway  | nat-0123456789abcdef0 | (absent)     | nat-0123456789abcdef0              |

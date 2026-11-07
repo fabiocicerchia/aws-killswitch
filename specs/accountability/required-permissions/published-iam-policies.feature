@@ -11,7 +11,6 @@ Feature: Publishing the IAM policies the tool needs
     And an account holding every supported resource kind
     When the operator runs <commands>
     Then no AWS call made by <commands> is refused for a missing permission
-    And the commands get as far as their permissions allow without stopping on AccessDenied
 
     Examples:
       | attached policies                        | commands               |

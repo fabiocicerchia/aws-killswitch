@@ -40,7 +40,7 @@ Feature: Least-privilege IAM policies for planning, firing and the Lambda trigge
     When the operator reviews what the fire policy allows
     Then the only allowed delete action that removes a resource is ec2:DeleteNatGateway
     And lambda:DeleteFunctionConcurrency is also allowed, so a Lambda function's concurrency setting can be removed
-    And every other allowed action stops, starts, scales, throttles or modifies a resource
+    And every other allowed action reads, stops, starts, scales, throttles or modifies a resource, or recreates a NAT gateway and its routes on restore
     And the only S3 write allowed is putting restore records under the killswitch/ prefix of the ops bucket
 
   @id:accountability.required-permissions.005 @rule:permissions.iam.fire-compute-scoped-by-env-tag @inferred @source:docs/iam-fire.json#StopComputeReversibly @questionable

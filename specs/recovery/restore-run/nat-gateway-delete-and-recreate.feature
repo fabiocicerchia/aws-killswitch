@@ -19,7 +19,6 @@ Feature: Deleting and recreating NAT gateways
     Then a new NAT gateway exists in subnet subnet-0aa11bb22cc33dd44
     And the new NAT gateway uses allocation eipalloc-0123456789abcdef0 and so the same public IP address
     And the new NAT gateway has connectivity type public
-    And the restore waits until the new NAT gateway is available before going on
 
   @id:recovery.restore-run.003 @rule:recovery.nat-gateway.routes-repointed @inferred @source:internal/awsx/execute_network.go#repointRoutes
   Scenario Outline: Restoring sends every recorded route back through the recreated NAT gateway

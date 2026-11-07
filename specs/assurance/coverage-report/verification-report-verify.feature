@@ -1,6 +1,6 @@
 @domain:assurance @area:coverage-report @from:verify/verify
 Feature: Reading a verification report
-  Operators paste the verification summary into public issues, so it has to show which resource kinds were really exercised and must never reveal anything that identifies the account.
+  Operators paste the verification summary into public issues, so it has to show which resource kinds were really exercised and its counts and findings must never reveal anything that identifies the account.
 
   Background:
     Given the operator has run a verification against a scratch account

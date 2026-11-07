@@ -9,7 +9,7 @@ Feature: Verifying a fire and restore round trip
   Scenario: A cycle where every action lands and every resource comes back passes
     Given the scratch account holds an ECS service with 3 desired tasks, a Lambda function and an auto-scaling group, all running
     When the operator runs a verification against the scratch account
-    Then the report reads "fire 3 changed, 0 failed, 3 verified by a second read"
+    Then the report's fire line reads "3 changed, 0 failed, 3 verified by a second read"
     And the report reads "No divergence between what was planned and what the account read back."
     And every resource in the account is running again with its pre-fire settings
     And the verification passes
@@ -20,7 +20,7 @@ Feature: Verifying a fire and restore round trip
     And stopping the ECS service is refused with AccessDenied
     When the operator runs a verification against the scratch account
     Then the report counts 1 failed stop
-    And the Lambda function is still stopped and counted as changed
+    And the Lambda function is stopped anyway and counted as changed
     And the verification fails
 
   @id:assurance.round-trip-verify.011 @rule:assurance.round-trip.restore-failure-stops-restore @inferred @source:internal/verify/verify.go#Run @questionable

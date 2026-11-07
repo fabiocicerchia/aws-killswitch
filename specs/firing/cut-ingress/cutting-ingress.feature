@@ -9,7 +9,7 @@ Feature: Cutting and restoring public entry points
   Scenario: A fired load balancer listener answers every request with a 503 cost-control message
     Given a load balancer listener routes traffic to a target group
     When the operator fires the plan
-    Then the listener answers every request with HTTP 503
+    Then the listener's default action answers requests with HTTP 503
     And the response body is "Service temporarily unavailable (cost control)" as text/plain
     And the target group and the targets behind it are left unchanged
 
@@ -68,5 +68,5 @@ Feature: Cutting and restoring public entry points
     Examples:
       | rate | burst | outcome                                                   |
       | 100  | 200   | has a default rate limit of 100 and burst limit of 200    |
-      | -1   | -1    | has no stage-level throttle, so the account limit applies |
+      | -1   | -1    | stays throttled to zero, and its restore fails with "no usable recorded throttle; refusing to guess" |
       | 50   | -1    | has no stage-level throttle, so the account limit applies |

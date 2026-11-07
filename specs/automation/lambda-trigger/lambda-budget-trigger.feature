@@ -26,10 +26,10 @@ Feature: Firing the killswitch from a budget alert
 
     Examples:
       | inline                  | path                              | used                                                                                                                                          |
-      | a valid policy document | policy.yaml in the package        | the inline policy                                                                                                                             |
-      | blank                   | policy.yaml in the package        | policy.yaml from the package                                                                                                                  |
+      | a valid policy document | killswitch.json in the package    | the inline policy                                                                                                                             |
+      | blank                   | killswitch.json in the package    | killswitch.json from the package                                                                                                              |
       | blank                   | unset                             | none: the invocation fails with "no policy: set KILLSWITCH_POLICY to the file's contents, or KILLSWITCH_POLICY_PATH to a path in the package" |
-      | blank                   | missing.yaml (not in the package) | none: the invocation fails with "reading missing.yaml: ..."                                                                                   |
+      | blank                   | missing.json (not in the package) | none: the invocation fails with "reading missing.json: ..."                                                                                   |
 
   @id:automation.lambda-trigger.003 @rule:automation.lambda.invalid-policy-refused @inferred @source:cmd/killswitch-lambda/main.go#handle
   Scenario: An invalid policy stops the trigger before anything is discovered or changed
@@ -68,11 +68,11 @@ Feature: Firing the killswitch from a budget alert
   @id:automation.lambda-trigger.007 @rule:automation.lambda.response-reports-outcome @inferred @source:cmd/killswitch-lambda/main.go#Response
   Scenario Outline: Each invocation reports what it did, what triggered it and which services could not be inspected
     Given a budget notification with subject <subject> and message id msg-0001
-    And discovery could not read one service: "rds: AccessDenied"
+    And discovery could not read rds in eu-west-1 for lack of permission
     When the budget alert invokes the killswitch
     Then the response and the CloudWatch log line "killswitch: {...}" carry fired, changed, failed, plan_id and account_id
     And the response trigger is <trigger>
-    And the response warnings include "rds: AccessDenied"
+    And the response warnings include one beginning "rds in eu-west-1: "
 
     Examples:
       | subject                                                    | trigger                                                               |
