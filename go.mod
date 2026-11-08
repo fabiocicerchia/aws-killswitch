@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-lambda-go v1.55.1
 	github.com/aws/aws-sdk-go-v2 v1.47.5
 	github.com/aws/aws-sdk-go-v2/config v1.33.9
-	github.com/aws/aws-sdk-go-v2/service/apigateway v1.52.1
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.52.5
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.79.1
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.75.0
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.74.1
