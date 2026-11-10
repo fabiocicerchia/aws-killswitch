@@ -1,0 +1,3936 @@
+{
+ "excluded": {
+  "audit/audit": [
+   {
+    "candidate": "A nil or writer-less Log silently accepts events",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/audit/audit.go#Log.Event"
+   },
+   {
+    "candidate": "Events are serialised under a mutex so concurrent writers do not interleave lines",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/audit/audit.go#Log"
+   },
+   {
+    "candidate": "To(writer) lets tests and the Lambda send audit records to an arbitrary stream",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/audit/audit.go#To"
+   },
+   {
+    "candidate": "Injectable clock for tests",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/audit/audit.go#Log.clock"
+   },
+   {
+    "candidate": "An empty path yields a discarding log",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/audit/audit.go#New"
+   },
+   {
+    "candidate": "Which events (fire.begin, action.applied, restore.end, ...) are recorded during fire and restore",
+    "covered_by": "belongs to the execution engine module, not audit",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/engine/engine.go"
+   },
+   {
+    "candidate": "Each audit event is one JSON line stamped with when, what and who",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/audit/audit.go#Log.Event"
+   },
+   {
+    "candidate": "An event's details can never overwrite who, when or what it records",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/audit/audit.go#Log.Event"
+   },
+   {
+    "candidate": "An audit entry that cannot be written mid-run is dropped without any warning",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/audit/audit.go#Log.Event"
+   }
+  ],
+  "aws-killswitch/makefile": [
+   {
+    "candidate": "make help lists every documented target with its one-line description (default goal)",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "Makefile#help"
+   },
+   {
+    "candidate": "make build compiles the aws-killswitch binary into ./bin",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "Makefile#build"
+   },
+   {
+    "candidate": "make lambda cross-compiles the Budgets-action handler for linux/arm64 as 'bootstrap' and zips it as bin/killswitch-lambda.zip for the provided.al2023 runtime",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "Makefile#lambda"
+   },
+   {
+    "candidate": "make test runs the race-enabled test suite with a coverage summary",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "Makefile#test"
+   },
+   {
+    "candidate": "make lint runs every pre-commit hook over all files",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "Makefile#lint"
+   },
+   {
+    "candidate": "make tidy / clean / format / analyze / setup / run housekeeping targets",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "Makefile#tidy"
+   },
+   {
+    "candidate": "make install puts the binary and man page under GOBIN/GOPATH and USER_MANDIR, or under DESTDIR/PREFIX when PREFIX is set (USER_MANDIR is never defined in the Makefile, so the per-user branch depends on the caller's environment)",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "Makefile#install"
+   },
+   {
+    "candidate": "make uninstall removes what make install put down (not declared .PHONY)",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "Makefile#uninstall"
+   }
+  ],
+  "awsx/discover": [
+   {
+    "candidate": "Discovery never changes anything in the account (safe to run against production)",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover.go#Clients.Discover"
+   },
+   {
+    "candidate": "Order in which services are walked varies between runs (map iteration)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover.go#Clients.Discover"
+   },
+   {
+    "candidate": "Per-region client set built from one base config and shared by discovery and execution",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover.go#NewClients"
+   },
+   {
+    "candidate": "Which kinds are discovered per service (listeners, functions, ECS services, ASGs, instances, NAT gateways, RDS, EKS nodegroups, API stages, distributions)",
+    "covered_by": "compute/data/ingress/network discovery modules (discover_*.go)",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/awsx/discover.go#Clients.Discover"
+   },
+   {
+    "candidate": "Empty region in NewClients keeps the base config's region",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/awsx/discover.go#NewClients"
+   },
+   {
+    "candidate": "A service that cannot be read is reported and the rest of the account is still planned",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover.go#Clients.Discover"
+   },
+   {
+    "candidate": "A CloudFront distribution is planned once however many regions are in scope",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover.go#Clients.WithCloudFront"
+   }
+  ],
+  "awsx/discover-compute": [
+   {
+    "candidate": "ECS service desired count, ASG min/desired/max and nodegroup sizes are recorded as prior state",
+    "covered_by": "recovery/restore-run (restore puts back recorded capacity); owned by the restore modules",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/awsx/discover_compute.go#Clients.servicesIn"
+   },
+   {
+    "candidate": "Nodegroups identified as cluster/name so same-named nodegroups in two clusters stay distinct",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover_compute.go#Clients.nodegroup"
+   },
+   {
+    "candidate": "Nodegroups without a scaling config (Fargate, self-managed) are skipped",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover_compute.go#Clients.nodegroup"
+   },
+   {
+    "candidate": "ECS DescribeServices batched in tens",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover_compute.go#Clients.servicesIn"
+   },
+   {
+    "candidate": "Instance-type lookup cached per type within one scan",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover_compute.go#Clients.instanceStore"
+   },
+   {
+    "candidate": "Pagination across Lambda, ECS, ASG, EC2 and EKS listings",
+    "covered_by": "discovery/multi-region-scan",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover_compute.go#Clients.functions"
+   },
+   {
+    "candidate": "Any AWS error aborts that service's discovery",
+    "covered_by": "discovery/multi-region-scan (partial-failure tolerance lives in discover.go)",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/awsx/discover_compute.go#Clients.services"
+   },
+   {
+    "candidate": "Instance display name taken from Name tag, falling back to the instance ID",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/awsx/discover_compute.go#Clients.instances"
+   },
+   {
+    "candidate": "Tags captured per resource (used by protection policy)",
+    "covered_by": "planning/protected-resources",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/awsx/discover_compute.go#asgTags"
+   },
+   {
+    "candidate": "A function with no reserved concurrency goes back to having none on restore",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover_compute.go#Clients.functions"
+   },
+   {
+    "candidate": "A function already throttled to zero is left out of the plan without a mention",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover_compute.go#Clients.functions"
+   },
+   {
+    "candidate": "Instances in an Auto Scaling group are handled through their group, not one by one",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover_compute.go#Clients.instances"
+   },
+   {
+    "candidate": "Only running standalone instances are discovered",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover_compute.go#Clients.instances"
+   },
+   {
+    "candidate": "An instance whose type has local instance storage is flagged as losing that data on stop",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover_compute.go#Clients.instanceStore"
+   },
+   {
+    "candidate": "An instance of an unknown type is shown as not estimated rather than free",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover_compute.go#Clients.instances"
+   },
+   {
+    "candidate": "An EKS nodegroup in the middle of an update is left out of the plan without a mention",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover_compute.go#Clients.nodegroup"
+   },
+   {
+    "candidate": "The Auto Scaling group behind an EKS nodegroup is also planned as a plain group",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover_compute.go#Clients.autoScalingGroups"
+   }
+  ],
+  "awsx/discover-data": [
+   {
+    "candidate": "Instance and cluster listings are paginated until exhausted",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover_data.go#databases"
+   },
+   {
+    "candidate": "Prior state records instance class and cluster engine alongside status",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover_data.go#databases"
+   },
+   {
+    "candidate": "RDS tags are converted into the resource's tag map (used by scope policy)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover_data.go#databases"
+   },
+   {
+    "candidate": "Resource name equals the DB identifier, region taken from the client",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/awsx/discover_data.go#databases"
+   },
+   {
+    "candidate": "Databases are excluded unless include_databases is set, and carry the seven-day auto-restart warning",
+    "covered_by": "enforced by planning, not by this module; belongs to planning/scope-policy",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/plan/plan.go#databaseAction"
+   }
+  ],
+  "awsx/discover-ingress": [
+   {
+    "candidate": "Listings of load balancers, distributions and REST APIs are paginated",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover_ingress.go#Clients.listeners"
+   },
+   {
+    "candidate": "The CloudFront client calls the us-east-1 endpoint",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover.go#Clients.WithCloudFront"
+   },
+   {
+    "candidate": "A nil DistributionList page is skipped",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover_ingress.go#Clients.distributions"
+   },
+   {
+    "candidate": "Prior state keys (default_actions, load_balancer, enabled, comment, rest_api_id, stage_name, rate_limit, burst_limit) in the state file",
+    "covered_by": "",
+    "reason": "TECH_PERSISTENCE",
+    "source": "internal/awsx/discover_ingress.go#apiStage"
+   },
+   {
+    "candidate": "Listener tags merged from every tag description into one map",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover_ingress.go#Clients.elbTags"
+   },
+   {
+    "candidate": "Disabled distributions and zero-throttled stages are skipped as already stopped",
+    "covered_by": "planning rule enforced by plan.ingressAction (belongs to the plan module)",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/plan/plan.go#ingressAction"
+   },
+   {
+    "candidate": "Discovery is read-only and safe to run against production",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover.go#Discover"
+   },
+   {
+    "candidate": "A cut listener gets back exactly the routing it had when it was found",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover_ingress.go#Clients.listeners"
+   },
+   {
+    "candidate": "Each CloudFront distribution is found once per run, as a global resource",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover_ingress.go#Clients.distributions"
+   },
+   {
+    "candidate": "CloudFront distribution tags play no part in scope or protection",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover_ingress.go#Clients.distributions"
+   },
+   {
+    "candidate": "One failed lookup drops every entry point of that service in that region, and the plan says so",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/discover_ingress.go#Clients.listeners"
+   }
+  ],
+  "awsx/discover-network": [
+   {
+    "candidate": "NAT gateway display name comes from its Name tag, falling back to its ID",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/awsx/discover_network.go#natGateways"
+   },
+   {
+    "candidate": "NAT gateways listed page by page via the paginator",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover_network.go#natGateways"
+   },
+   {
+    "candidate": "One route-table query per NAT gateway, filtered on route.nat-gateway-id",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/discover_network.go#routesVia"
+   },
+   {
+    "candidate": "NAT gateway tags and region copied onto the discovered resource",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/awsx/discover_network.go#natGateways"
+   }
+  ],
+  "awsx/execute": [
+   {
+    "candidate": "Apply or restore of a kind with no implementation returns \"no apply/restore implemented for <kind>\"",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/execute.go#Executor.Apply"
+   },
+   {
+    "candidate": "API Gateway stage throttled with both rate and burst set to zero",
+    "covered_by": "planning.action-catalog.stop-meaning-per-kind",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/awsx/execute.go#appliers"
+   },
+   {
+    "candidate": "Every applier kind has a matching restorer",
+    "covered_by": "recovery.restore-run.inverse-from-recorded-state",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/awsx/execute.go#restorers"
+   },
+   {
+    "candidate": "Executor keeps one set of clients per region",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/execute.go#NewExecutor"
+   },
+   {
+    "candidate": "Restore puts each resource back from what was recorded, not from what the account looks like now",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/execute.go#Executor.Restore"
+   },
+   {
+    "candidate": "An action in a region the run has no access to fails instead of being skipped",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/execute.go#Executor.client"
+   },
+   {
+    "candidate": "CloudFront distributions, which have no region, are still stopped and restored",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/awsx/execute.go#Executor.client"
+   }
+  ],
+  "awsx/execute-compute": [
+   {
+    "candidate": "ASG bounds are written in a single update call despite the comment describing max-first/max-last ordering",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/execute_compute.go#scaleASG"
+   },
+   {
+    "candidate": "Which AWS API each helper calls (PutFunctionConcurrency, UpdateService, UpdateAutoScalingGroup, StopInstances, UpdateNodegroupConfig)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/execute_compute.go#throttleLambda"
+   },
+   {
+    "candidate": "EC2 restore starts the instance unconditionally without consulting recorded state",
+    "covered_by": "recovery.restore-run.compute-returns-to-recorded-capacity",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/awsx/execute_compute.go#startInstance"
+   },
+   {
+    "candidate": "ECS fire fails when the record has no cluster or service name",
+    "covered_by": "recovery.restore-run.compute-refuses-incomplete-record",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/awsx/execute_compute.go#scaleService"
+   }
+  ],
+  "awsx/execute-data": [
+   {
+    "candidate": "Snapshot name is killswitch-<id>-<unix seconds>, unique per attempt",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/execute_data.go#snapshotName"
+   },
+   {
+    "candidate": "An AWS error from a stop/start call is returned to the engine unchanged",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/execute_data.go#stopDBCluster"
+   }
+  ],
+  "awsx/execute-ingress": [
+   {
+    "candidate": "Listener default actions are serialised to generic JSON for the state file",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/execute_ingress.go#encodeActions"
+   },
+   {
+    "candidate": "CloudFront ETag is fetched fresh rather than recorded at discovery",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/execute_ingress.go#setDistributionEnabled"
+   },
+   {
+    "candidate": "No update is sent when the distribution is already in the target state",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/execute_ingress.go#setDistributionEnabled"
+   },
+   {
+    "candidate": "Error when the executor has no CloudFront client",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/execute_ingress.go#setDistributionEnabled"
+   },
+   {
+    "candidate": "Error when CloudFront returns no distribution config",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/awsx/execute_ingress.go#setDistributionEnabled"
+   }
+  ],
+  "awsx/execute-network": [
+   {
+    "candidate": "Restore waits with a 10-minute ceiling on gateway availability (timing detail)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/execute_network.go#restoreNATGateway"
+   },
+   {
+    "candidate": "ReplaceRoute attempted before CreateRoute (call ordering)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/execute_network.go#repointRoutes"
+   },
+   {
+    "candidate": "Malformed route entries in the restore record are skipped",
+    "covered_by": "",
+    "reason": "TECH_PERSISTENCE",
+    "source": "internal/awsx/execute_network.go#repointRoutes"
+   },
+   {
+    "candidate": "Gateway recorded with no routes is recreated and nothing repointed",
+    "covered_by": "recovery.nat-gateway.routes-repointed",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/awsx/execute_network.go#restoreNATGateway"
+   },
+   {
+    "candidate": "Allocation and connectivity type omitted from recreation when not recorded",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/awsx/execute_network.go#restoreNATGateway"
+   }
+  ],
+  "awsx/helpers": [
+   {
+    "candidate": "ec2Tags/rdsTags convert AWS tag lists to a key/value map (later duplicate keys win)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/helpers.go#ec2Tags"
+   },
+   {
+    "candidate": "chunk splits ECS service ARNs into batches of 10 for DescribeServices",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/helpers.go#chunk"
+   },
+   {
+    "candidate": "ecstypesInclude type alias for readability",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/helpers.go#ecstypesInclude"
+   }
+  ],
+  "awsx/pricing": [
+   {
+    "candidate": "Instance type lookup ignores letter case and surrounding whitespace",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/awsx/pricing.go#familyPrice"
+   },
+   {
+    "candidate": "Prices are compiled-in constants rather than Pricing API lookups",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/pricing.go#ec2FamilyLarge"
+   },
+   {
+    "candidate": "Size factors increase monotonically with size",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/awsx/pricing_test.go#TestSizeFactorsAreMonotonic"
+   },
+   {
+    "candidate": "NAT gateway pricing kept as a function for symmetry with other kinds",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/pricing.go#NATGatewayHourlyUSD"
+   }
+  ],
+  "awsx/pricing-test": [
+   {
+    "candidate": "Within a family a bigger size never has a lower multiplier",
+    "covered_by": "cost.savings.instance-list-price",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/awsx/pricing_test.go#TestSizeFactorsAreMonotonic"
+   },
+   {
+    "candidate": "approx float tolerance helper",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/awsx/pricing_test.go#approx"
+   },
+   {
+    "candidate": "Upper/lower case and surrounding whitespace in the type give the same price",
+    "covered_by": "cost.savings.instance-list-price",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/awsx/pricing_test.go#TestCaseAndWhitespaceDoNotChangeTheAnswer"
+   },
+   {
+    "candidate": "Prices are constants rather than live Pricing API lookups",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/pricing.go#ec2FamilyLarge"
+   }
+  ],
+  "awsx/spend": [
+   {
+    "candidate": "Cost Explorer is queried in us-east-1 regardless of the configured region",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "cmd/aws-killswitch/commands.go#cmdSpend"
+   },
+   {
+    "candidate": "Request uses monthly granularity and the UnblendedCost metric",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/awsx/spend.go#MonthToDate"
+   },
+   {
+    "candidate": "Cost Explorer API errors are returned unchanged",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/awsx/spend.go#MonthToDate"
+   },
+   {
+    "candidate": "A result period without an UnblendedCost entry is skipped",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/awsx/spend.go#MonthToDate"
+   },
+   {
+    "candidate": "Threshold comparison and exit code 3 when over threshold",
+    "covered_by": "enforced in the cmd module, not awsx/spend; belongs to the spend command's own spec",
+    "reason": "UNVERIFIABLE",
+    "source": "cmd/aws-killswitch/commands.go#cmdSpend"
+   }
+  ],
+  "cmd/aws-killswitch": [
+   {
+    "candidate": "Snapshot stored in S3 first then local (Multi store ordering)",
+    "covered_by": "",
+    "reason": "TECH_PERSISTENCE",
+    "source": "cmd/aws-killswitch/wiring.go#buildStore"
+   },
+   {
+    "candidate": "Default local dir falls back to relative .aws-killswitch when $HOME is unknown",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "cmd/aws-killswitch/wiring.go#defaultLocalDir"
+   },
+   {
+    "candidate": "Audit log defaults to <local>/audit.jsonl",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "cmd/aws-killswitch/wiring.go#auditPathOrDefault"
+   },
+   {
+    "candidate": "Restore builds one client per region recorded",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "cmd/aws-killswitch/commands.go#cmdRestore"
+   },
+   {
+    "candidate": "Cost Explorer queried in us-east-1",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "cmd/aws-killswitch/commands.go#cmdSpend"
+   },
+   {
+    "candidate": "Verify --settle default 90s",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "cmd/aws-killswitch/main.go#main"
+   },
+   {
+    "candidate": "End-to-end journey test harness with recording executor",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "cmd/aws-killswitch/journey_test.go#TestPlanFireStatusRestoreJourney"
+   },
+   {
+    "candidate": "Fire dry run when trip ack refusal duplicates",
+    "covered_by": "cli.fire.ack-required-needs-force",
+    "reason": "DUPLICATE_OF",
+    "source": "cmd/aws-killswitch/commands.go#cmdFire"
+   },
+   {
+    "candidate": "Restore with --yes prints 'restored N, failed M'",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "cmd/aws-killswitch/commands.go#cmdRestore"
+   }
+  ],
+  "cmd/killswitch-lambda": [
+   {
+    "candidate": "Lambda loads AWS credentials via the default config chain and fails on error",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "cmd/killswitch-lambda/main.go#handle"
+   },
+   {
+    "candidate": "Audit entries are written to stderr (CloudWatch Logs)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "cmd/killswitch-lambda/main.go#handle"
+   },
+   {
+    "candidate": "Budgets SNS Message body is never parsed; the invocation itself is the signal",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "cmd/killswitch-lambda/main.go#Event"
+   },
+   {
+    "candidate": "Empty plan reports 'nothing in scope to stop'",
+    "covered_by": "automation/trip-cycle (owned by internal/trip)",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/trip/trip.go#Fire"
+   },
+   {
+    "candidate": "Fire continues past individual action failures and reports changed/failed counts",
+    "covered_by": "firing/partial-failure (owned by internal/engine)",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/trip/trip.go#Fire"
+   },
+   {
+    "candidate": "Account id resolved via STS for the plan",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "cmd/killswitch-lambda/main.go#handle"
+   },
+   {
+    "candidate": "JSON marshal error of the response ignored",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "cmd/killswitch-lambda/main.go#handle"
+   }
+  ],
+  "docs/iam-calls-test": [
+   {
+    "candidate": "Recorder middleware maps SDK service IDs to IAM prefixes and API Gateway operations to GET/PATCH",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "docs/iam_calls_test.go#recordingConfig"
+   },
+   {
+    "candidate": "Hand-maintained list of follow-on calls the recorder cannot reach",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "docs/iam_calls_test.go#TestPoliciesGrantEveryCallTheToolMakes"
+   },
+   {
+    "candidate": "Guard that at least 20 read and 15 write calls were recorded",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "docs/iam_calls_test.go#TestPoliciesGrantEveryCallTheToolMakes"
+   },
+   {
+    "candidate": "Separate scenarios for the read-only policy and for the fire policy",
+    "covered_by": "accountability.required-permissions.published-policies-grant-every-call",
+    "reason": "DUPLICATE_OF",
+    "source": "docs/iam_calls_test.go#TestPoliciesGrantEveryCallTheToolMakes"
+   }
+  ],
+  "docs/iam-test": [
+   {
+    "candidate": "Every shipped policy is valid IAM JSON (Version 2012-10-17, Allow/Deny effects, service:operation actions, exactly four policy files)",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "docs/iam_test.go#TestEveryPolicyIsWellFormed"
+   },
+   {
+    "candidate": "IAM Action accepts both a single string and an array",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "docs/iam_test.go#actions"
+   },
+   {
+    "candidate": "Lambda idempotency guard degrades to allowing the fire when s3:ListBucket is missing",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "docs/iam-lambda-extra.json#ReadItsOwnFireHistory"
+   }
+  ],
+  "docs/stylesheets": [
+   {
+    "candidate": "Documentation site uses an orange-red accent pair (--accent #fb923c, --accent-2 #ef4444) for links, header chrome, buttons and the hero gradient",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "docs/stylesheets/extra.css#:root"
+   },
+   {
+    "candidate": "Dark (slate) scheme uses a near-black background (#0b0f1a) for page, header and tabs, with links in --accent",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "docs/stylesheets/extra.css#[data-md-color-scheme=\"slate\"]"
+   },
+   {
+    "candidate": "Docs theme loads nothing over the network (system font stacks, no CDN, web font or analytics)",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "docs/stylesheets/extra.css#:root"
+   },
+   {
+    "candidate": "Home hero renders a gradient title, tagline and pill buttons from the <div class=\"hero\"> block",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "docs/stylesheets/extra.css#.md-typeset .hero"
+   },
+   {
+    "candidate": "Feature cards in Material grids get rounded borders, lift and accent border on hover",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "docs/stylesheets/extra.css#.md-typeset .grid.cards > ul > li"
+   },
+   {
+    "candidate": "Tables render as rounded cards with uppercase headers; code blocks get rounded borders",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "docs/stylesheets/extra.css#.md-typeset table:not([class])"
+   },
+   {
+    "candidate": "Material's placeholder logo is hidden in the header and nav because the repo has no logo",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "docs/stylesheets/extra.css#.md-header__button.md-logo"
+   },
+   {
+    "candidate": "Translucent blurred header, tab opacity, typography weights, footer styling, smooth scrolling",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "docs/stylesheets/extra.css#.md-header"
+   },
+   {
+    "candidate": "Some comments don't match the palette: they call --accent-2 'indigo' and --accent 'cyan' (lines 44, 47), but the values are orange-red, and the button hover shadow is hard-coded to indigo rgba(99,102,241) instead of following the accent. These are cosmetic and not something to accept",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "docs/stylesheets/extra.css#.md-typeset .md-button:hover"
+   }
+  ],
+  "engine/engine": [
+   {
+    "candidate": "Audit events fire.begin/action.applied/action.failed/restore.* emitted during fire and restore",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/engine/engine.go#Fire"
+   },
+   {
+    "candidate": "Default clock is UTC now when no clock is supplied",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/engine/engine.go#Options"
+   },
+   {
+    "candidate": "Plan actions with no matching record entry are silently skipped",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/engine/engine.go#indexEntries"
+   },
+   {
+    "candidate": "Fire stops after first failure when ContinueOnError is off",
+    "covered_by": "firing.partial-failure.continue-and-record-failures",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/engine/engine.go#Fire"
+   },
+   {
+    "candidate": "Restore reports an error if the final 'restored' mark cannot be saved",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/engine/engine.go#Restore"
+   },
+   {
+    "candidate": "Restore stops if the record cannot be updated after a successful restore",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/engine/engine.go#Restore"
+   },
+   {
+    "candidate": "Duration formatting: days above 24h, minutes otherwise",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/engine/engine.go#round"
+   }
+  ],
+  "engine/engine-test": [
+   {
+    "candidate": "Test doubles fakeExec, memStore, brokenAfterN",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/engine/engine_test.go#fakeExec"
+   },
+   {
+    "candidate": "Audit events fire.begin/action.applied etc. emitted by the engine",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/engine/engine.go#Fire"
+   },
+   {
+    "candidate": "Restore stops on first failure when ContinueOnError is off",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/engine/engine.go#Restore"
+   },
+   {
+    "candidate": "Restore dry run reports skipped entries",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/engine/engine.go#Restore"
+   },
+   {
+    "candidate": "Duration rounding below one day",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/engine/engine.go#round"
+   },
+   {
+    "candidate": "The restore record lists every change as soon as it is made",
+    "covered_by": "firing.engine.record-updated-after-every-change",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/engine/engine.go#Fire"
+   },
+   {
+    "candidate": "A dry run changes nothing and leaves no restore record",
+    "covered_by": "firing.engine.dry-run-touches-nothing",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/engine/engine.go#Fire"
+   },
+   {
+    "candidate": "An empty plan is refused rather than fired",
+    "covered_by": "firing.engine.empty-plan-refused",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/engine/engine.go#Fire"
+   },
+   {
+    "candidate": "Restore brings data back first, then compute, and lets traffic in last",
+    "covered_by": "recovery.restore.reverse-phase-order",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/engine/engine.go#Restore"
+   }
+  ],
+  "examples/scratch-account": [
+   {
+    "candidate": "VPC, subnets, internet gateway, CIDR layout and security group rules",
+    "covered_by": "",
+    "reason": "TECH_INFRA",
+    "source": "examples/scratch-account/main.tf#aws_vpc"
+   },
+   {
+    "candidate": "IAM roles and policy attachments for Lambda, EKS cluster and nodes",
+    "covered_by": "",
+    "reason": "TECH_INFRA",
+    "source": "examples/scratch-account/main.tf#aws_iam_role"
+   },
+   {
+    "candidate": "arm64/Graviton AMI and t4g instance family pairing, EKS ami_type",
+    "covered_by": "",
+    "reason": "TECH_INFRA",
+    "source": "examples/scratch-account/main.tf#aws_launch_template"
+   },
+   {
+    "candidate": "IMDSv2 required on launch template and standalone instance",
+    "covered_by": "",
+    "reason": "TECH_INFRA",
+    "source": "examples/scratch-account/main.tf#aws_instance"
+   },
+   {
+    "candidate": "RDS CloudWatch log export, managed master passwords, skip_final_snapshot",
+    "covered_by": "",
+    "reason": "TECH_INFRA",
+    "source": "examples/scratch-account/main.tf#aws_db_instance"
+   },
+   {
+    "candidate": "Terraform and provider version pins with VERSION-BUMP markers",
+    "covered_by": "",
+    "reason": "TECH_BUILD",
+    "source": "examples/scratch-account/main.tf#terraform"
+   },
+   {
+    "candidate": "Default region eu-west-1 and prefix variable defaults",
+    "covered_by": "",
+    "reason": "TECH_INFRA",
+    "source": "examples/scratch-account/main.tf#region"
+   },
+   {
+    "candidate": "Internal ALB, MOCK API integration and noop Lambda code as minimal workloads",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "examples/scratch-account/main.tf#aws_api_gateway_rest_api"
+   },
+   {
+    "candidate": "Verify reports kinds absent from the account as NOT EXERCISED",
+    "covered_by": "belongs to assurance/coverage-report (internal/verify), not this module",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/report.go"
+   }
+  ],
+  "model/fuzz-test": [
+   {
+    "candidate": "Decoding a restore snapshot read back from storage, and reading prior state out of it, never panics on arbitrary valid JSON",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/model/fuzz_test.go#FuzzSnapshotDecode"
+   },
+   {
+    "candidate": "The never-touch deny list returns an answer rather than panicking for a malformed or empty ARN",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/model/fuzz_test.go#FuzzIsNeverTouch"
+   }
+  ],
+  "model/model": [
+   {
+    "candidate": "GlobalRegion value \"global\" recorded for CloudFront",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/model/model.go#GlobalRegion"
+   },
+   {
+    "candidate": "Snapshot/Entry JSON field names (plan_id, entries, fired_at, restored_at, result, error)",
+    "covered_by": "",
+    "reason": "TECH_PERSISTENCE",
+    "source": "internal/model/model.go#Snapshot"
+   },
+   {
+    "candidate": "PriorInt reads JSON float64 numbers back as integers",
+    "covered_by": "recovery.restore-run.unusable-recorded-count-refused",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/model/model.go#PriorInt"
+   },
+   {
+    "candidate": "PriorString treats an empty string as a present value",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/model/model.go#PriorString"
+   },
+   {
+    "candidate": "Phase.String returns \"unknown\" for an out-of-range phase and ByPhase drops such actions",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/model/model.go#Phase.String"
+   },
+   {
+    "candidate": "BlastRadius TouchesDB and DataLoss flags",
+    "covered_by": "not rendered by the CLI code read; warnings for databases and instance store are raised by the plan module",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/model/model.go#Plan.BlastRadius"
+   },
+   {
+    "candidate": "Only the listed resource kinds are ever acted on",
+    "covered_by": "enforced by plan building (actionFor), not in this module",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/model/model.go#Kind"
+   },
+   {
+    "candidate": "Action Warning and Plan AckRequired require --force",
+    "covered_by": "populated by the plan module and enforced by the CLI",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/model/model.go#Plan"
+   },
+   {
+    "candidate": "Fuzz targets FuzzSnapshotDecode and FuzzIsNeverTouch",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/model/fuzz_test.go#FuzzIsNeverTouch"
+   },
+   {
+    "candidate": "A plan lists its changes by phase, ingress first and data last, each with its reason",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/model/model.go#Plan.ByPhase"
+   },
+   {
+    "candidate": "Each planned resource is shown by name with its id beside it",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/model/model.go#Resource.Ref"
+   },
+   {
+    "candidate": "Resources with no price estimate are reported as not estimated, never as zero saving",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/model/model.go#Plan.BlastRadius"
+   },
+   {
+    "candidate": "A plan with nothing in scope is a valid outcome, not an error",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/model/model.go#Plan.IsEmpty"
+   },
+   {
+    "candidate": "A restore acts only on resources the fire actually changed",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/model/model.go#Snapshot.Changed"
+   },
+   {
+    "candidate": "A stopped database is reported with the date AWS will restart it, seven days after the fire",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/model/model.go#Entry.RestoreDeadline"
+   }
+  ],
+  "model/model-test": [
+   {
+    "candidate": "PriorBool/PriorFloat accept only exact JSON types (accessor-level type checks)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/model/model.go#PriorFloat"
+   },
+   {
+    "candidate": "A priced kind is absent from the per-kind savings breakdown map when no resource of it has an estimate",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/model/model_test.go#TestBlastRadiusSeparatesEstimatedFromUnpriced"
+   },
+   {
+    "candidate": "PriorFloat refuses NaN and infinity",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/model/model.go#PriorFloat"
+   },
+   {
+    "candidate": "Resources without a price estimate are reported as not estimated, never as zero",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/model/model.go#Plan.BlastRadius"
+   },
+   {
+    "candidate": "Every resource the plan would change is counted in the total, whatever its kind",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/model/model.go#Plan.BlastRadius"
+   }
+  ],
+  "plan/plan": [
+   {
+    "candidate": "Unsupported resource kinds are refused with 'unsupported kind X'",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/plan/plan.go#actionFor"
+   },
+   {
+    "candidate": "Per-kind operation wording (fixed 503, reserved concurrency 0, min/desired/max 0, EKS max left alone, snapshot then stop with final_snapshot)",
+    "covered_by": "planning/action-catalog (action vocabulary per kind)",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/plan/plan.go#actionFor"
+   },
+   {
+    "candidate": "Empty inventory yields a valid empty plan, never an error",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/plan/plan.go#Build"
+   },
+   {
+    "candidate": "Plan carries ID, creation time, account and regions",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/plan/plan.go#Build"
+   },
+   {
+    "candidate": "alreadyZero helper shared by ECS and ASG",
+    "covered_by": "plan.protection.already-at-rest-skipped",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/plan/plan.go#alreadyZero"
+   },
+   {
+    "candidate": "Prior-state number parsing survives JSON round trip / refuses int32 wrap",
+    "covered_by": "model module (tested in plan_test.go but not enforced here)",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/model/model.go#PriorInt32"
+   },
+   {
+    "candidate": "Policy validation rejects unscoped or contradictory scopes",
+    "covered_by": "planning/scope-policy (policy module)",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/policy/policy.go#Policy.Validate"
+   },
+   {
+    "candidate": "Database restore deadline is seven days after fire",
+    "covered_by": "recovery/fire-status (model module)",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/model/model.go#Entry.RestoreDeadline"
+   }
+  ],
+  "plan/plan-test": [
+   {
+    "candidate": "PriorInt reads recorded counts back from JSON as float64/int/int64/int32 and refuses missing or string values",
+    "covered_by": "",
+    "reason": "TECH_PERSISTENCE",
+    "source": "internal/model/model.go#PriorInt"
+   },
+   {
+    "candidate": "PriorInt32 refuses recorded values outside int32 range rather than wrapping to zero",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/model/model.go#PriorInt32"
+   },
+   {
+    "candidate": "A stopped database's restore deadline is seven days after the fire; non-databases have none",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/model/model.go#Entry.RestoreDeadline"
+   },
+   {
+    "candidate": "Never-touch deny list contains s3, dynamodb, ebs-volume, snapshot, kms, iam and excludes ecs-service and asg",
+    "covered_by": "planning.protected.stateful-storage-never-touched",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/model/model.go#IsNeverTouch"
+   },
+   {
+    "candidate": "Databases are placed in the data phase, last",
+    "covered_by": "planning.order.ingress-before-compute-before-network-before-data",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/plan/plan.go#databaseAction"
+   },
+   {
+    "candidate": "Test helpers res, build, kinds, refusalFor, withPrior",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/plan/plan_test.go#build"
+   },
+   {
+    "candidate": "A resource tagged killswitch:protect is refused under any scope",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/policy/policy.go#Policy.InScope"
+   },
+   {
+    "candidate": "Every resource the plan leaves alone is listed with the reason",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/policy/policy.go#Policy.InScope"
+   },
+   {
+    "candidate": "A policy without a clear scope is rejected before anything is discovered",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/policy/policy.go#Policy.Validate"
+   }
+  ],
+  "policy/policy": [
+   {
+    "candidate": "scope.regions empty means the caller's configured region only",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/policy/policy.go#Scope"
+   },
+   {
+    "candidate": "include_databases / allow_instance_store_loss / delete_nat_gateways opt-ins gate those actions",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/policy/policy.go#Policy"
+   },
+   {
+    "candidate": "state_uri selects where the snapshot is stored",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/policy/policy.go#Policy"
+   },
+   {
+    "candidate": "Lambda trigger also validates the policy before firing",
+    "covered_by": "planning.scope.no-scope-refuses-to-run",
+    "reason": "DUPLICATE_OF",
+    "source": "cmd/killswitch-lambda/main.go#handle"
+   },
+   {
+    "candidate": "Case-insensitive tag key lookup helper (exact match first, then fold)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/policy/policy.go#lookupFold"
+   },
+   {
+    "candidate": "Policy JSON field names and struct layout",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/policy/policy.go#Policy"
+   },
+   {
+    "candidate": "A policy with no scope is refused before anything is discovered",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/policy/policy.go#Policy.Validate"
+   },
+   {
+    "candidate": "A policy that contradicts itself is refused",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/policy/policy.go#Policy.Validate"
+   },
+   {
+    "candidate": "Only resources carrying every scope tag are planned, and the rest are explained",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/policy/policy.go#Policy.InScope"
+   },
+   {
+    "candidate": "Scope everything puts every unprotected resource in range regardless of tags",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/policy/policy.go#Policy.InScope"
+   },
+   {
+    "candidate": "A plan touching more resources than the confirmation threshold needs explicit acknowledgement",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/policy/policy.go#Policy.Threshold"
+   },
+   {
+    "candidate": "A resource tagged killswitch:protect is never planned, whatever the scope",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/policy/policy.go#Policy.InScope"
+   }
+  ],
+  "state/local": [
+   {
+    "candidate": "Prior-state numbers (desired capacity, min/max size) survive a write and read back",
+    "covered_by": "",
+    "reason": "TECH_PERSISTENCE",
+    "source": "internal/state/local.go#Local.Get"
+   },
+   {
+    "candidate": "Records are stored as <plan id>.json in the state directory and only .json files are listed",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/state/local.go#Local.path"
+   },
+   {
+    "candidate": "Temp file is synced to disk before rename",
+    "covered_by": "",
+    "reason": "TECH_PERSISTENCE",
+    "source": "internal/state/local.go#Local.Put"
+   },
+   {
+    "candidate": "Subdirectories in the state directory are ignored by listing",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/state/local.go#Local.List"
+   },
+   {
+    "candidate": "Store described as file://<dir> in error messages",
+    "covered_by": "state.local.status-empty-before-first-fire",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/state/local.go#Local.Describe"
+   },
+   {
+    "candidate": "The local restore record can only be read by the user who wrote it",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/local.go#Local.Put"
+   },
+   {
+    "candidate": "Rewriting a restore record never leaves a partial record or stray files behind",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/local.go#Local.Put"
+   },
+   {
+    "candidate": "A missing restore record and a damaged one are reported differently",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/local.go#Local.Get"
+   },
+   {
+    "candidate": "Status on a machine that has never recorded a fire says nothing has been fired from there",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/local.go#Local.List"
+   },
+   {
+    "candidate": "Status lists recorded plans with the most recent activity first",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/local.go#Local.List"
+   },
+   {
+    "candidate": "A damaged restore record disappears from status without any warning",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/local.go#Local.List"
+   }
+  ],
+  "state/s3": [
+   {
+    "candidate": "S3 store name 's3://bucket/prefix' shown in errors and warnings (Describe)",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/state/s3.go#S3.Describe"
+   },
+   {
+    "candidate": "A failure to fetch a listing page fails the S3 listing (then swallowed by the multi-store listing)",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/state/s3.go#S3.List"
+   },
+   {
+    "candidate": "Paginating ListObjectsV2 across pages",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/state/s3.go#S3.List"
+   },
+   {
+    "candidate": "Response body close is ignored on error",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/state/s3.go#S3.Get"
+   },
+   {
+    "candidate": "The state bucket is in the never-touch set so a fire cannot destroy its own restore record",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/s3.go#S3"
+   },
+   {
+    "candidate": "Durable S3 copy read before the local copy; write must succeed in both",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/state.go#Multi"
+   },
+   {
+    "candidate": "Each fire's restore record is written to the bucket encrypted and named by its plan id",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/s3.go#S3.Put"
+   },
+   {
+    "candidate": "A restore record that is missing or cannot be read from the bucket is reported as not found",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/s3.go#S3.Get"
+   },
+   {
+    "candidate": "A restore record that is not valid JSON is reported as corrupt",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/s3.go#S3.Get"
+   },
+   {
+    "candidate": "Listing restore records from the bucket shows every readable one, newest first, and skips the rest",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/s3.go#S3.List"
+   }
+  ],
+  "state/s3-test": [
+   {
+    "candidate": "fakeS3 in-memory bucket speaking PutObject/GetObject/ListObjectsV2",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/state/s3_test.go#fakeS3"
+   },
+   {
+    "candidate": "newFakeS3Client wiring the SDK to a local test server",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/state/s3_test.go#newFakeS3Client"
+   },
+   {
+    "candidate": "Listing follows S3 continuation tokens across pages",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/state/s3.go#S3.List"
+   },
+   {
+    "candidate": "Build places the S3 store ahead of the local directory in a combined store",
+    "covered_by": "",
+    "reason": "TECH_PERSISTENCE",
+    "source": "internal/state/state.go#Build"
+   },
+   {
+    "candidate": "PutVerified write-then-read-back on the happy path (its refusal on a short read-back is not asserted here)",
+    "covered_by": "",
+    "reason": "TECH_PERSISTENCE",
+    "source": "internal/state/state.go#PutVerified"
+   },
+   {
+    "candidate": "Wrong bucket returns NoSuchBucket in the fake",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/state/s3_test.go#fakeS3.ServeHTTP"
+   },
+   {
+    "candidate": "A restore record written to S3 is encrypted at rest",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/s3.go#S3.Put"
+   },
+   {
+    "candidate": "A restore record kept in S3 can be read back from a machine that never held it",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/s3.go#S3.Get"
+   },
+   {
+    "candidate": "A restore record that cannot be fetched from S3 is reported as not found",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/s3.go#S3.Get"
+   },
+   {
+    "candidate": "Past fires recorded in S3 are listed by most recent activity first",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/s3.go#S3.List"
+   },
+   {
+    "candidate": "One unreadable object in the bucket does not hide the other restore records",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/s3.go#S3.List"
+   }
+  ],
+  "state/state": [
+   {
+    "candidate": "Store interface (Put/Get/List/Describe) contract",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/state/state.go#Store"
+   },
+   {
+    "candidate": "ErrNotFound sentinel distinguishing missing record from broken store",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/state/state.go#ErrNotFound"
+   },
+   {
+    "candidate": "Snapshot files use the .json extension in both write and listing",
+    "covered_by": "",
+    "reason": "TECH_PERSISTENCE",
+    "source": "internal/state/state.go#snapshotExt"
+   },
+   {
+    "candidate": "Multi.Describe joins store names with ' + '",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/state/state.go#Multi.Describe"
+   },
+   {
+    "candidate": "Build orders the S3 store before the local store",
+    "covered_by": "",
+    "reason": "TECH_PERSISTENCE",
+    "source": "internal/state/state.go#Build"
+   },
+   {
+    "candidate": "Build combines S3 and local into one store when both are given (CLI uses its own buildStore instead)",
+    "covered_by": "recovery.snapshot.every-copy-must-accept",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/state/state.go#Build"
+   },
+   {
+    "candidate": "fresher/stamp/sorted helpers ordering by restored, then fired, then created time",
+    "covered_by": "recovery.snapshot.status-lists-each-fire-once-freshest-first",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/state/state.go#stamp"
+   },
+   {
+    "candidate": "When both a durable and a local copy are kept, a write that either one rejects refuses the fire",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/state.go#Multi.Put"
+   },
+   {
+    "candidate": "A restore finds the record in whichever copy still holds it",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/state.go#Multi.Get"
+   },
+   {
+    "candidate": "Status lists each fire once, using its most recent copy, newest first, and silently skips a copy it cannot read",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/state.go#Multi.List"
+   }
+  ],
+  "state/state-test": [
+   {
+    "candidate": "A plan id with no saved record is reported as not found rather than as a broken store",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/state/local.go#Local.Get"
+   },
+   {
+    "candidate": "Test fixtures (snap helper, lossy/unreadable/failing fake stores)",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/state/state_test.go#snap"
+   },
+   {
+    "candidate": "Local record round-trips through a JSON file",
+    "covered_by": "recovery.restore-record.prior-numbers-preserved",
+    "reason": "TECH_PERSISTENCE",
+    "source": "internal/state/local.go#Local.Put"
+   },
+   {
+    "candidate": "The local restore record can be read only by the operator who wrote it",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/local.go#Local.Put"
+   },
+   {
+    "candidate": "Rewriting a restore record leaves exactly one complete record and nothing else",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/local.go#Local.Put"
+   },
+   {
+    "candidate": "With a durable and a local copy configured, a write either copy rejects fails the save",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/state.go#Multi.Put"
+   },
+   {
+    "candidate": "A restore finds the record in whichever copy still has it",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/state/state.go#Multi.Get"
+   },
+   {
+    "candidate": "Only an s3://bucket/prefix state location is accepted",
+    "covered_by": "recovery.state-storage.state-uri-must-be-s3",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/state/s3.go#ParseURI"
+   }
+  ],
+  "trip/trip": [
+   {
+    "candidate": "When the policy lists no regions, only the configured default region is scanned",
+    "covered_by": "cli/configuration-wiring (dropped here for budget)",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/trip/trip.go#Plan"
+   },
+   {
+    "candidate": "CloudFront (global) is walked only by the first region so it is planned once",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/trip/trip.go#Discover"
+   },
+   {
+    "candidate": "Options.Now clock defaults to current UTC time",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/trip/trip.go#Fire"
+   },
+   {
+    "candidate": "Cooldown wait is rounded to seconds under a minute, minutes otherwise",
+    "covered_by": "automation.trip-cycle.cooldown-blocks-repeat-fire",
+    "reason": "TRIVIAL",
+    "source": "internal/trip/trip.go#round"
+   },
+   {
+    "candidate": "CLI and Lambda share one Fire path",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/trip/trip.go#Fire"
+   },
+   {
+    "candidate": "Engine errors are returned to the caller with the partial plan",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/trip/trip.go#Fire"
+   }
+  ],
+  "trip/trip-test": [
+   {
+    "candidate": "fakeStore in-memory state store test double",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/trip/trip_test.go#fakeStore"
+   },
+   {
+    "candidate": "at() time-pointer helper",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/trip/trip_test.go#at"
+   },
+   {
+    "candidate": "Cooldown state is read from the state store instead of process memory, so Lambda cold starts still see it",
+    "covered_by": "automation.trip-cycle.cooldown-blocks-repeat-fire",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/trip/trip.go#FiredRecently"
+   },
+   {
+    "candidate": "Elapsed time in the skip message is rounded to the minute, or to the second when under a minute",
+    "covered_by": "automation.trip-cycle.cooldown-blocks-repeat-fire",
+    "reason": "TRIVIAL",
+    "source": "internal/trip/trip.go#round"
+   },
+   {
+    "candidate": "A second trip within an hour of an unrestored fire is skipped",
+    "covered_by": "automation.trip-cycle.cooldown-blocks-repeat-fire",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/trip/trip.go#FiredRecently"
+   },
+   {
+    "candidate": "A plan is identified by its UTC start time, to the second",
+    "covered_by": "automation.trip-cycle.plan-id-is-utc-timestamp",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/trip/trip.go#PlanID"
+   }
+  ],
+  "verify/report": [
+   {
+    "candidate": "Report header shows the start time in RFC3339 and the duration rounded to seconds",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/verify/report.go#Report.Text"
+   },
+   {
+    "candidate": "Fixed-width column layout and separator line of the kind table",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/verify/report.go#Report.Text"
+   },
+   {
+    "candidate": "Plan-only run (no fire) reads as OK because zero changes equals zero verified",
+    "covered_by": "assurance.report.pass-criteria",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/verify/report.go#Report.OK"
+   },
+   {
+    "candidate": "Kind rows are sorted by kind name",
+    "covered_by": "assurance.report.every-supported-kind-listed",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/verify/report.go#sortedKinds"
+   },
+   {
+    "candidate": "Kinds the account held none of are named as not exercised",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/report.go#Report.Text"
+   },
+   {
+    "candidate": "Each divergence is listed on its own line, and a clean run says so",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/report.go#Report.Text"
+   },
+   {
+    "candidate": "The pasteable report never shows resource IDs, ARNs, account IDs or resource names",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/report.go#Report.Text"
+   },
+   {
+    "candidate": "Errors raised during the run are printed in the report exactly as AWS returned them",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/report.go#Report.Text"
+   },
+   {
+    "candidate": "A verification passes only when every change landed, was confirmed and was undone",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/report.go#Report.OK"
+   }
+  ],
+  "verify/verify": [
+   {
+    "candidate": "Waits for the account to settle (default 90s, polling every 5s) before reading back",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/verify/verify.go#Report.reread"
+   },
+   {
+    "candidate": "Recorded-state comparison ignores key order",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/verify/verify.go#priorEqual"
+   },
+   {
+    "candidate": "Discovery errors are listed in the report without failing the run",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/verify/verify.go#Report.addErrs"
+   },
+   {
+    "candidate": "Report counts discovered, planned and refused resources per kind",
+    "covered_by": "assurance.verify-report.unexercised-kinds-named",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/verify/verify.go#Run"
+   },
+   {
+    "candidate": "A report is returned even when the run fails halfway",
+    "covered_by": "assurance.round-trip.restore-halts-on-first-failure",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/verify/verify.go#Run"
+   },
+   {
+    "candidate": "Report records start time and duration",
+    "covered_by": "",
+    "reason": "TRIVIAL",
+    "source": "internal/verify/verify.go#Run"
+   },
+   {
+    "candidate": "Verification plan id is verify-<unix time>",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/verify/verify.go#Run"
+   },
+   {
+    "candidate": "Discoverer interface lets the cycle run against an in-memory account",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/verify/verify.go#Discoverer"
+   },
+   {
+    "candidate": "An accepted stop that changed nothing is a divergence",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/verify.go#Report.checkFire"
+   },
+   {
+    "candidate": "A restore that puts back a different value is a divergence",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/verify.go#Report.checkRestore"
+   },
+   {
+    "candidate": "Only a NAT gateway may disappear when the killswitch fires",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/verify.go#Report.checkFire"
+   },
+   {
+    "candidate": "A NAT gateway that is never recreated is a divergence",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/verify.go#Report.checkRestore"
+   }
+  ],
+  "verify/verify-test": [
+   {
+    "candidate": "Prior-state comparison ignores key order",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/verify/verify_test.go#TestPriorComparisonIsOrderIndependent"
+   },
+   {
+    "candidate": "Settle and poll timing before the second read",
+    "covered_by": "",
+    "reason": "INTERNAL_MECHANISM",
+    "source": "internal/verify/verify.go#Report.reread"
+   },
+   {
+    "candidate": "In-memory account and snapshot store test doubles",
+    "covered_by": "",
+    "reason": "TECH_DEVTOOLING",
+    "source": "internal/verify/verify_test.go#account"
+   },
+   {
+    "candidate": "Per-service discovery errors degrade rather than fail the run",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/verify.go#Report.addErrs"
+   },
+   {
+    "candidate": "Reference numbering is stable within a report",
+    "covered_by": "assurance.coverage.report-carries-no-identifiers",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/verify/verify_test.go#TestAReferenceIsStableWithinAReportAndMeaninglessOutsideIt"
+   },
+   {
+    "candidate": "verify refuses without --yes or --plan-only, and multi-region policies",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "cmd/aws-killswitch/main.go"
+   },
+   {
+    "candidate": "A stop the API accepted but that changed nothing is reported as a divergence",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/verify.go#Report.checkFire"
+   },
+   {
+    "candidate": "A restore that puts back a different value than before the fire is reported as a divergence",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/verify.go#Report.checkRestore"
+   },
+   {
+    "candidate": "Only a NAT gateway may disappear during a fire, and it must come back in the same number",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/verify.go#Report.checkRestore"
+   },
+   {
+    "candidate": "A plan-only verification reports what would be stopped and changes nothing",
+    "covered_by": "assurance.round-trip.plan-only-changes-nothing",
+    "reason": "DUPLICATE_OF",
+    "source": "internal/verify/verify.go#Run"
+   },
+   {
+    "candidate": "Supported resource kinds the account did not hold are named as not exercised",
+    "covered_by": "",
+    "reason": "UNVERIFIABLE",
+    "source": "internal/verify/report.go#Report.Text"
+   }
+  ]
+ },
+ "lifted": {
+  "audit/audit": [
+   {
+    "from_source": "internal/audit/audit.go#New",
+    "rule": "accountability.audit-log.unavailable-log-does-not-block"
+   },
+   {
+    "from_source": "internal/audit/audit.go#New",
+    "rule": "accountability.audit-log.private-to-owner"
+   }
+  ],
+  "aws-killswitch/makefile": [],
+  "awsx/discover": [
+   {
+    "from_source": "internal/trip/trip.go#Discover",
+    "rule": "discovery.scan.global-distributions-found-once"
+   }
+  ],
+  "awsx/discover-compute": [],
+  "awsx/discover-data": [],
+  "awsx/discover-ingress": [],
+  "awsx/discover-network": [],
+  "awsx/execute": [
+   {
+    "from_source": "internal/awsx/execute.go#Executor",
+    "rule": "firing.pause-data-network.final-snapshot-when-opted-in"
+   },
+   {
+    "from_source": "internal/awsx/execute.go#Executor.client",
+    "rule": "firing.execution-engine.unreachable-region-fails-loudly"
+   }
+  ],
+  "awsx/execute-compute": [],
+  "awsx/execute-data": [],
+  "awsx/execute-ingress": [],
+  "awsx/execute-network": [],
+  "awsx/helpers": [],
+  "awsx/pricing": [
+   {
+    "from_source": "internal/model/model.go#Plan.BlastRadius",
+    "rule": "cost.savings.unknown-is-not-free"
+   }
+  ],
+  "awsx/pricing-test": [
+   {
+    "from_source": "internal/awsx/pricing.go#familyPrice",
+    "rule": "cost.savings.unpriced-is-not-free"
+   }
+  ],
+  "awsx/spend": [],
+  "cmd/aws-killswitch": [
+   {
+    "from_source": "cmd/aws-killswitch/wiring.go#loadPolicy",
+    "rule": "A typo or unknown field in the policy file is refused rather than silently ignored (exit 65)"
+   },
+   {
+    "from_source": "cmd/aws-killswitch/commands.go#cmdFire",
+    "rule": "The CLI fire honours the same one-hour cooldown as the automated trip, so a repeat fire cannot overwrite the prior state with a stopped one"
+   },
+   {
+    "from_source": "internal/engine/engine.go#Restore",
+    "rule": "A restore halts at the first failure so wrong credentials cannot masquerade as partial success"
+   }
+  ],
+  "cmd/killswitch-lambda": [
+   {
+    "from_source": "internal/state/state.go#Build",
+    "rule": "automation.lambda.refuses-without-durable-restore-record"
+   },
+   {
+    "from_source": "internal/trip/trip.go#FiredRecently",
+    "rule": "automation.lambda.repeat-delivery-skipped"
+   },
+   {
+    "from_source": "internal/trip/trip.go#Fire",
+    "rule": "automation.lambda.unattended-needs-force-for-acknowledgements"
+   }
+  ],
+  "docs/iam-calls-test": [
+   {
+    "from_source": "docs/iam_calls_test.go#TestPoliciesGrantEveryCallTheToolMakes",
+    "rule": "accountability.required-permissions.published-policies-grant-every-call"
+   }
+  ],
+  "docs/iam-test": [
+   {
+    "from_source": "docs/iam-fire.json#NeverTouchTheData",
+    "rule": "permissions.iam.fire-policy-denies-data-destruction"
+   },
+   {
+    "from_source": "docs/iam-lambda-trust.json#Statement",
+    "rule": "permissions.iam.lambda-role-assumable-only-by-lambda"
+   }
+  ],
+  "docs/stylesheets": [],
+  "engine/engine": [
+   {
+    "from_source": "internal/state/state.go#PutVerified",
+    "rule": "firing.engine.no-change-without-verified-record"
+   }
+  ],
+  "engine/engine-test": [
+   {
+    "from_source": "internal/state/state.go#PutVerified",
+    "rule": "firing.engine.record-before-any-change"
+   },
+   {
+    "from_source": "internal/model/model.go#Entry.RestoreDeadline",
+    "rule": "recovery.status.database-restart-deadline"
+   }
+  ],
+  "examples/scratch-account": [
+   {
+    "from_source": "examples/scratch-account/main.tf#locals",
+    "rule": "assurance.scratch-account.everything-carries-scope-tag"
+   }
+  ],
+  "model/fuzz-test": [],
+  "model/model": [
+   {
+    "from_source": "internal/model/model.go#IsNeverTouch",
+    "rule": "planning.protected-resources.stateful-kinds-never-touched"
+   },
+   {
+    "from_source": "internal/model/model.go#IsNeverTouch",
+    "rule": "planning.protected-resources.protected-service-arn-never-touched"
+   },
+   {
+    "from_source": "internal/model/model.go#PriorInt32",
+    "rule": "recovery.restore-run.unusable-recorded-count-refused"
+   },
+   {
+    "from_source": "internal/model/model.go#Snapshot.Changed",
+    "rule": "recovery.restore-run.only-changed-resources-restored"
+   }
+  ],
+  "model/model-test": [
+   {
+    "from_source": "internal/model/model.go#Plan.BlastRadius",
+    "rule": "cost.savings.unpriced-never-counted-as-free"
+   },
+   {
+    "from_source": "internal/model/model.go#PriorBool",
+    "rule": "recovery.restore.distribution-enabled-must-be-recorded-exactly"
+   },
+   {
+    "from_source": "internal/model/model.go#PriorFloat",
+    "rule": "recovery.restore.stage-throttle-restored-exactly"
+   }
+  ],
+  "plan/plan": [
+   {
+    "from_source": "internal/policy/policy.go#Policy.InScope",
+    "rule": "plan.protection.out-of-scope-explained"
+   },
+   {
+    "from_source": "internal/model/model.go#IsNeverTouch",
+    "rule": "plan.protection.stateful-storage-never-touched"
+   }
+  ],
+  "plan/plan-test": [
+   {
+    "from_source": "internal/model/model.go#IsNeverTouch",
+    "rule": "planning.protected.stateful-storage-never-touched"
+   },
+   {
+    "from_source": "internal/policy/policy.go#isProtected",
+    "rule": "planning.protected.protect-tag-unprotects-only-when-explicitly-false"
+   },
+   {
+    "from_source": "internal/policy/policy.go#Policy.Validate",
+    "rule": "planning.scope.ambiguous-policy-rejected"
+   }
+  ],
+  "policy/policy": [
+   {
+    "from_source": "internal/policy/policy.go#Policy.Validate",
+    "rule": "planning.scope.no-scope-refuses-to-run"
+   },
+   {
+    "from_source": "internal/policy/policy.go#Policy.InScope",
+    "rule": "planning.protected.protect-tag-overrides-scope"
+   },
+   {
+    "from_source": "internal/policy/policy.go#Parse",
+    "rule": "planning.scope.unknown-policy-keys-rejected"
+   }
+  ],
+  "state/local": [
+   {
+    "from_source": "internal/state/local.go#Local.Put",
+    "rule": "state.local.record-private-to-owner"
+   },
+   {
+    "from_source": "internal/state/local.go#Local.Put",
+    "rule": "state.local.record-never-half-written"
+   }
+  ],
+  "state/s3": [
+   {
+    "from_source": "internal/state/s3.go#S3.Put",
+    "rule": "recovery.state-storage.s3-record-encrypted-at-plan-key"
+   },
+   {
+    "from_source": "internal/state/s3.go#S3.Get",
+    "rule": "recovery.state-storage.unreadable-s3-record-reported-missing"
+   }
+  ],
+  "state/s3-test": [
+   {
+    "from_source": "internal/state/s3.go#S3.Put",
+    "rule": "Restore records kept in S3 are always server-side encrypted at rest"
+   },
+   {
+    "from_source": "internal/state/s3.go#S3.List",
+    "rule": "One unreadable record must not hide the other restore records when listing past fires"
+   }
+  ],
+  "state/state": [
+   {
+    "from_source": "internal/state/state.go#PutVerified",
+    "rule": "A fire never starts unless its restore record has been written and read back intact"
+   },
+   {
+    "from_source": "internal/state/state.go#Multi.Put",
+    "rule": "When the record is kept in several places, every one of them must accept it before the fire may start"
+   },
+   {
+    "from_source": "internal/state/state.go#Multi.Get",
+    "rule": "A restore can proceed as long as any one copy of the record survives"
+   },
+   {
+    "from_source": "internal/state/state.go#Build",
+    "rule": "The serverless trigger never fires without a durable S3 restore location"
+   }
+  ],
+  "state/state-test": [
+   {
+    "from_source": "internal/state/local.go#Local.Put",
+    "rule": "recovery.state-storage.record-not-readable-by-others"
+   },
+   {
+    "from_source": "internal/state/local.go#Local.Put",
+    "rule": "recovery.state-storage.rewrite-never-leaves-partial-record"
+   },
+   {
+    "from_source": "internal/state/state.go#Multi.Put",
+    "rule": "recovery.state-storage.every-copy-must-accept-the-write"
+   },
+   {
+    "from_source": "internal/state/state.go#Multi.Get",
+    "rule": "recovery.state-storage.read-from-any-surviving-copy"
+   }
+  ],
+  "trip/trip": [
+   {
+    "from_source": "internal/trip/trip.go#FiredRecently",
+    "rule": "automation.trip-cycle.cooldown-blocks-repeat-fire: the cooldown is decided from the recorded fires in the restore record store (fired, not restored, within one hour), so it holds across separate Lambda invocations"
+   }
+  ],
+  "trip/trip-test": [
+   {
+    "from_source": "internal/trip/trip.go#FiredRecently",
+    "rule": "A repeat trip within one hour of a fire that has not been restored is refused, so the first restore record stays the one that brings the account back"
+   }
+  ],
+  "verify/report": [],
+  "verify/verify": [],
+  "verify/verify-test": []
+ },
+ "retired": [
+  "assurance.coverage-report.004",
+  "assurance.round-trip-verify.008",
+  "assurance.round-trip-verify.010",
+  "assurance.round-trip-verify.011",
+  "assurance.scratch-account.004",
+  "automation.lambda-trigger.004",
+  "automation.lambda-trigger.005",
+  "automation.trip-cycle.002",
+  "automation.trip-cycle.007",
+  "automation.trip-cycle.010",
+  "cli.commands.003",
+  "cost.current-spend.007",
+  "cost.savings-estimates.001",
+  "cost.savings-estimates.002",
+  "cost.savings-estimates.007",
+  "cost.savings-estimates.009",
+  "discovery.ingress-discovery.002",
+  "discovery.network-discovery.006",
+  "firing.cut-ingress.006",
+  "firing.drain-compute.001",
+  "firing.drain-compute.004",
+  "firing.execution-engine.001",
+  "firing.execution-engine.004",
+  "firing.execution-engine.007",
+  "firing.execution-engine.010",
+  "planning.action-catalog.002",
+  "planning.plan-building.001",
+  "planning.plan-building.003",
+  "planning.plan-building.004",
+  "planning.plan-building.006",
+  "planning.plan-building.007",
+  "planning.protected-resources.002",
+  "planning.protected-resources.004",
+  "planning.protected-resources.006",
+  "planning.protected-resources.010",
+  "planning.protected-resources.011",
+  "planning.scope-policy.004",
+  "recovery.fire-status.003",
+  "recovery.restore-run.008",
+  "recovery.restore-run.014",
+  "recovery.restore-run.015",
+  "recovery.restore-run.018",
+  "recovery.restore-snapshot.001",
+  "recovery.restore-snapshot.003",
+  "recovery.restore-snapshot.005"
+ ],
+ "scenarios": {
+  "accountability.audit-log.001": {
+   "file": "specs/accountability/audit-log/audit-log.feature",
+   "fingerprint": "de8adee16399",
+   "human": false,
+   "rule": "accountability.audit-log.append-only",
+   "source": "internal/audit/audit.go#New",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "accountability.audit-log.002": {
+   "file": "specs/accountability/audit-log/audit-log.feature",
+   "fingerprint": "de8adee16399",
+   "human": false,
+   "rule": "accountability.audit-log.private-to-owner",
+   "source": "internal/audit/audit.go#New",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "accountability.audit-log.003": {
+   "file": "specs/accountability/audit-log/audit-log.feature",
+   "fingerprint": "0fe66d2afb7c",
+   "human": false,
+   "rule": "accountability.audit-log.author-identity-fallback",
+   "source": "internal/audit/audit.go#whoami",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "accountability.audit-log.004": {
+   "file": "specs/accountability/audit-log/audit-log.feature",
+   "fingerprint": "de8adee16399",
+   "human": false,
+   "rule": "accountability.audit-log.unavailable-log-does-not-block",
+   "source": "internal/audit/audit.go#New",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "accountability.required-permissions.001": {
+   "file": "specs/accountability/required-permissions/published-iam-policies.feature",
+   "fingerprint": "7351c70fe3a8",
+   "human": false,
+   "rule": "accountability.required-permissions.published-policies-grant-every-call",
+   "source": "docs/iam-plan-readonly.json#Discover",
+   "status": "verified",
+   "test": "docs/iam_calls_test.go#TestPoliciesGrantEveryCallTheToolMakes",
+   "tests": [
+    "docs/iam_calls_test.go#TestPoliciesGrantEveryCallTheToolMakes"
+   ]
+  },
+  "accountability.required-permissions.002": {
+   "file": "specs/accountability/required-permissions/shipped-iam-policies.feature",
+   "fingerprint": "7351c70fe3a8",
+   "human": false,
+   "rule": "permissions.iam.readonly-policy-cannot-change-resources",
+   "source": "docs/iam-plan-readonly.json#Discover",
+   "status": "verified",
+   "test": "docs/iam_test.go#TestReadonlyPolicyCannotChangeAnything",
+   "tests": [
+    "docs/iam_test.go#TestReadonlyPolicyCannotChangeAnything"
+   ]
+  },
+  "accountability.required-permissions.003": {
+   "file": "specs/accountability/required-permissions/shipped-iam-policies.feature",
+   "fingerprint": "86807c81530c",
+   "human": false,
+   "rule": "permissions.iam.fire-policy-denies-data-destruction",
+   "source": "docs/iam-fire.json#NeverTouchTheData",
+   "status": "verified",
+   "test": "docs/iam_test.go#TestFirePolicyDeletesOnlyNatGateways",
+   "tests": [
+    "docs/iam_test.go#TestFirePolicyDeletesOnlyNatGateways"
+   ]
+  },
+  "accountability.required-permissions.004": {
+   "file": "specs/accountability/required-permissions/shipped-iam-policies.feature",
+   "fingerprint": "509b45472ec2",
+   "human": false,
+   "rule": "permissions.iam.fire-policy-only-reversible-changes",
+   "source": "docs/iam-fire.json#NatGatewayOptIn",
+   "status": "verified",
+   "test": "docs/iam_test.go#TestFirePolicyDeletesOnlyNatGateways",
+   "tests": [
+    "docs/iam_test.go#TestFirePolicyDeletesOnlyNatGateways"
+   ]
+  },
+  "accountability.required-permissions.005": {
+   "file": "specs/accountability/required-permissions/shipped-iam-policies.feature",
+   "fingerprint": "09af732d01b9",
+   "human": false,
+   "rule": "permissions.iam.fire-compute-scoped-by-env-tag",
+   "source": "docs/iam-fire.json#StopComputeReversibly",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "accountability.required-permissions.006": {
+   "file": "specs/accountability/required-permissions/shipped-iam-policies.feature",
+   "fingerprint": "4ec5b6964c53",
+   "human": false,
+   "rule": "permissions.iam.lambda-role-assumable-only-by-lambda",
+   "source": "docs/iam-lambda-trust.json#Statement",
+   "status": "verified",
+   "test": "docs/iam_test.go#TestOnlyLambdaAssumesTheExecutionRole",
+   "tests": [
+    "docs/iam_test.go#TestOnlyLambdaAssumesTheExecutionRole"
+   ]
+  },
+  "accountability.required-permissions.007": {
+   "file": "specs/accountability/required-permissions/shipped-iam-policies.feature",
+   "fingerprint": "40b2e62ec838",
+   "human": false,
+   "rule": "permissions.iam.lambda-extra-cannot-change-resources",
+   "source": "docs/iam-lambda-extra.json#WriteItsOwnLogs",
+   "status": "verified",
+   "test": "docs/iam_test.go#TestLambdaExtraCannotChangeAResource",
+   "tests": [
+    "docs/iam_test.go#TestLambdaExtraCannotChangeAResource"
+   ]
+  },
+  "assurance.coverage-report.001": {
+   "file": "specs/assurance/coverage-report/verification-report.feature",
+   "fingerprint": "04d793bf3a8a",
+   "human": false,
+   "rule": "assurance.report.every-supported-kind-listed",
+   "source": "internal/verify/report.go#sortedKinds",
+   "status": "verified",
+   "test": "internal/verify/verify_test.go#TestKindsTheAccountDoesNotHoldAreNamedAsUnexercised",
+   "tests": [
+    "internal/verify/verify_test.go#TestKindsTheAccountDoesNotHoldAreNamedAsUnexercised"
+   ]
+  },
+  "assurance.coverage-report.002": {
+   "file": "specs/assurance/coverage-report/verification-report-verify.feature",
+   "fingerprint": "739f22f9ff99",
+   "human": false,
+   "rule": "assurance.verify-report.unexercised-kinds-named",
+   "source": "internal/verify/verify.go#AllKinds",
+   "status": "verified",
+   "test": "internal/verify/verify_test.go#TestKindsTheAccountDoesNotHoldAreNamedAsUnexercised",
+   "tests": [
+    "internal/verify/verify_test.go#TestKindsTheAccountDoesNotHoldAreNamedAsUnexercised"
+   ]
+  },
+  "assurance.coverage-report.003": {
+   "file": "specs/assurance/coverage-report/verification-report-verify.feature",
+   "fingerprint": "3e6b9f8d1fdc",
+   "human": false,
+   "rule": "assurance.verify-report.no-identifying-data",
+   "source": "internal/verify/verify.go#refFor",
+   "status": "verified",
+   "test": "internal/verify/verify_test.go#TestNothingIdentifyingReachesTheReport",
+   "tests": [
+    "internal/verify/verify_test.go#TestNothingIdentifyingReachesTheReport",
+    "internal/verify/verify_test.go#TestAReferenceIsStableWithinAReportAndMeaninglessOutsideIt"
+   ]
+  },
+  "assurance.round-trip-verify.001": {
+   "file": "specs/assurance/round-trip-verify/cli-verify-scratch-account.feature",
+   "fingerprint": "d963dd8d08f3",
+   "human": false,
+   "rule": "cli.verify.requires-explicit-consent",
+   "source": "cmd/aws-killswitch/main.go#cmdVerify",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "assurance.round-trip-verify.002": {
+   "file": "specs/assurance/round-trip-verify/cli-verify-scratch-account.feature",
+   "fingerprint": "d963dd8d08f3",
+   "human": false,
+   "rule": "cli.verify.single-region-only",
+   "source": "cmd/aws-killswitch/main.go#cmdVerify",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "assurance.round-trip-verify.003": {
+   "file": "specs/assurance/round-trip-verify/cli-verify-scratch-account.feature",
+   "fingerprint": "d963dd8d08f3",
+   "human": false,
+   "rule": "cli.verify.announces-target-first",
+   "source": "cmd/aws-killswitch/main.go#cmdVerify",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "assurance.round-trip-verify.004": {
+   "file": "specs/assurance/round-trip-verify/cli-verify-scratch-account.feature",
+   "fingerprint": "d963dd8d08f3",
+   "human": false,
+   "rule": "cli.verify.divergence-fails-run",
+   "source": "cmd/aws-killswitch/main.go#cmdVerify",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "assurance.round-trip-verify.005": {
+   "file": "specs/assurance/round-trip-verify/round-trip-verification.feature",
+   "fingerprint": "db341edf7282",
+   "human": false,
+   "rule": "assurance.round-trip.failed-stop-does-not-halt-fire",
+   "source": "internal/verify/verify.go#Run",
+   "status": "verified",
+   "test": "internal/verify/verify_test.go#TestAFailedApplyIsCountedAndTheRunContinues",
+   "tests": [
+    "internal/verify/verify_test.go#TestAFailedApplyIsCountedAndTheRunContinues"
+   ]
+  },
+  "assurance.round-trip-verify.006": {
+   "file": "specs/assurance/round-trip-verify/round-trip-verification.feature",
+   "fingerprint": "db341edf7282",
+   "human": false,
+   "rule": "assurance.round-trip.restore-halts-on-first-failure",
+   "source": "internal/verify/verify.go#Run",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "assurance.round-trip-verify.007": {
+   "file": "specs/assurance/round-trip-verify/round-trip-verification.feature",
+   "fingerprint": "db341edf7282",
+   "human": false,
+   "rule": "assurance.round-trip.plan-only-changes-nothing",
+   "source": "internal/verify/verify.go#Run",
+   "status": "verified",
+   "test": "internal/verify/verify_test.go#TestSkipFirePlansAndTouchesNothing",
+   "tests": [
+    "internal/verify/verify_test.go#TestSkipFirePlansAndTouchesNothing"
+   ]
+  },
+  "assurance.round-trip-verify.009": {
+   "file": "specs/assurance/round-trip-verify/round-trip-verification-verify-test.feature",
+   "fingerprint": "db341edf7282",
+   "human": false,
+   "rule": "assurance.round-trip.clean-cycle-passes",
+   "source": "internal/verify/verify.go#Run",
+   "status": "verified",
+   "test": "internal/verify/verify_test.go#TestACleanCycleFiresRestoresAndReportsNoDivergence",
+   "tests": [
+    "internal/verify/verify_test.go#TestACleanCycleFiresRestoresAndReportsNoDivergence"
+   ]
+  },
+  "assurance.round-trip-verify.013": {
+   "file": "specs/assurance/round-trip-verify/round-trip-verification-verify-test.feature",
+   "fingerprint": "db341edf7282",
+   "human": false,
+   "rule": "assurance.round-trip.empty-account-is-not-a-pass",
+   "source": "internal/verify/verify.go#Run",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "assurance.scratch-account.001": {
+   "file": "specs/assurance/scratch-account/scratch-account.feature",
+   "fingerprint": "913e8a1c37ed",
+   "human": false,
+   "rule": "assurance.scratch-account.every-supported-kind-present",
+   "source": "examples/scratch-account/main.tf#aws_lb_listener",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "assurance.scratch-account.002": {
+   "file": "specs/assurance/scratch-account/scratch-account.feature",
+   "fingerprint": "fae800330576",
+   "human": false,
+   "rule": "assurance.scratch-account.everything-carries-scope-tag",
+   "source": "examples/scratch-account/main.tf#locals",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "assurance.scratch-account.003": {
+   "file": "specs/assurance/scratch-account/scratch-account.feature",
+   "fingerprint": "28042829e343",
+   "human": false,
+   "rule": "assurance.scratch-account.non-default-prior-settings",
+   "source": "examples/scratch-account/main.tf#aws_lambda_function",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "automation.lambda-trigger.001": {
+   "file": "specs/automation/lambda-trigger/lambda-budget-trigger.feature",
+   "fingerprint": "4d66159a56c5",
+   "human": false,
+   "rule": "automation.lambda.refuses-without-durable-restore-record",
+   "source": "cmd/killswitch-lambda/main.go#handle",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "automation.lambda-trigger.002": {
+   "file": "specs/automation/lambda-trigger/lambda-budget-trigger.feature",
+   "fingerprint": "f5f341894c74",
+   "human": false,
+   "rule": "automation.lambda.policy-from-environment",
+   "source": "cmd/killswitch-lambda/main.go#loadPolicy",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "automation.lambda-trigger.003": {
+   "file": "specs/automation/lambda-trigger/lambda-budget-trigger.feature",
+   "fingerprint": "4d66159a56c5",
+   "human": false,
+   "rule": "automation.lambda.invalid-policy-refused",
+   "source": "cmd/killswitch-lambda/main.go#handle",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "automation.lambda-trigger.006": {
+   "file": "specs/automation/lambda-trigger/lambda-budget-trigger.feature",
+   "fingerprint": "4d66159a56c5",
+   "human": false,
+   "rule": "automation.lambda.dry-run-test-invocation",
+   "source": "cmd/killswitch-lambda/main.go#handle",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "automation.lambda-trigger.007": {
+   "file": "specs/automation/lambda-trigger/lambda-budget-trigger.feature",
+   "fingerprint": "091a5022dc0d",
+   "human": false,
+   "rule": "automation.lambda.response-reports-outcome",
+   "source": "cmd/killswitch-lambda/main.go#Response",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "automation.trip-cycle.001": {
+   "file": "specs/automation/trip-cycle/trip-cycle.feature",
+   "fingerprint": "ef6c1515ff1a",
+   "human": false,
+   "rule": "automation.trip-cycle.cooldown-blocks-repeat-fire",
+   "source": "internal/trip/trip.go#Fire",
+   "status": "verified",
+   "test": "internal/trip/trip_test.go#TestARepeatedNotificationInsideTheCooldownDoesNotDoubleFire",
+   "tests": [
+    "internal/trip/trip_test.go#TestARepeatedNotificationInsideTheCooldownDoesNotDoubleFire",
+    "internal/trip/trip_test.go#TestAFireOlderThanTheCooldownDoesNotBlockANewOne",
+    "internal/trip/trip_test.go#TestARestoredSnapshotDoesNotBlockANewFire",
+    "internal/trip/trip_test.go#TestAPlannedButNeverFiredSnapshotDoesNotBlock",
+    "internal/trip/trip_test.go#TestAFireStampedInTheFutureIsIgnored"
+   ]
+  },
+  "automation.trip-cycle.003": {
+   "file": "specs/automation/trip-cycle/trip-cycle.feature",
+   "fingerprint": "ef6c1515ff1a",
+   "human": false,
+   "rule": "automation.trip-cycle.empty-plan-fires-nothing",
+   "source": "internal/trip/trip.go#Fire",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "automation.trip-cycle.004": {
+   "file": "specs/automation/trip-cycle/trip-cycle.feature",
+   "fingerprint": "ef6c1515ff1a",
+   "human": false,
+   "rule": "automation.trip-cycle.acknowledgement-required-blocks-unattended",
+   "source": "internal/trip/trip.go#Fire",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "automation.trip-cycle.005": {
+   "file": "specs/automation/trip-cycle/trip-cycle.feature",
+   "fingerprint": "ef6c1515ff1a",
+   "human": false,
+   "rule": "automation.trip-cycle.dry-run-changes-nothing",
+   "source": "internal/trip/trip.go#Fire",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "automation.trip-cycle.006": {
+   "file": "specs/automation/trip-cycle/trip-cycle.feature",
+   "fingerprint": "1cd66de029f6",
+   "human": false,
+   "rule": "automation.trip-cycle.discovery-failures-degrade-not-abort",
+   "source": "internal/trip/trip.go#Discover",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "automation.trip-cycle.008": {
+   "file": "specs/automation/trip-cycle/trip-cycle.feature",
+   "fingerprint": "5fba9c59f498",
+   "human": false,
+   "rule": "automation.trip-cycle.plan-id-is-utc-timestamp",
+   "source": "internal/trip/trip.go#PlanID",
+   "status": "verified",
+   "test": "internal/trip/trip_test.go#TestPlanIDIsSortableAndSecondPrecise",
+   "tests": [
+    "internal/trip/trip_test.go#TestPlanIDIsSortableAndSecondPrecise"
+   ]
+  },
+  "automation.trip-cycle.011": {
+   "file": "specs/automation/trip-cycle/trip-cooldown.feature",
+   "fingerprint": "dba280db73b0",
+   "human": false,
+   "rule": "automation.trip-cycle.unreadable-state-does-not-block",
+   "source": "internal/trip/trip.go#FiredRecently",
+   "status": "verified",
+   "test": "internal/trip/trip_test.go#TestUnreadableStateDoesNotRefuseToFire",
+   "tests": [
+    "internal/trip/trip_test.go#TestUnreadableStateDoesNotRefuseToFire"
+   ]
+  },
+  "automation.trip-cycle.012": {
+   "file": "specs/automation/trip-cycle/trip-cooldown.feature",
+   "fingerprint": "ef6c1515ff1a",
+   "human": false,
+   "rule": "automation.trip-cycle.operator-force-overrides-cooldown",
+   "source": "internal/trip/trip.go#Fire",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.commands.001": {
+   "file": "specs/cli/commands/cli-fire-and-restore.feature",
+   "fingerprint": "3c0bf9b34060",
+   "human": false,
+   "rule": "cli.fire.dry-run-without-yes",
+   "source": "cmd/aws-killswitch/commands.go#cmdFire",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.commands.002": {
+   "file": "specs/cli/commands/cli-fire-and-restore.feature",
+   "fingerprint": "4bad4168c4fa",
+   "human": false,
+   "rule": "cli.fire.ack-required-needs-force",
+   "source": "cmd/aws-killswitch/commands.go#refuseToFire",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.commands.004": {
+   "file": "specs/cli/commands/cli-fire-and-restore.feature",
+   "fingerprint": "4bad4168c4fa",
+   "human": false,
+   "rule": "cli.fire.nothing-in-scope-fails",
+   "source": "cmd/aws-killswitch/commands.go#refuseToFire",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.commands.005": {
+   "file": "specs/cli/commands/cli-fire-and-restore.feature",
+   "fingerprint": "3c0bf9b34060",
+   "human": false,
+   "rule": "cli.fire.partial-failure-reports-restore-path",
+   "source": "cmd/aws-killswitch/commands.go#cmdFire",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.commands.006": {
+   "file": "specs/cli/commands/cli-fire-and-restore.feature",
+   "fingerprint": "e003a9960884",
+   "human": false,
+   "rule": "cli.restore.dry-run-preview",
+   "source": "cmd/aws-killswitch/commands.go#cmdRestore",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.commands.007": {
+   "file": "specs/cli/commands/cli-fire-and-restore.feature",
+   "fingerprint": "e003a9960884",
+   "human": false,
+   "rule": "cli.restore.stops-at-first-failure",
+   "source": "cmd/aws-killswitch/commands.go#cmdRestore",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.commands.008": {
+   "file": "specs/cli/commands/cli-fire-and-restore.feature",
+   "fingerprint": "e003a9960884",
+   "human": false,
+   "rule": "cli.restore.refuses-missing-or-empty-record",
+   "source": "cmd/aws-killswitch/commands.go#cmdRestore",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.configuration-wiring.001": {
+   "file": "specs/cli/configuration-wiring/cli-policy-and-state-location.feature",
+   "fingerprint": "7a668338cee6",
+   "human": false,
+   "rule": "cli.config.policy-required-and-valid",
+   "source": "cmd/aws-killswitch/wiring.go#policyFor",
+   "status": "verified",
+   "test": "cmd/aws-killswitch/exit_test.go#TestMissingPolicyFileExitsNoInput",
+   "tests": [
+    "cmd/aws-killswitch/exit_test.go#TestMissingPolicyFileExitsNoInput",
+    "cmd/aws-killswitch/exit_test.go#TestUnparsablePolicyExitsDataErr",
+    "cmd/aws-killswitch/exit_test.go#TestUnscopedPolicyExitsConfig"
+   ]
+  },
+  "cli.configuration-wiring.002": {
+   "file": "specs/cli/configuration-wiring/cli-policy-and-state-location.feature",
+   "fingerprint": "eac87ac39023",
+   "human": false,
+   "rule": "cli.config.state-location",
+   "source": "cmd/aws-killswitch/wiring.go#buildStore",
+   "status": "verified",
+   "test": "cmd/aws-killswitch/exit_test.go#TestUnusableStateURIExitsConfig",
+   "tests": [
+    "cmd/aws-killswitch/exit_test.go#TestUnusableStateURIExitsConfig"
+   ]
+  },
+  "cli.configuration-wiring.003": {
+   "file": "specs/cli/configuration-wiring/cli-policy-and-state-location.feature",
+   "fingerprint": "8d30e5ceff83",
+   "human": false,
+   "rule": "cli.config.unusable-credentials-refused",
+   "source": "cmd/aws-killswitch/main.go#run",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.configuration-wiring.004": {
+   "file": "specs/cli/configuration-wiring/cli-policy-and-state-location.feature",
+   "fingerprint": "037a3ce7a9db",
+   "human": false,
+   "rule": "cli.config.degrade-not-abort",
+   "source": "cmd/aws-killswitch/wiring.go#warnAll",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.exit-codes.001": {
+   "file": "specs/cli/exit-codes/cli-exit-codes.feature",
+   "fingerprint": "8d30e5ceff83",
+   "human": false,
+   "rule": "cli.exit.wrong-command-is-usage",
+   "source": "cmd/aws-killswitch/main.go#run",
+   "status": "verified",
+   "test": "cmd/aws-killswitch/exit_test.go#TestUnknownCommandExitsUsage",
+   "tests": [
+    "cmd/aws-killswitch/exit_test.go#TestUnknownCommandExitsUsage"
+   ]
+  },
+  "cli.exit-codes.002": {
+   "file": "specs/cli/exit-codes/cli-exit-codes.feature",
+   "fingerprint": "ca43292b1669",
+   "human": false,
+   "rule": "cli.exit.unknown-flag-exits-two",
+   "source": "cmd/aws-killswitch/main.go#main",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.exit-codes.003": {
+   "file": "specs/cli/exit-codes/cli-exit-codes.feature",
+   "fingerprint": "858c5acae92c",
+   "human": false,
+   "rule": "cli.exit.unclassified-failure-is-one",
+   "source": "cmd/aws-killswitch/exit.go#exitCode",
+   "status": "verified",
+   "test": "cmd/aws-killswitch/exit_test.go#TestUnclassifiedErrorExitsFail",
+   "tests": [
+    "cmd/aws-killswitch/exit_test.go#TestUnclassifiedErrorExitsFail"
+   ]
+  },
+  "cli.exit-codes.004": {
+   "file": "specs/cli/exit-codes/cli-exit-codes.feature",
+   "fingerprint": "ca43292b1669",
+   "human": false,
+   "rule": "cli.exit.flags-anywhere",
+   "source": "cmd/aws-killswitch/main.go#main",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.output-rendering.001": {
+   "file": "specs/cli/output-rendering/resource-display-names.feature",
+   "fingerprint": "f59884a34c31",
+   "human": false,
+   "rule": "discovery.naming.name-tag-or-id",
+   "source": "internal/awsx/helpers.go#nameOf",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.output-rendering.002": {
+   "file": "specs/cli/output-rendering/cli-plan-output.feature",
+   "fingerprint": "9d060ab2d058",
+   "human": false,
+   "rule": "cli.render.plan-shows-changes-and-refusals",
+   "source": "cmd/aws-killswitch/render.go#printPlan",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.output-rendering.003": {
+   "file": "specs/cli/output-rendering/cli-plan-output.feature",
+   "fingerprint": "46c22b24fde1",
+   "human": false,
+   "rule": "cli.render.unpriced-not-shown-as-free",
+   "source": "cmd/aws-killswitch/render.go#printSavings",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.output-rendering.004": {
+   "file": "specs/cli/output-rendering/cli-plan-output.feature",
+   "fingerprint": "9d060ab2d058",
+   "human": false,
+   "rule": "cli.render.empty-plan",
+   "source": "cmd/aws-killswitch/render.go#printPlan",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.output-rendering.005": {
+   "file": "specs/cli/output-rendering/cli-plan-output.feature",
+   "fingerprint": "64a07287e33b",
+   "human": false,
+   "rule": "cli.render.json-output",
+   "source": "cmd/aws-killswitch/render.go#emit",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cli.output-rendering.006": {
+   "file": "specs/cli/output-rendering/cli-plan-output.feature",
+   "fingerprint": "d40378e2034c",
+   "human": false,
+   "rule": "cli.render.long-names-truncated",
+   "source": "cmd/aws-killswitch/render.go#truncate",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cost.current-spend.001": {
+   "file": "specs/cost/current-spend/month-to-date-spend.feature",
+   "fingerprint": "f2e6129c4b6c",
+   "human": false,
+   "rule": "cost.spend.month-to-date-window",
+   "source": "internal/awsx/spend.go#MonthToDate",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cost.current-spend.002": {
+   "file": "specs/cost/current-spend/month-to-date-spend.feature",
+   "fingerprint": "f2e6129c4b6c",
+   "human": false,
+   "rule": "cost.spend.estimated-figures-flagged",
+   "source": "internal/awsx/spend.go#MonthToDate",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cost.current-spend.003": {
+   "file": "specs/cost/current-spend/month-to-date-spend.feature",
+   "fingerprint": "f2e6129c4b6c",
+   "human": false,
+   "rule": "cost.spend.unreadable-amount-refused",
+   "source": "internal/awsx/spend.go#MonthToDate",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cost.current-spend.004": {
+   "file": "specs/cost/current-spend/month-to-date-spend.feature",
+   "fingerprint": "62e4bbde4b14",
+   "human": false,
+   "rule": "cost.spend.forecast-reported",
+   "source": "internal/awsx/spend.go#Spend",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cost.current-spend.005": {
+   "file": "specs/cost/current-spend/cli-spend-threshold.feature",
+   "fingerprint": "16b52bfa5655",
+   "human": false,
+   "rule": "cost.spend.threshold-verdict",
+   "source": "cmd/aws-killswitch/commands.go#cmdSpend",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cost.current-spend.006": {
+   "file": "specs/cost/current-spend/cli-spend-threshold.feature",
+   "fingerprint": "16b52bfa5655",
+   "human": false,
+   "rule": "cost.spend.json-ignores-threshold",
+   "source": "cmd/aws-killswitch/commands.go#cmdSpend",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cost.current-spend.008": {
+   "file": "specs/cost/current-spend/cli-spend-threshold.feature",
+   "fingerprint": "8d30e5ceff83",
+   "human": false,
+   "rule": "cost.spend.no-policy-needed",
+   "source": "cmd/aws-killswitch/main.go#run",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cost.savings-estimates.003": {
+   "file": "specs/cost/savings-estimates/hourly-savings-estimates.feature",
+   "fingerprint": "fe61795aba0e",
+   "human": false,
+   "rule": "cost.savings.nat-gateway-flat-rate",
+   "source": "internal/awsx/pricing.go#NATGatewayHourlyUSD",
+   "status": "verified",
+   "test": "internal/awsx/pricing_test.go#TestNATIsFlat",
+   "tests": [
+    "internal/awsx/pricing_test.go#TestNATIsFlat"
+   ]
+  },
+  "cost.savings-estimates.004": {
+   "file": "specs/cost/savings-estimates/hourly-savings-estimates.feature",
+   "fingerprint": "d9aa45baf1c0",
+   "human": false,
+   "rule": "cost.savings.list-price-floor",
+   "source": "internal/awsx/pricing.go#RDSHourlyUSD",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "cost.savings-estimates.005": {
+   "file": "specs/cost/savings-estimates/hourly-savings-estimates.feature",
+   "fingerprint": "3eb44c8b3f48",
+   "human": false,
+   "rule": "cost.savings.small-and-metal-size-scaling",
+   "source": "internal/awsx/pricing.go#sizeFactor",
+   "status": "verified",
+   "test": "internal/awsx/pricing_test.go#TestEC2PricesMatchThePublishedTable",
+   "tests": [
+    "internal/awsx/pricing_test.go#TestEC2PricesMatchThePublishedTable"
+   ]
+  },
+  "cost.savings-estimates.006": {
+   "file": "specs/cost/savings-estimates/savings-estimates.feature",
+   "fingerprint": "23baab2ff70a",
+   "human": false,
+   "rule": "cost.savings.instance-list-price",
+   "source": "internal/awsx/pricing.go#EC2HourlyUSD",
+   "status": "verified",
+   "test": "internal/awsx/pricing_test.go#TestEC2PricesMatchThePublishedTable",
+   "tests": [
+    "internal/awsx/pricing_test.go#TestEC2PricesMatchThePublishedTable",
+    "internal/awsx/pricing_test.go#TestCaseAndWhitespaceDoNotChangeTheAnswer",
+    "internal/awsx/pricing_test.go#TestSizeFactorsAreMonotonic"
+   ]
+  },
+  "cost.savings-estimates.008": {
+   "file": "specs/cost/savings-estimates/savings-estimates.feature",
+   "fingerprint": "d9aa45baf1c0",
+   "human": false,
+   "rule": "cost.savings.database-list-price",
+   "source": "internal/awsx/pricing.go#RDSHourlyUSD",
+   "status": "verified",
+   "test": "internal/awsx/pricing_test.go#TestRDSPrices",
+   "tests": [
+    "internal/awsx/pricing_test.go#TestRDSPrices"
+   ]
+  },
+  "cost.savings-estimates.010": {
+   "file": "specs/cost/savings-estimates/savings-estimates.feature",
+   "fingerprint": "fa04a1eba840",
+   "human": false,
+   "rule": "cost.savings.unpriced-is-not-free",
+   "source": "internal/awsx/pricing.go#familyPrice",
+   "status": "verified",
+   "test": "internal/awsx/pricing_test.go#TestUnknownIsNotEstimatedRatherThanFree",
+   "tests": [
+    "internal/awsx/pricing_test.go#TestUnknownIsNotEstimatedRatherThanFree",
+    "internal/awsx/pricing_test.go#TestOracleAndSQLServerClassesAreNotGuessed"
+   ]
+  },
+  "discovery.data-discovery.001": {
+   "file": "specs/discovery/data-discovery/database-discovery.feature",
+   "fingerprint": "da784161e7ef",
+   "human": false,
+   "rule": "data.discovery.cluster-is-the-stop-unit",
+   "source": "internal/awsx/discover_data.go#databases",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "discovery.data-discovery.002": {
+   "file": "specs/discovery/data-discovery/database-discovery.feature",
+   "fingerprint": "da784161e7ef",
+   "human": false,
+   "rule": "data.discovery.database-price-or-unpriced",
+   "source": "internal/awsx/discover_data.go#databases",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "discovery.data-discovery.003": {
+   "file": "specs/discovery/data-discovery/database-discovery.feature",
+   "fingerprint": "da784161e7ef",
+   "human": false,
+   "rule": "data.discovery.status-decides-stoppability",
+   "source": "internal/awsx/discover_data.go#databases",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "discovery.data-discovery.004": {
+   "file": "specs/discovery/data-discovery/database-discovery.feature",
+   "fingerprint": "da784161e7ef",
+   "human": false,
+   "rule": "data.discovery.failure-reported-per-region",
+   "source": "internal/awsx/discover_data.go#databases",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "discovery.ingress-discovery.001": {
+   "file": "specs/discovery/ingress-discovery/ingress-discovery.feature",
+   "fingerprint": "bb4edbabfc1b",
+   "human": false,
+   "rule": "discovery.ingress.only-forwarding-listeners-are-candidates",
+   "source": "internal/awsx/discover_ingress.go#forwards",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "discovery.ingress-discovery.003": {
+   "file": "specs/discovery/ingress-discovery/ingress-discovery.feature",
+   "fingerprint": "e4e76fd3c234",
+   "human": false,
+   "rule": "discovery.ingress.entry-points-named-as-known",
+   "source": "internal/awsx/discover_ingress.go#apiStage",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "discovery.multi-region-scan.001": {
+   "file": "specs/discovery/multi-region-scan/account-region-scan.feature",
+   "fingerprint": "05ff884b1ea3",
+   "human": false,
+   "rule": "discovery.scan.unknown-account-label",
+   "source": "internal/awsx/discover.go#AccountID",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "discovery.network-discovery.001": {
+   "file": "specs/discovery/network-discovery/nat-gateway-discovery.feature",
+   "fingerprint": "7ab2c773be45",
+   "human": false,
+   "rule": "discovery.network.only-available-nat-gateways",
+   "source": "internal/awsx/discover_network.go#natGateways",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "discovery.network-discovery.002": {
+   "file": "specs/discovery/network-discovery/nat-gateway-discovery.feature",
+   "fingerprint": "7ab2c773be45",
+   "human": false,
+   "rule": "discovery.network.nat-gateway-routes-recorded",
+   "source": "internal/awsx/discover_network.go#natGateways",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "discovery.network-discovery.003": {
+   "file": "specs/discovery/network-discovery/nat-gateway-discovery.feature",
+   "fingerprint": "3ffc4fbb12d6",
+   "human": false,
+   "rule": "discovery.network.nat-gateway-non-ipv4-routes-unrestorable",
+   "source": "internal/awsx/discover_network.go#routesVia",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "discovery.network-discovery.004": {
+   "file": "specs/discovery/network-discovery/nat-gateway-discovery.feature",
+   "fingerprint": "7ab2c773be45",
+   "human": false,
+   "rule": "discovery.network.nat-gateway-public-address-kept",
+   "source": "internal/awsx/discover_network.go#natGateways",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "discovery.network-discovery.005": {
+   "file": "specs/discovery/network-discovery/nat-gateway-discovery.feature",
+   "fingerprint": "7ab2c773be45",
+   "human": false,
+   "rule": "discovery.network.nat-gateway-incomplete-record-not-planned",
+   "source": "internal/awsx/discover_network.go#natGateways",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "firing.cut-ingress.001": {
+   "file": "specs/firing/cut-ingress/cutting-ingress.feature",
+   "fingerprint": "b6fe08a8fdd2",
+   "human": false,
+   "rule": "firing.ingress.listener-answers-503",
+   "source": "internal/awsx/execute_ingress.go#blockListener",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "firing.cut-ingress.002": {
+   "file": "specs/firing/cut-ingress/cutting-ingress.feature",
+   "fingerprint": "2722b7a7afeb",
+   "human": false,
+   "rule": "recovery.ingress.listener-routing-restored-verbatim",
+   "source": "internal/awsx/execute_ingress.go#restoreListener",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "firing.cut-ingress.003": {
+   "file": "specs/firing/cut-ingress/cutting-ingress.feature",
+   "fingerprint": "2722b7a7afeb",
+   "human": false,
+   "rule": "recovery.ingress.restore-refuses-to-guess",
+   "source": "internal/awsx/execute_ingress.go#restoreListener",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "firing.cut-ingress.004": {
+   "file": "specs/firing/cut-ingress/cutting-ingress.feature",
+   "fingerprint": "7fa29ee92143",
+   "human": false,
+   "rule": "firing.ingress.distribution-disabled-config-preserved",
+   "source": "internal/awsx/execute_ingress.go#setDistributionEnabled",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "firing.cut-ingress.005": {
+   "file": "specs/firing/cut-ingress/cutting-ingress.feature",
+   "fingerprint": "fe8bfa3a1f20",
+   "human": false,
+   "rule": "recovery.ingress.already-disabled-distribution-stays-disabled",
+   "source": "internal/awsx/execute_ingress.go#restoreDistribution",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "firing.cut-ingress.007": {
+   "file": "specs/firing/cut-ingress/cutting-ingress.feature",
+   "fingerprint": "3ea890d236f1",
+   "human": false,
+   "rule": "recovery.ingress.stage-throttle-restored",
+   "source": "internal/awsx/execute_ingress.go#restoreStage",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "firing.drain-compute.002": {
+   "file": "specs/firing/drain-compute/drain-compute.feature",
+   "fingerprint": "b0234457575f",
+   "human": false,
+   "rule": "recovery.restore-run.compute-returns-to-recorded-capacity",
+   "source": "internal/awsx/execute_compute.go#restoreLambda",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "firing.drain-compute.003": {
+   "file": "specs/firing/drain-compute/drain-compute.feature",
+   "fingerprint": "d5ce468ab328",
+   "human": false,
+   "rule": "recovery.restore-run.compute-refuses-incomplete-record",
+   "source": "internal/awsx/execute_compute.go#restoreASG",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "firing.execution-engine.002": {
+   "file": "specs/firing/execution-engine/firing-the-killswitch.feature",
+   "fingerprint": "7c63bc156e1f",
+   "human": false,
+   "rule": "firing.engine.record-updated-after-every-change",
+   "source": "internal/engine/engine.go#Fire",
+   "status": "verified",
+   "test": "internal/engine/engine_test.go#TestSnapshotIsUpdatedAfterEveryChange",
+   "tests": [
+    "internal/engine/engine_test.go#TestSnapshotIsUpdatedAfterEveryChange"
+   ]
+  },
+  "firing.execution-engine.003": {
+   "file": "specs/firing/execution-engine/firing-the-killswitch.feature",
+   "fingerprint": "7c63bc156e1f",
+   "human": false,
+   "rule": "firing.partial-failure.continue-and-record-failures",
+   "source": "internal/engine/engine.go#Fire",
+   "status": "verified",
+   "test": "internal/engine/engine_test.go#TestPartialFireRecordsOnlyWhatActuallyChanged",
+   "tests": [
+    "internal/engine/engine_test.go#TestPartialFireRecordsOnlyWhatActuallyChanged"
+   ]
+  },
+  "firing.execution-engine.005": {
+   "file": "specs/firing/execution-engine/firing-the-killswitch.feature",
+   "fingerprint": "7c63bc156e1f",
+   "human": false,
+   "rule": "firing.engine.dry-run-touches-nothing",
+   "source": "internal/engine/engine.go#Fire",
+   "status": "verified",
+   "test": "internal/engine/engine_test.go#TestDryRunWritesNothingAndChangesNothing",
+   "tests": [
+    "internal/engine/engine_test.go#TestDryRunWritesNothingAndChangesNothing"
+   ]
+  },
+  "firing.execution-engine.006": {
+   "file": "specs/firing/execution-engine/firing-the-killswitch.feature",
+   "fingerprint": "7c63bc156e1f",
+   "human": false,
+   "rule": "firing.engine.empty-plan-refused",
+   "source": "internal/engine/engine.go#Fire",
+   "status": "verified",
+   "test": "internal/engine/engine_test.go#TestEmptyPlanIsRejected",
+   "tests": [
+    "internal/engine/engine_test.go#TestEmptyPlanIsRejected"
+   ]
+  },
+  "firing.execution-engine.009": {
+   "file": "specs/firing/execution-engine/firing-a-plan.feature",
+   "fingerprint": "7c63bc156e1f",
+   "human": false,
+   "rule": "firing.engine.stop-when-record-cannot-be-updated",
+   "source": "internal/engine/engine.go#Fire",
+   "status": "verified",
+   "test": "internal/engine/engine_test.go#TestFireStopsWhenTheRecordCanNoLongerBeUpdated",
+   "tests": [
+    "internal/engine/engine_test.go#TestFireStopsWhenTheRecordCanNoLongerBeUpdated"
+   ]
+  },
+  "firing.pause-data-network.001": {
+   "file": "specs/firing/pause-data-network/pausing-databases.feature",
+   "fingerprint": "8ce16af1fd81",
+   "human": false,
+   "rule": "firing.databases.stop-not-delete",
+   "source": "internal/awsx/execute_data.go#stopDBInstance",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "firing.pause-data-network.002": {
+   "file": "specs/firing/pause-data-network/pausing-databases.feature",
+   "fingerprint": "2ae4c2cc5816",
+   "human": false,
+   "rule": "recovery.databases.restart-on-restore",
+   "source": "internal/awsx/execute_data.go#startDBInstance",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "firing.pause-data-network.003": {
+   "file": "specs/firing/pause-data-network/pausing-databases.feature",
+   "fingerprint": "c17a49602e71",
+   "human": false,
+   "rule": "firing.databases.final-snapshot-taken",
+   "source": "internal/awsx/execute.go#Executor",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "planning.action-catalog.001": {
+   "file": "specs/planning/action-catalog/applying-and-undoing-stop-actions.feature",
+   "fingerprint": "415392e8ce0e",
+   "human": false,
+   "rule": "planning.action-catalog.stop-meaning-per-kind",
+   "source": "internal/awsx/execute.go#appliers",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "planning.plan-building.002": {
+   "file": "specs/planning/plan-building/shutdown-plan-building.feature",
+   "fingerprint": "84509b1bff3e",
+   "human": false,
+   "rule": "plan.ordering.same-inventory-same-plan",
+   "source": "internal/plan/plan.go#sortPlan",
+   "status": "verified",
+   "test": "internal/plan/plan_test.go#TestPlanIsDeterministic",
+   "tests": [
+    "internal/plan/plan_test.go#TestPlanIsDeterministic"
+   ]
+  },
+  "planning.plan-building.005": {
+   "file": "specs/planning/plan-building/plan-building.feature",
+   "fingerprint": "84509b1bff3e",
+   "human": false,
+   "rule": "planning.order.ingress-before-compute-before-network-before-data",
+   "source": "internal/plan/plan.go#sortPlan",
+   "status": "verified",
+   "test": "internal/plan/plan_test.go#TestIngressIsCutBeforeComputeIsDrained",
+   "tests": [
+    "internal/plan/plan_test.go#TestIngressIsCutBeforeComputeIsDrained",
+    "internal/plan/plan_test.go#TestASGIsScaledBeforeLooseInstancesAreStopped",
+    "internal/plan/plan_test.go#TestNodegroupIsScaledBeforeLooseInstancesAndAfterLambda",
+    "internal/plan/plan_test.go#TestCloudFrontIsCutFirstOfAll"
+   ]
+  },
+  "planning.plan-building.008": {
+   "file": "specs/planning/plan-building/plan-building.feature",
+   "fingerprint": "75d544558e5c",
+   "human": false,
+   "rule": "planning.ack.warnings-require-acknowledgement",
+   "source": "internal/plan/plan.go#acknowledgements",
+   "status": "verified",
+   "test": "internal/plan/plan_test.go#TestDatabasesAreOptInAndCarryTheSevenDayWarning",
+   "tests": [
+    "internal/plan/plan_test.go#TestDatabasesAreOptInAndCarryTheSevenDayWarning"
+   ]
+  },
+  "planning.plan-building.009": {
+   "file": "specs/planning/plan-building/plan-building.feature",
+   "fingerprint": "75d544558e5c",
+   "human": false,
+   "rule": "planning.ack.large-plan-threshold",
+   "source": "internal/plan/plan.go#acknowledgements",
+   "status": "verified",
+   "test": "internal/plan/plan_test.go#TestLargePlansRequireAcknowledgement",
+   "tests": [
+    "internal/plan/plan_test.go#TestLargePlansRequireAcknowledgement"
+   ]
+  },
+  "planning.protected-resources.001": {
+   "file": "specs/planning/protected-resources/never-touch-stateful-storage.feature",
+   "fingerprint": "a996d849a337",
+   "human": false,
+   "rule": "planning.protected-resources.stateful-kinds-never-touched",
+   "source": "internal/model/model.go#IsNeverTouch",
+   "status": "verified",
+   "test": "internal/plan/plan_test.go#TestStatefulStorageIsNeverTouched",
+   "tests": [
+    "internal/plan/plan_test.go#TestStatefulStorageIsNeverTouched"
+   ]
+  },
+  "planning.protected-resources.003": {
+   "file": "specs/planning/protected-resources/never-touch-stateful-storage.feature",
+   "fingerprint": "a996d849a337",
+   "human": false,
+   "rule": "planning.protected-resources.compute-is-not-protected",
+   "source": "internal/model/model.go#IsNeverTouch",
+   "status": "verified",
+   "test": "internal/plan/plan_test.go#TestStatefulStorageIsNeverTouched",
+   "tests": [
+    "internal/plan/plan_test.go#TestStatefulStorageIsNeverTouched"
+   ]
+  },
+  "planning.protected-resources.005": {
+   "file": "specs/planning/protected-resources/protected-and-skipped-resources.feature",
+   "fingerprint": "22b44e5e8c22",
+   "human": false,
+   "rule": "plan.protection.out-of-scope-explained",
+   "source": "internal/plan/plan.go#Build",
+   "status": "verified",
+   "test": "internal/plan/plan_test.go#TestProtectTagWinsOverEveryScope",
+   "tests": [
+    "internal/plan/plan_test.go#TestProtectTagWinsOverEveryScope",
+    "internal/plan/plan_test.go#TestProtectTagOnlyIgnoredWhenExplicitlyFalse",
+    "internal/plan/plan_test.go#TestOutOfScopeResourcesAreExplained"
+   ]
+  },
+  "planning.protected-resources.007": {
+   "file": "specs/planning/protected-resources/protected-and-skipped-resources.feature",
+   "fingerprint": "3e3977cec40e",
+   "human": false,
+   "rule": "plan.protection.already-at-rest-skipped",
+   "source": "internal/plan/plan.go#actionFor",
+   "status": "verified",
+   "test": "internal/plan/plan_test.go#TestAlreadyStoppedResourcesAreSkipped",
+   "tests": [
+    "internal/plan/plan_test.go#TestAlreadyStoppedResourcesAreSkipped",
+    "internal/plan/plan_test.go#TestNodegroupAlreadyAtZeroIsRefusedNotReapplied",
+    "internal/plan/plan_test.go#TestAnAlreadyDisabledDistributionIsRefused",
+    "internal/plan/plan_test.go#TestAStageAlreadyThrottledToZeroIsRefused"
+   ]
+  },
+  "planning.protected-resources.008": {
+   "file": "specs/planning/protected-resources/protected-resources.feature",
+   "fingerprint": "22b44e5e8c22",
+   "human": false,
+   "rule": "planning.protected.stateful-storage-never-touched",
+   "source": "internal/plan/plan.go#Build",
+   "status": "verified",
+   "test": "internal/plan/plan_test.go#TestStatefulStorageIsNeverTouched",
+   "tests": [
+    "internal/plan/plan_test.go#TestStatefulStorageIsNeverTouched"
+   ]
+  },
+  "planning.protected-resources.009": {
+   "file": "specs/planning/protected-resources/protected-resources.feature",
+   "fingerprint": "4c8f2351cef4",
+   "human": false,
+   "rule": "planning.protected.protect-tag-unprotects-only-when-explicitly-false",
+   "source": "internal/policy/policy.go#isProtected",
+   "status": "verified",
+   "test": "internal/plan/plan_test.go#TestProtectTagOnlyIgnoredWhenExplicitlyFalse",
+   "tests": [
+    "internal/plan/plan_test.go#TestProtectTagOnlyIgnoredWhenExplicitlyFalse"
+   ]
+  },
+  "planning.scope-policy.001": {
+   "file": "specs/planning/scope-policy/scope-policy-opt-ins.feature",
+   "fingerprint": "d57f6c08f4ac",
+   "human": false,
+   "rule": "planning.scope.databases-opt-in",
+   "source": "internal/plan/plan.go#databaseAction",
+   "status": "verified",
+   "test": "internal/plan/plan_test.go#TestDatabasesAreOptInAndCarryTheSevenDayWarning",
+   "tests": [
+    "internal/plan/plan_test.go#TestDatabasesAreOptInAndCarryTheSevenDayWarning"
+   ]
+  },
+  "planning.scope-policy.002": {
+   "file": "specs/planning/scope-policy/scope-policy-opt-ins.feature",
+   "fingerprint": "9655ea6c08a2",
+   "human": false,
+   "rule": "planning.scope.instance-store-loss-opt-in",
+   "source": "internal/plan/plan.go#instanceAction",
+   "status": "verified",
+   "test": "internal/plan/plan_test.go#TestInstanceStoreLossIsRefusedByDefault",
+   "tests": [
+    "internal/plan/plan_test.go#TestInstanceStoreLossIsRefusedByDefault"
+   ]
+  },
+  "planning.scope-policy.003": {
+   "file": "specs/planning/scope-policy/scope-policy-opt-ins.feature",
+   "fingerprint": "3e3977cec40e",
+   "human": false,
+   "rule": "planning.scope.nat-deletion-opt-in",
+   "source": "internal/plan/plan.go#actionFor",
+   "status": "verified",
+   "test": "internal/plan/plan_test.go#TestNATGatewayDeletionIsOptInAndFlagged",
+   "tests": [
+    "internal/plan/plan_test.go#TestNATGatewayDeletionIsOptInAndFlagged"
+   ]
+  },
+  "recovery.fire-status.001": {
+   "file": "specs/recovery/fire-status/cli-fire-status.feature",
+   "fingerprint": "6df2d890ba59",
+   "human": false,
+   "rule": "recovery.status.lists-records",
+   "source": "cmd/aws-killswitch/commands.go#cmdStatus",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "recovery.fire-status.002": {
+   "file": "specs/recovery/fire-status/cli-fire-status.feature",
+   "fingerprint": "6df2d890ba59",
+   "human": false,
+   "rule": "recovery.status.empty-store-message",
+   "source": "cmd/aws-killswitch/commands.go#cmdStatus",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "recovery.fire-status.004": {
+   "file": "specs/recovery/fire-status/database-auto-restart-warning.feature",
+   "fingerprint": "10ddf8586af8",
+   "human": false,
+   "rule": "recovery.status.database-restart-deadline",
+   "source": "internal/engine/engine.go#Deadlines",
+   "status": "verified",
+   "test": "internal/engine/engine_test.go#TestDatabaseDeadlinesAreReported",
+   "tests": [
+    "internal/engine/engine_test.go#TestDatabaseDeadlinesAreReported"
+   ]
+  },
+  "recovery.restore-run.001": {
+   "file": "specs/recovery/restore-run/nat-gateway-delete-and-recreate.feature",
+   "fingerprint": "f616555a3c98",
+   "human": false,
+   "rule": "recovery.nat-gateway.fire-deletes-gateway",
+   "source": "internal/awsx/execute_network.go#deleteNATGateway",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "recovery.restore-run.002": {
+   "file": "specs/recovery/restore-run/nat-gateway-delete-and-recreate.feature",
+   "fingerprint": "53264cc31f61",
+   "human": false,
+   "rule": "recovery.nat-gateway.recreated-with-same-public-address",
+   "source": "internal/awsx/execute_network.go#restoreNATGateway",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "recovery.restore-run.003": {
+   "file": "specs/recovery/restore-run/nat-gateway-delete-and-recreate.feature",
+   "fingerprint": "cfe1265d4eb3",
+   "human": false,
+   "rule": "recovery.nat-gateway.routes-repointed",
+   "source": "internal/awsx/execute_network.go#repointRoutes",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "recovery.restore-run.004": {
+   "file": "specs/recovery/restore-run/nat-gateway-delete-and-recreate.feature",
+   "fingerprint": "cfe1265d4eb3",
+   "human": false,
+   "rule": "recovery.nat-gateway.non-ipv4-routes-not-restored",
+   "source": "internal/awsx/execute_network.go#repointRoutes",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "recovery.restore-run.005": {
+   "file": "specs/recovery/restore-run/nat-gateway-delete-and-recreate.feature",
+   "fingerprint": "53264cc31f61",
+   "human": false,
+   "rule": "recovery.nat-gateway.refused-without-subnet",
+   "source": "internal/awsx/execute_network.go#restoreNATGateway",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "recovery.restore-run.006": {
+   "file": "specs/recovery/restore-run/nat-gateway-delete-and-recreate.feature",
+   "fingerprint": "53264cc31f61",
+   "human": false,
+   "rule": "recovery.nat-gateway.partial-restore-reported",
+   "source": "internal/awsx/execute_network.go#restoreNATGateway",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "recovery.restore-run.007": {
+   "file": "specs/recovery/restore-run/restoring-an-account.feature",
+   "fingerprint": "4d7fd1012334",
+   "human": false,
+   "rule": "recovery.restore.reverse-phase-order",
+   "source": "internal/engine/engine.go#Restore",
+   "status": "verified",
+   "test": "internal/engine/engine_test.go#TestRestoreRunsInReversePhaseOrder",
+   "tests": [
+    "internal/engine/engine_test.go#TestRestoreRunsInReversePhaseOrder"
+   ]
+  },
+  "recovery.restore-run.009": {
+   "file": "specs/recovery/restore-run/restoring-an-account.feature",
+   "fingerprint": "4d7fd1012334",
+   "human": false,
+   "rule": "recovery.restore.stop-on-first-failure",
+   "source": "internal/engine/engine.go#Restore",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "recovery.restore-run.010": {
+   "file": "specs/recovery/restore-run/restoring-an-account.feature",
+   "fingerprint": "4d7fd1012334",
+   "human": false,
+   "rule": "recovery.restore.dry-run-touches-nothing",
+   "source": "internal/engine/engine.go#Restore",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "recovery.restore-run.012": {
+   "file": "specs/recovery/restore-run/restoring-an-account-engine-test.feature",
+   "fingerprint": "4d7fd1012334",
+   "human": false,
+   "rule": "recovery.restore.never-replayed",
+   "source": "internal/engine/engine.go#Restore",
+   "status": "verified",
+   "test": "internal/engine/engine_test.go#TestRestoreIsIdempotent",
+   "tests": [
+    "internal/engine/engine_test.go#TestRestoreIsIdempotent"
+   ]
+  },
+  "recovery.restore-run.013": {
+   "file": "specs/recovery/restore-run/restoring-recorded-state.feature",
+   "fingerprint": "77d446234eb8",
+   "human": false,
+   "rule": "recovery.restore-run.unusable-recorded-count-refused",
+   "source": "internal/model/model.go#PriorInt32",
+   "status": "verified",
+   "test": "internal/plan/plan_test.go#TestPriorInt32RefusesRatherThanWrapping",
+   "tests": [
+    "internal/plan/plan_test.go#TestPriorInt32RefusesRatherThanWrapping"
+   ]
+  },
+  "recovery.restore-run.016": {
+   "file": "specs/recovery/restore-run/restore-refuses-to-guess-prior-state.feature",
+   "fingerprint": "fe8bfa3a1f20",
+   "human": false,
+   "rule": "recovery.restore.distribution-enabled-must-be-recorded-exactly",
+   "source": "internal/awsx/execute_ingress.go#restoreDistribution",
+   "status": "verified",
+   "test": "internal/model/model_test.go#TestPriorBoolOnlyAcceptsARealBool",
+   "tests": [
+    "internal/model/model_test.go#TestPriorBoolOnlyAcceptsARealBool"
+   ]
+  },
+  "recovery.restore-run.017": {
+   "file": "specs/recovery/restore-run/restore-refuses-to-guess-prior-state.feature",
+   "fingerprint": "3ea890d236f1",
+   "human": false,
+   "rule": "recovery.restore.stage-throttle-restored-exactly",
+   "source": "internal/awsx/execute_ingress.go#restoreStage",
+   "status": "verified",
+   "test": "internal/model/model_test.go#TestPriorFloatKeepsFractionalRatesAndRefusesNonsense",
+   "tests": [
+    "internal/model/model_test.go#TestPriorFloatKeepsFractionalRatesAndRefusesNonsense"
+   ]
+  },
+  "recovery.restore-run.019": {
+   "file": "specs/recovery/restore-run/restore-refuses-to-guess-prior-state.feature",
+   "fingerprint": "b0234457575f",
+   "human": false,
+   "rule": "recovery.restore.lambda-reservation-unreadable-removes-reservation",
+   "source": "internal/awsx/execute_compute.go#restoreLambda",
+   "status": "inferred",
+   "test": "",
+   "tests": []
+  },
+  "recovery.restore-snapshot.002": {
+   "file": "specs/recovery/restore-snapshot/restore-record.feature",
+   "fingerprint": "0506bd8306d2",
+   "human": false,
+   "rule": "recovery.snapshot.records-prior-state-of-every-action",
+   "source": "internal/state/state.go#From",
+   "status": "verified",
+   "test": "internal/state/state_test.go#TestFromPlanCarriesEveryActionsPriorState",
+   "tests": [
+    "internal/state/state_test.go#TestFromPlanCarriesEveryActionsPriorState"
+   ]
+  },
+  "recovery.restore-snapshot.004": {
+   "file": "specs/recovery/restore-snapshot/restore-record-before-fire.feature",
+   "fingerprint": "bea3bf24ab95",
+   "human": false,
+   "rule": "recovery.restore-record.verified-before-any-change",
+   "source": "internal/state/state.go#PutVerified",
+   "status": "verified",
+   "test": "internal/state/state_test.go#TestPutVerifiedCatchesALossyStore",
+   "tests": [
+    "internal/state/state_test.go#TestPutVerifiedCatchesALossyStore"
+   ]
+  },
+  "recovery.restore-snapshot.006": {
+   "file": "specs/recovery/restore-snapshot/restore-record-before-fire.feature",
+   "fingerprint": "4cdb1246e225",
+   "human": false,
+   "rule": "recovery.restore-record.prior-numbers-preserved",
+   "source": "internal/model/model.go#PriorInt",
+   "status": "verified",
+   "test": "internal/state/state_test.go#TestLocalStoreRoundTripsPriorStateAsNumbers",
+   "tests": [
+    "internal/state/state_test.go#TestLocalStoreRoundTripsPriorStateAsNumbers"
+   ]
+  },
+  "recovery.state-storage.001": {
+   "file": "specs/recovery/state-storage/s3-restore-records.feature",
+   "fingerprint": "aa57f6e0234a",
+   "human": false,
+   "rule": "recovery.state-storage.state-uri-must-be-s3",
+   "source": "internal/state/s3.go#ParseURI",
+   "status": "verified",
+   "test": "internal/state/state_test.go#TestParseURI",
+   "tests": [
+    "internal/state/state_test.go#TestParseURI"
+   ]
+  }
+ },
+ "taxonomy": {
+  "domains": [
+   {
+    "areas": [
+     {
+      "description": "Finding instances, auto-scaling groups, containers and other compute that burns money while running.",
+      "slug": "compute-discovery",
+      "title": "Compute discovery"
+     },
+     {
+      "description": "Finding databases and data services whose running cost can be paused without losing data.",
+      "slug": "data-discovery",
+      "title": "Data store discovery"
+     },
+     {
+      "description": "Finding load balancers, API endpoints and other public entry points that let traffic in.",
+      "slug": "ingress-discovery",
+      "title": "Ingress discovery"
+     },
+     {
+      "description": "Finding NAT gateways, elastic IPs and other paid network plumbing.",
+      "slug": "network-discovery",
+      "title": "Network discovery"
+     },
+     {
+      "description": "Walking every region and service in the account, paginating and tolerating partial failures while capturing prior state.",
+      "slug": "multi-region-scan",
+      "title": "Account and region scanning"
+     }
+    ],
+    "description": "Finding everything running in the account that costs money or accepts traffic, and recording its prior state.",
+    "slug": "discovery",
+    "title": "Resource discovery"
+   },
+   {
+    "areas": [
+     {
+      "description": "Ordering stop actions into a sequence that is safe to execute and to reverse.",
+      "slug": "plan-building",
+      "title": "Plan building"
+     },
+     {
+      "description": "Deciding what must never be touched and explaining each skipped resource in the plan.",
+      "slug": "protected-resources",
+      "title": "Protected resources"
+     },
+     {
+      "description": "Operator-configured rules, set before an incident, for which accounts, regions, tags and kinds may be hit.",
+      "slug": "scope-policy",
+      "title": "Scope policy"
+     },
+     {
+      "description": "The vocabulary of stoppable resource kinds, what stopping each means, and its declared inverse.",
+      "slug": "action-catalog",
+      "title": "Action catalog"
+     }
+    ],
+    "description": "Turning discovered resources into a reviewed, ordered, reversible proposal before anything changes.",
+    "slug": "planning",
+    "title": "Shutdown planning"
+   },
+   {
+    "areas": [
+     {
+      "description": "Running plan steps in order, writing the restore record first and updating it after every change.",
+      "slug": "execution-engine",
+      "title": "Execution engine"
+     },
+     {
+      "description": "Closing public entry points so no new traffic reaches the account.",
+      "slug": "cut-ingress",
+      "title": "Cutting ingress"
+     },
+     {
+      "description": "Scaling down, stopping or pausing compute workloads.",
+      "slug": "drain-compute",
+      "title": "Draining compute"
+     },
+     {
+      "description": "Stopping databases and releasing or disabling paid network resources without data loss.",
+      "slug": "pause-data-network",
+      "title": "Pausing data and network services"
+     },
+     {
+      "description": "Behaviour when some actions fail mid-fire: abandoning, continuing, and reporting what was actually changed.",
+      "slug": "partial-failure",
+      "title": "Partial failure handling"
+     }
+    ],
+    "description": "Executing an approved plan to cut ingress and drain compute while keeping every change reversible.",
+    "slug": "firing",
+    "title": "Firing the killswitch"
+   },
+   {
+    "areas": [
+     {
+      "description": "The persisted record of prior state, written and read back before any change is made.",
+      "slug": "restore-snapshot",
+      "title": "Restore snapshot"
+     },
+     {
+      "description": "Keeping restore records on local disk or in S3, with integrity and concurrency guarantees.",
+      "slug": "state-storage",
+      "title": "State storage backends"
+     },
+     {
+      "description": "Replaying recorded inverses to bring every stopped resource back to its prior state.",
+      "slug": "restore-run",
+      "title": "Restoring an account"
+     },
+     {
+      "description": "Listing past fires and showing what is currently stopped and restorable.",
+      "slug": "fire-status",
+      "title": "Fire status"
+     }
+    ],
+    "description": "Recording exactly how to put everything back, and putting it back.",
+    "slug": "recovery",
+    "title": "Restore and recovery"
+   },
+   {
+    "areas": [
+     {
+      "description": "Reporting recent and month-to-date spend for the account.",
+      "slug": "current-spend",
+      "title": "Current spend"
+     },
+     {
+      "description": "Pricing resources to estimate the hourly cost a plan would stop.",
+      "slug": "savings-estimates",
+      "title": "Savings estimates"
+     }
+    ],
+    "description": "Showing what the account is spending and what a fire would save.",
+    "slug": "cost",
+    "title": "Cost visibility"
+   },
+   {
+    "areas": [
+     {
+      "description": "One discover, plan and fire cycle shared by every front end.",
+      "slug": "trip-cycle",
+      "title": "Trip cycle"
+     },
+     {
+      "description": "Running the trip from a Lambda function in response to budget or alarm events.",
+      "slug": "lambda-trigger",
+      "title": "Serverless trigger"
+     }
+    ],
+    "description": "Firing the killswitch without a human at the keyboard when spending crosses a line.",
+    "slug": "automation",
+    "title": "Automated triggering"
+   },
+   {
+    "areas": [
+     {
+      "description": "Running a full fire/restore cycle and reading the account back to detect divergence.",
+      "slug": "round-trip-verify",
+      "title": "Round-trip verification"
+     },
+     {
+      "description": "Reporting divergences and resource kinds left unexercised by a verification run.",
+      "slug": "coverage-report",
+      "title": "Verification report"
+     },
+     {
+      "description": "Infrastructure that provisions every supported resource kind in a disposable account for verification.",
+      "slug": "scratch-account",
+      "title": "Scratch test account"
+     }
+    ],
+    "description": "Proving that fire followed by restore returns the account to exactly where it started.",
+    "slug": "assurance",
+    "title": "Assurance and verification"
+   },
+   {
+    "areas": [
+     {
+      "description": "Append-only entries for each discovery, fire and restore action.",
+      "slug": "audit-log",
+      "title": "Audit log"
+     },
+     {
+      "description": "The documented IAM permissions the tool needs, kept in step with the AWS calls it actually makes.",
+      "slug": "required-permissions",
+      "title": "Required IAM permissions"
+     }
+    ],
+    "description": "An answerable record of what the tool did, when, and by whom.",
+    "slug": "accountability",
+    "title": "Audit and accountability"
+   },
+   {
+    "areas": [
+     {
+      "description": "The plan, fire, status, restore, spend and verify verbs and their options.",
+      "slug": "commands",
+      "title": "Commands and flags"
+     },
+     {
+      "description": "Human-readable and machine-readable presentation of plans, status and results.",
+      "slug": "output-rendering",
+      "title": "Output rendering"
+     },
+     {
+      "description": "Distinct process exit codes for usage errors, failures and partial outcomes.",
+      "slug": "exit-codes",
+      "title": "Exit codes"
+     },
+     {
+      "description": "Loading AWS credentials, regions, state location and policy for each run.",
+      "slug": "configuration-wiring",
+      "title": "Configuration and credentials"
+     }
+    ],
+    "description": "How operators drive the tool from a terminal.",
+    "slug": "cli",
+    "title": "Command-line experience"
+   },
+   {
+    "areas": [
+     {
+      "description": "Make targets for compiling, testing, linting and tidying.",
+      "slug": "build",
+      "title": "Build and lint"
+     },
+     {
+      "description": "Styling and presentation of the published documentation.",
+      "slug": "documentation-site",
+      "title": "Documentation site"
+     }
+    ],
+    "description": "Building, testing and documenting the project.",
+    "slug": "developer-tooling",
+    "title": "Developer tooling"
+   }
+  ]
+ }
+}
