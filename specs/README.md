@@ -4,12 +4,14 @@ What this code does, one atomic Gherkin scenario per behaviour, read from the co
 Tags: `@verified` a test asserts it · `@inferred` read from the code only · `@gap` an entry point no test covers · `@human` written or amended by a person, never rewritten.
 
 ## Audit and accountability
+
 An answerable record of what the tool did, when, and by whom.
 
 - **Audit log**: [Keeping an answerable audit log of what the killswitch did](accountability/audit-log/audit-log.feature) (4)
 - **Required IAM permissions**: [Publishing the IAM policies the tool needs](accountability/required-permissions/published-iam-policies.feature) (1), [Least-privilege IAM policies for planning, firing and the Lambda trigger](accountability/required-permissions/shipped-iam-policies.feature) (6)
 
 ## Assurance and verification
+
 Proving that fire followed by restore returns the account to exactly where it started.
 
 - **Verification report**: [Reading a verification report](assurance/coverage-report/verification-report-verify.feature) (2), [Reporting a verification run](assurance/coverage-report/verification-report.feature) (1)
@@ -17,12 +19,14 @@ Proving that fire followed by restore returns the account to exactly where it st
 - **Scratch test account**: [Provisioning a scratch account for verification](assurance/scratch-account/scratch-account.feature) (3)
 
 ## Automated triggering
+
 Firing the killswitch without a human at the keyboard when spending crosses a line.
 
 - **Serverless trigger**: [Firing the killswitch from a budget alert](automation/lambda-trigger/lambda-budget-trigger.feature) (5)
 - **Trip cycle**: [Refusing a duplicate trip after a recent fire](automation/trip-cycle/trip-cooldown.feature) (2), [Running one killswitch trip](automation/trip-cycle/trip-cycle.feature) (6)
 
 ## Command-line experience
+
 How operators drive the tool from a terminal.
 
 - **Commands and flags**: [Firing and restoring from the command line](cli/commands/cli-fire-and-restore.feature) (7)
@@ -31,12 +35,14 @@ How operators drive the tool from a terminal.
 - **Output rendering**: [Reading a shutdown plan](cli/output-rendering/cli-plan-output.feature) (5), [Naming discovered resources in the plan](cli/output-rendering/resource-display-names.feature) (1)
 
 ## Cost visibility
+
 Showing what the account is spending and what a fire would save.
 
 - **Current spend**: [Checking month-to-date spend against a threshold](cost/current-spend/cli-spend-threshold.feature) (3), [Reporting month-to-date spend](cost/current-spend/month-to-date-spend.feature) (4)
 - **Savings estimates**: [Estimating the hourly saving of a plan](cost/savings-estimates/hourly-savings-estimates.feature) (3), [Estimating the hourly saving of a shutdown](cost/savings-estimates/savings-estimates.feature) (3)
 
 ## Resource discovery
+
 Finding everything running in the account that costs money or accepts traffic, and recording its prior state.
 
 - **Data store discovery**: [Finding databases that can be paused](discovery/data-discovery/database-discovery.feature) (4)
@@ -45,6 +51,7 @@ Finding everything running in the account that costs money or accepts traffic, a
 - **Network discovery**: [Discovering NAT gateways and the routes that depend on them](discovery/network-discovery/nat-gateway-discovery.feature) (5)
 
 ## Firing the killswitch
+
 Executing an approved plan to cut ingress and drain compute while keeping every change reversible.
 
 - **Cutting ingress**: [Cutting and restoring public entry points](firing/cut-ingress/cutting-ingress.feature) (6)
@@ -53,6 +60,7 @@ Executing an approved plan to cut ingress and drain compute while keeping every 
 - **Pausing data and network services**: [Pausing and resuming databases](firing/pause-data-network/pausing-databases.feature) (3)
 
 ## Shutdown planning
+
 Turning discovered resources into a reviewed, ordered, reversible proposal before anything changes.
 
 - **Action catalog**: [Applying and undoing each stop action](planning/action-catalog/applying-and-undoing-stop-actions.feature) (1)
@@ -61,6 +69,7 @@ Turning discovered resources into a reviewed, ordered, reversible proposal befor
 - **Scope policy**: [Writing down what an account allows before an incident](planning/scope-policy/scope-policy-opt-ins.feature) (3)
 
 ## Restore and recovery
+
 Recording exactly how to put everything back, and putting it back.
 
 - **Fire status**: [Listing past fires](recovery/fire-status/cli-fire-status.feature) (2), [Warning before AWS restarts a stopped database](recovery/fire-status/database-auto-restart-warning.feature) (1)
