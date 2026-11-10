@@ -18,18 +18,6 @@ Feature: Finding the public entry points that let traffic in
       | 80   | redirect to HTTPS         | absent                      |
       | 8080 | fixed 503 response        | absent                      |
 
-  @id:discovery.ingress-discovery.002 @rule:discovery.ingress.api-stage-throttle-restored-as-found @inferred @source:internal/awsx/discover_ingress.go#apiStage
-  Scenario Outline: A throttled API stage is restored to the stage limit it had, or to the account limit if it had none
-    Given REST API "orders-api" stage "prod" has <stage default throttle>
-    And the operator has fired a plan that throttled "orders-api prod" to 0 requests per second
-    When the operator restores the fire
-    Then "orders-api prod" <restored throttle>
-
-    Examples:
-      | stage default throttle                                     | restored throttle                                                      |
-      | no stage-wide default throttle                             | stays throttled to 0, and its restore fails with "no usable recorded throttle; refusing to guess" |
-      | a stage-wide default of 100 requests per second, burst 200 | has a stage-wide default of 100 requests per second, burst 200 again   |
-
   @id:discovery.ingress-discovery.003 @rule:discovery.ingress.entry-points-named-as-known @inferred @source:internal/awsx/discover_ingress.go#apiStage
   Scenario Outline: Entry points are named in the plan the way the operator knows them
     Given the account has <entry point>

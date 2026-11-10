@@ -22,18 +22,6 @@ Feature: Estimating the hourly saving of a shutdown
       | M5.LARGE       | 0.096        |
       | "  m5.large  " | 0.096        |
 
-  @id:cost.savings-estimates.007 @rule:cost.savings.burstable-small-sizes @verified @source:internal/awsx/pricing.go#sizeFactor @test:internal/awsx/pricing_test.go#TestEC2PricesMatchThePublishedTable @questionable
-  Scenario Outline: Small burstable instances are priced at a fixed fraction of the large size
-    Given the account runs an instance of type <instance_type>
-    When the operator builds a plan
-    Then the plan estimates stopping that instance saves $<usd_per_hour> per hour
-
-    Examples:
-      | instance_type | usd_per_hour |
-      | t3.small      | 0.0416       |
-      | t3.micro      | 0.0208       |
-      | t3.nano       | 0.0104       |
-
   @id:cost.savings-estimates.008 @rule:cost.savings.database-list-price @verified @source:internal/awsx/pricing.go#RDSHourlyUSD @test:internal/awsx/pricing_test.go#TestRDSPrices @questionable
   Scenario Outline: A stopped database is priced at its single-AZ open-source engine list price
     Given the account runs a database of class <instance_class>
@@ -44,12 +32,6 @@ Feature: Estimating the hourly saving of a shutdown
       | instance_class | usd_per_hour |
       | db.m5.large    | 0.342        |
       | db.r6g.2xlarge | 1.728        |
-
-  @id:cost.savings-estimates.009 @rule:cost.savings.nat-flat-rate @verified @source:internal/awsx/pricing.go#NATGatewayHourlyUSD @test:internal/awsx/pricing_test.go#TestNATIsFlat
-  Scenario: Every NAT gateway is priced at one flat hourly rate
-    Given the account has a NAT gateway
-    When the operator builds a plan
-    Then the plan estimates removing that NAT gateway saves $0.045 per hour
 
   @id:cost.savings-estimates.010 @rule:cost.savings.unpriced-is-not-free @verified @source:internal/awsx/pricing.go#familyPrice @test:internal/awsx/pricing_test.go#TestUnknownIsNotEstimatedRatherThanFree @test:internal/awsx/pricing_test.go#TestOracleAndSQLServerClassesAreNotGuessed
   Scenario Outline: A resource with no known price is reported as not estimated, never as free

@@ -19,6 +19,7 @@ Feature: Deciding what the killswitch leaves alone
       | arn:aws:dynamodb:eu-west-1:123456789012:table/orders              |
       | arn:aws:fsx:eu-west-1:123456789012:file-system/fs-1               |
       | arn:aws:backup:eu-west-1:123456789012:vault/default               |
+      | arn:aws:kms:eu-west-1:123456789012:key/example                    |
 
   @id:planning.protected-resources.009 @rule:planning.protected.protect-tag-unprotects-only-when-explicitly-false @verified @source:internal/policy/policy.go#isProtected @test:internal/plan/plan_test.go#TestProtectTagOnlyIgnoredWhenExplicitlyFalse
   Scenario Outline: Only an explicitly false protect tag lets a resource be stopped
@@ -38,19 +39,3 @@ Feature: Deciding what the killswitch leaves alone
       | 0               | scheduled to be stopped |
       | no              | scheduled to be stopped |
       | off             | scheduled to be stopped |
-
-  @id:planning.protected-resources.010 @rule:planning.protected.already-at-rest-not-rescheduled @verified @source:internal/plan/plan.go#computeAction @test:internal/plan/plan_test.go#TestAlreadyStoppedResourcesAreSkipped @test:internal/plan/plan_test.go#TestNodegroupAlreadyAtZeroIsRefusedNotReapplied @test:internal/plan/plan_test.go#TestAnAlreadyDisabledDistributionIsRefused @test:internal/plan/plan_test.go#TestAStageAlreadyThrottledToZeroIsRefused @questionable
-  Scenario Outline: A resource already at rest is refused instead of being stopped again
-    Given a <kind> "<id>" tagged Env=prod that is <state>
-    When the operator builds a plan
-    Then the plan contains no action for "<id>"
-    And the plan lists "<id>" as refused with "<reason>"
-
-    Examples:
-      | kind                    | id           | state                          | reason                    |
-      | auto-scaling group      | asg-1        | at a desired capacity of 0     | already at zero           |
-      | ECS service             | svc-1        | at a desired count of 0        | already at zero           |
-      | EKS nodegroup           | prod/workers | at a desired size of 0         | already at zero           |
-      | EC2 instance            | i-1          | stopped                        | not running (stopped)     |
-      | CloudFront distribution | E123         | disabled                       | already disabled          |
-      | API Gateway stage       | abc/prod     | throttled to 0 requests/second | already throttled to zero |

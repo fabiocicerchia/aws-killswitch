@@ -22,13 +22,6 @@ Feature: Running one killswitch trip
       | never (planned only)                  | not restored           | fired   |       |
       | 30 minutes in the future (clock skew) | not restored           | fired   |       |
 
-  @id:automation.trip-cycle.002 @rule:automation.trip-cycle.unreadable-history-does-not-block @verified @source:internal/trip/trip.go#FiredRecently @test:internal/trip/trip_test.go#TestUnreadableStateDoesNotRefuseToFire @questionable
-  Scenario: A trip still fires when past fires cannot be read
-    Given the restore record store refuses to list past fires
-    When the trip is triggered
-    Then the trip is not refused for cooldown
-    And discovery, planning and firing go ahead as if no earlier fire existed
-
   @id:automation.trip-cycle.003 @rule:automation.trip-cycle.empty-plan-fires-nothing @inferred @source:internal/trip/trip.go#Fire
   Scenario: A trip with nothing in scope stops nothing
     Given no resource in the policy's scope is stoppable
@@ -62,13 +55,6 @@ Feature: Running one killswitch trip
     When the trip is triggered
     Then resources from every other service and region are still planned and fired
     And the listing failure is reported as a warning alongside the outcome
-
-  @id:automation.trip-cycle.007 @rule:automation.trip-cycle.continues-past-failed-actions @inferred @source:internal/trip/trip.go#Fire
-  Scenario: A trip keeps stopping resources after one fails and reports both counts
-    Given a plan of 5 actions of which 1 will fail
-    When the trip fires
-    Then the remaining 4 actions are still applied
-    And the outcome reports 4 changed and 1 failed
 
   @id:automation.trip-cycle.008 @rule:automation.trip-cycle.plan-id-is-utc-timestamp @verified @source:internal/trip/trip.go#PlanID @test:internal/trip/trip_test.go#TestPlanIDIsSortableAndSecondPrecise
   Scenario: Each trip's plan is identified by its UTC start time to the second

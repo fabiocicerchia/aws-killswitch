@@ -52,15 +52,8 @@ Feature: Cutting and restoring public entry points
     Then the distribution stays disabled
     And the restore of that distribution reports no error
 
-  @id:firing.cut-ingress.006 @rule:firing.ingress.stage-throttled-to-zero @inferred @source:internal/awsx/execute_ingress.go#throttleStage
-  Scenario: A fired API Gateway stage is throttled to zero requests and zero burst
-    Given an API Gateway stage that accepts requests
-    When the operator fires the plan
-    Then the stage's default method rate limit is 0
-    And the stage's default method burst limit is 0
-
   @id:firing.cut-ingress.007 @rule:recovery.ingress.stage-throttle-restored @inferred @source:internal/awsx/execute_ingress.go#restoreStage @questionable
-  Scenario Outline: Restoring a stage puts back its prior throttle, or removes the override if it had none
+  Scenario Outline: Restoring a stage puts back its prior throttle, and refuses a record with no usable rate or burst
     Given a fired API Gateway stage whose recorded throttle was rate <rate> and burst <burst>
     When the operator restores the fire
     Then the stage <outcome>
@@ -69,4 +62,4 @@ Feature: Cutting and restoring public entry points
       | rate | burst | outcome                                                   |
       | 100  | 200   | has a default rate limit of 100 and burst limit of 200    |
       | -1   | -1    | stays throttled to zero, and its restore fails with "no usable recorded throttle; refusing to guess" |
-      | 50   | -1    | has no stage-level throttle, so the account limit applies |
+      | 50   | -1    | stays throttled to zero, and its restore fails with "no usable recorded throttle; refusing to guess" |

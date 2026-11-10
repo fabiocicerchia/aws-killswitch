@@ -2163,7 +2163,53 @@
   "verify/verify": [],
   "verify/verify-test": []
  },
- "retired": [],
+ "retired": [
+  "assurance.coverage-report.004",
+  "assurance.round-trip-verify.008",
+  "assurance.round-trip-verify.010",
+  "assurance.round-trip-verify.011",
+  "assurance.scratch-account.004",
+  "automation.lambda-trigger.004",
+  "automation.lambda-trigger.005",
+  "automation.trip-cycle.002",
+  "automation.trip-cycle.007",
+  "automation.trip-cycle.010",
+  "cli.commands.003",
+  "cost.current-spend.007",
+  "cost.savings-estimates.001",
+  "cost.savings-estimates.002",
+  "cost.savings-estimates.007",
+  "cost.savings-estimates.009",
+  "discovery.ingress-discovery.002",
+  "discovery.network-discovery.006",
+  "firing.cut-ingress.006",
+  "firing.drain-compute.001",
+  "firing.drain-compute.004",
+  "firing.execution-engine.001",
+  "firing.execution-engine.004",
+  "firing.execution-engine.007",
+  "firing.execution-engine.010",
+  "planning.action-catalog.002",
+  "planning.plan-building.001",
+  "planning.plan-building.003",
+  "planning.plan-building.004",
+  "planning.plan-building.006",
+  "planning.plan-building.007",
+  "planning.protected-resources.002",
+  "planning.protected-resources.004",
+  "planning.protected-resources.006",
+  "planning.protected-resources.010",
+  "planning.protected-resources.011",
+  "planning.scope-policy.004",
+  "recovery.fire-status.003",
+  "recovery.restore-run.008",
+  "recovery.restore-run.014",
+  "recovery.restore-run.015",
+  "recovery.restore-run.018",
+  "recovery.restore-snapshot.001",
+  "recovery.restore-snapshot.003",
+  "recovery.restore-snapshot.005"
+ ],
  "scenarios": {
   "accountability.audit-log.001": {
    "file": "specs/accountability/audit-log/audit-log.feature",
@@ -2324,19 +2370,6 @@
     "internal/verify/verify_test.go#TestAReferenceIsStableWithinAReportAndMeaninglessOutsideIt"
    ]
   },
-  "assurance.coverage-report.004": {
-   "file": "specs/assurance/coverage-report/verification-report-verify-test.feature",
-   "fingerprint": "3e6b9f8d1fdc",
-   "human": false,
-   "rule": "assurance.coverage.report-carries-no-identifiers",
-   "source": "internal/verify/verify.go#refFor",
-   "status": "verified",
-   "test": "internal/verify/verify_test.go#TestNothingIdentifyingReachesTheReport",
-   "tests": [
-    "internal/verify/verify_test.go#TestNothingIdentifyingReachesTheReport",
-    "internal/verify/verify_test.go#TestAReferenceIsStableWithinAReportAndMeaninglessOutsideIt"
-   ]
-  },
   "assurance.round-trip-verify.001": {
    "file": "specs/assurance/round-trip-verify/cli-verify-scratch-account.feature",
    "fingerprint": "d963dd8d08f3",
@@ -2411,16 +2444,6 @@
     "internal/verify/verify_test.go#TestSkipFirePlansAndTouchesNothing"
    ]
   },
-  "assurance.round-trip-verify.008": {
-   "file": "specs/assurance/round-trip-verify/round-trip-verification.feature",
-   "fingerprint": "db341edf7282",
-   "human": false,
-   "rule": "assurance.round-trip.empty-plan-is-an-error",
-   "source": "internal/verify/verify.go#Run",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
   "assurance.round-trip-verify.009": {
    "file": "specs/assurance/round-trip-verify/round-trip-verification-verify-test.feature",
    "fingerprint": "db341edf7282",
@@ -2432,28 +2455,6 @@
    "tests": [
     "internal/verify/verify_test.go#TestACleanCycleFiresRestoresAndReportsNoDivergence"
    ]
-  },
-  "assurance.round-trip-verify.010": {
-   "file": "specs/assurance/round-trip-verify/round-trip-verification-verify-test.feature",
-   "fingerprint": "db341edf7282",
-   "human": false,
-   "rule": "assurance.round-trip.failed-stop-fails-run-without-halting-fire",
-   "source": "internal/verify/verify.go#Run",
-   "status": "verified",
-   "test": "internal/verify/verify_test.go#TestAFailedApplyIsCountedAndTheRunContinues",
-   "tests": [
-    "internal/verify/verify_test.go#TestAFailedApplyIsCountedAndTheRunContinues"
-   ]
-  },
-  "assurance.round-trip-verify.011": {
-   "file": "specs/assurance/round-trip-verify/round-trip-verification-verify-test.feature",
-   "fingerprint": "db341edf7282",
-   "human": false,
-   "rule": "assurance.round-trip.restore-failure-stops-restore",
-   "source": "internal/verify/verify.go#Run",
-   "status": "inferred",
-   "test": "",
-   "tests": []
   },
   "assurance.round-trip-verify.013": {
    "file": "specs/assurance/round-trip-verify/round-trip-verification-verify-test.feature",
@@ -2495,16 +2496,6 @@
    "test": "",
    "tests": []
   },
-  "assurance.scratch-account.004": {
-   "file": "specs/assurance/scratch-account/scratch-account.feature",
-   "fingerprint": "72e2319fcdfb",
-   "human": false,
-   "rule": "assurance.scratch-account.seed-output-next-steps",
-   "source": "examples/scratch-account/main.tf#next",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
   "automation.lambda-trigger.001": {
    "file": "specs/automation/lambda-trigger/lambda-budget-trigger.feature",
    "fingerprint": "4d66159a56c5",
@@ -2531,26 +2522,6 @@
    "human": false,
    "rule": "automation.lambda.invalid-policy-refused",
    "source": "cmd/killswitch-lambda/main.go#handle",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
-  "automation.lambda-trigger.004": {
-   "file": "specs/automation/lambda-trigger/lambda-budget-trigger.feature",
-   "fingerprint": "4d66159a56c5",
-   "human": false,
-   "rule": "automation.lambda.repeat-delivery-skipped",
-   "source": "cmd/killswitch-lambda/main.go#handle",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
-  "automation.lambda-trigger.005": {
-   "file": "specs/automation/lambda-trigger/lambda-budget-trigger.feature",
-   "fingerprint": "3d7187d48ecc",
-   "human": false,
-   "rule": "automation.lambda.unattended-needs-force-for-acknowledgements",
-   "source": "cmd/killswitch-lambda/main.go#Event",
    "status": "inferred",
    "test": "",
    "tests": []
@@ -2589,18 +2560,6 @@
     "internal/trip/trip_test.go#TestARestoredSnapshotDoesNotBlockANewFire",
     "internal/trip/trip_test.go#TestAPlannedButNeverFiredSnapshotDoesNotBlock",
     "internal/trip/trip_test.go#TestAFireStampedInTheFutureIsIgnored"
-   ]
-  },
-  "automation.trip-cycle.002": {
-   "file": "specs/automation/trip-cycle/trip-cycle.feature",
-   "fingerprint": "dba280db73b0",
-   "human": false,
-   "rule": "automation.trip-cycle.unreadable-history-does-not-block",
-   "source": "internal/trip/trip.go#FiredRecently",
-   "status": "verified",
-   "test": "internal/trip/trip_test.go#TestUnreadableStateDoesNotRefuseToFire",
-   "tests": [
-    "internal/trip/trip_test.go#TestUnreadableStateDoesNotRefuseToFire"
    ]
   },
   "automation.trip-cycle.003": {
@@ -2643,16 +2602,6 @@
    "test": "",
    "tests": []
   },
-  "automation.trip-cycle.007": {
-   "file": "specs/automation/trip-cycle/trip-cycle.feature",
-   "fingerprint": "ef6c1515ff1a",
-   "human": false,
-   "rule": "automation.trip-cycle.continues-past-failed-actions",
-   "source": "internal/trip/trip.go#Fire",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
   "automation.trip-cycle.008": {
    "file": "specs/automation/trip-cycle/trip-cycle.feature",
    "fingerprint": "5fba9c59f498",
@@ -2663,21 +2612,6 @@
    "test": "internal/trip/trip_test.go#TestPlanIDIsSortableAndSecondPrecise",
    "tests": [
     "internal/trip/trip_test.go#TestPlanIDIsSortableAndSecondPrecise"
-   ]
-  },
-  "automation.trip-cycle.010": {
-   "file": "specs/automation/trip-cycle/trip-cooldown.feature",
-   "fingerprint": "dba280db73b0",
-   "human": false,
-   "rule": "automation.trip-cycle.cooldown-only-counts-live-fires",
-   "source": "internal/trip/trip.go#FiredRecently",
-   "status": "verified",
-   "test": "internal/trip/trip_test.go#TestAFireOlderThanTheCooldownDoesNotBlockANewOne",
-   "tests": [
-    "internal/trip/trip_test.go#TestAFireOlderThanTheCooldownDoesNotBlockANewOne",
-    "internal/trip/trip_test.go#TestARestoredSnapshotDoesNotBlockANewFire",
-    "internal/trip/trip_test.go#TestAPlannedButNeverFiredSnapshotDoesNotBlock",
-    "internal/trip/trip_test.go#TestAFireStampedInTheFutureIsIgnored"
    ]
   },
   "automation.trip-cycle.011": {
@@ -2718,16 +2652,6 @@
    "human": false,
    "rule": "cli.fire.ack-required-needs-force",
    "source": "cmd/aws-killswitch/commands.go#refuseToFire",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
-  "cli.commands.003": {
-   "file": "specs/cli/commands/cli-fire-and-restore.feature",
-   "fingerprint": "3c0bf9b34060",
-   "human": false,
-   "rule": "cli.fire.cooldown-refuses-second-fire",
-   "source": "cmd/aws-killswitch/commands.go#cmdFire",
    "status": "inferred",
    "test": "",
    "tests": []
@@ -2992,16 +2916,6 @@
    "test": "",
    "tests": []
   },
-  "cost.current-spend.007": {
-   "file": "specs/cost/current-spend/cli-spend-threshold.feature",
-   "fingerprint": "16b52bfa5655",
-   "human": false,
-   "rule": "cost.spend.stale-figures-warned",
-   "source": "cmd/aws-killswitch/commands.go#cmdSpend",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
   "cost.current-spend.008": {
    "file": "specs/cost/current-spend/cli-spend-threshold.feature",
    "fingerprint": "8d30e5ceff83",
@@ -3011,32 +2925,6 @@
    "status": "inferred",
    "test": "",
    "tests": []
-  },
-  "cost.savings-estimates.001": {
-   "file": "specs/cost/savings-estimates/hourly-savings-estimates.feature",
-   "fingerprint": "fa04a1eba840",
-   "human": false,
-   "rule": "cost.savings.priced-by-family-and-size",
-   "source": "internal/awsx/pricing.go#familyPrice",
-   "status": "verified",
-   "test": "internal/awsx/pricing_test.go#TestEC2PricesMatchThePublishedTable",
-   "tests": [
-    "internal/awsx/pricing_test.go#TestEC2PricesMatchThePublishedTable",
-    "internal/awsx/pricing_test.go#TestRDSPrices"
-   ]
-  },
-  "cost.savings-estimates.002": {
-   "file": "specs/cost/savings-estimates/hourly-savings-estimates.feature",
-   "fingerprint": "fa04a1eba840",
-   "human": false,
-   "rule": "cost.savings.unknown-is-not-free",
-   "source": "internal/awsx/pricing.go#familyPrice",
-   "status": "verified",
-   "test": "internal/awsx/pricing_test.go#TestUnknownIsNotEstimatedRatherThanFree",
-   "tests": [
-    "internal/awsx/pricing_test.go#TestUnknownIsNotEstimatedRatherThanFree",
-    "internal/awsx/pricing_test.go#TestOracleAndSQLServerClassesAreNotGuessed"
-   ]
   },
   "cost.savings-estimates.003": {
    "file": "specs/cost/savings-estimates/hourly-savings-estimates.feature",
@@ -3086,18 +2974,6 @@
     "internal/awsx/pricing_test.go#TestSizeFactorsAreMonotonic"
    ]
   },
-  "cost.savings-estimates.007": {
-   "file": "specs/cost/savings-estimates/savings-estimates.feature",
-   "fingerprint": "3eb44c8b3f48",
-   "human": false,
-   "rule": "cost.savings.burstable-small-sizes",
-   "source": "internal/awsx/pricing.go#sizeFactor",
-   "status": "verified",
-   "test": "internal/awsx/pricing_test.go#TestEC2PricesMatchThePublishedTable",
-   "tests": [
-    "internal/awsx/pricing_test.go#TestEC2PricesMatchThePublishedTable"
-   ]
-  },
   "cost.savings-estimates.008": {
    "file": "specs/cost/savings-estimates/savings-estimates.feature",
    "fingerprint": "d9aa45baf1c0",
@@ -3108,18 +2984,6 @@
    "test": "internal/awsx/pricing_test.go#TestRDSPrices",
    "tests": [
     "internal/awsx/pricing_test.go#TestRDSPrices"
-   ]
-  },
-  "cost.savings-estimates.009": {
-   "file": "specs/cost/savings-estimates/savings-estimates.feature",
-   "fingerprint": "fe61795aba0e",
-   "human": false,
-   "rule": "cost.savings.nat-flat-rate",
-   "source": "internal/awsx/pricing.go#NATGatewayHourlyUSD",
-   "status": "verified",
-   "test": "internal/awsx/pricing_test.go#TestNATIsFlat",
-   "tests": [
-    "internal/awsx/pricing_test.go#TestNATIsFlat"
    ]
   },
   "cost.savings-estimates.010": {
@@ -3181,16 +3045,6 @@
    "human": false,
    "rule": "discovery.ingress.only-forwarding-listeners-are-candidates",
    "source": "internal/awsx/discover_ingress.go#forwards",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
-  "discovery.ingress-discovery.002": {
-   "file": "specs/discovery/ingress-discovery/ingress-discovery.feature",
-   "fingerprint": "e4e76fd3c234",
-   "human": false,
-   "rule": "discovery.ingress.api-stage-throttle-restored-as-found",
-   "source": "internal/awsx/discover_ingress.go#apiStage",
    "status": "inferred",
    "test": "",
    "tests": []
@@ -3265,16 +3119,6 @@
    "test": "",
    "tests": []
   },
-  "discovery.network-discovery.006": {
-   "file": "specs/discovery/network-discovery/nat-gateway-discovery.feature",
-   "fingerprint": "7ab2c773be45",
-   "human": false,
-   "rule": "discovery.network.nat-gateway-flat-hourly-estimate",
-   "source": "internal/awsx/discover_network.go#natGateways",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
   "firing.cut-ingress.001": {
    "file": "specs/firing/cut-ingress/cutting-ingress.feature",
    "fingerprint": "b6fe08a8fdd2",
@@ -3325,32 +3169,12 @@
    "test": "",
    "tests": []
   },
-  "firing.cut-ingress.006": {
-   "file": "specs/firing/cut-ingress/cutting-ingress.feature",
-   "fingerprint": "58dc25dcb378",
-   "human": false,
-   "rule": "firing.ingress.stage-throttled-to-zero",
-   "source": "internal/awsx/execute_ingress.go#throttleStage",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
   "firing.cut-ingress.007": {
    "file": "specs/firing/cut-ingress/cutting-ingress.feature",
    "fingerprint": "3ea890d236f1",
    "human": false,
    "rule": "recovery.ingress.stage-throttle-restored",
    "source": "internal/awsx/execute_ingress.go#restoreStage",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
-  "firing.drain-compute.001": {
-   "file": "specs/firing/drain-compute/drain-compute.feature",
-   "fingerprint": "cdb52d458ac0",
-   "human": false,
-   "rule": "firing.drain-compute.kind-reaches-zero-cost-state",
-   "source": "internal/awsx/execute_compute.go#scaleNodegroup",
    "status": "inferred",
    "test": "",
    "tests": []
@@ -3375,29 +3199,6 @@
    "test": "",
    "tests": []
   },
-  "firing.drain-compute.004": {
-   "file": "specs/firing/drain-compute/drain-compute.feature",
-   "fingerprint": "b0234457575f",
-   "human": false,
-   "rule": "recovery.restore-run.lambda-unknown-reservation-removed",
-   "source": "internal/awsx/execute_compute.go#restoreLambda",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
-  "firing.execution-engine.001": {
-   "file": "specs/firing/execution-engine/firing-the-killswitch.feature",
-   "fingerprint": "7c63bc156e1f",
-   "human": false,
-   "rule": "firing.engine.no-change-without-verified-record",
-   "source": "internal/engine/engine.go#Fire",
-   "status": "verified",
-   "test": "internal/engine/engine_test.go#TestNothingIsTouchedIfTheSnapshotCannotBeWritten",
-   "tests": [
-    "internal/engine/engine_test.go#TestNothingIsTouchedIfTheSnapshotCannotBeWritten",
-    "internal/engine/engine_test.go#TestSilentlyLossyStoreIsCaughtBeforeAnythingChanges"
-   ]
-  },
   "firing.execution-engine.002": {
    "file": "specs/firing/execution-engine/firing-the-killswitch.feature",
    "fingerprint": "7c63bc156e1f",
@@ -3420,18 +3221,6 @@
    "test": "internal/engine/engine_test.go#TestPartialFireRecordsOnlyWhatActuallyChanged",
    "tests": [
     "internal/engine/engine_test.go#TestPartialFireRecordsOnlyWhatActuallyChanged"
-   ]
-  },
-  "firing.execution-engine.004": {
-   "file": "specs/firing/execution-engine/firing-the-killswitch.feature",
-   "fingerprint": "7c63bc156e1f",
-   "human": false,
-   "rule": "firing.engine.halt-when-record-cannot-be-updated",
-   "source": "internal/engine/engine.go#Fire",
-   "status": "verified",
-   "test": "internal/engine/engine_test.go#TestFireStopsWhenTheRecordCanNoLongerBeUpdated",
-   "tests": [
-    "internal/engine/engine_test.go#TestFireStopsWhenTheRecordCanNoLongerBeUpdated"
    ]
   },
   "firing.execution-engine.005": {
@@ -3458,19 +3247,6 @@
     "internal/engine/engine_test.go#TestEmptyPlanIsRejected"
    ]
   },
-  "firing.execution-engine.007": {
-   "file": "specs/firing/execution-engine/firing-a-plan.feature",
-   "fingerprint": "7c63bc156e1f",
-   "human": false,
-   "rule": "firing.engine.record-before-any-change",
-   "source": "internal/engine/engine.go#Fire",
-   "status": "verified",
-   "test": "internal/engine/engine_test.go#TestNothingIsTouchedIfTheSnapshotCannotBeWritten",
-   "tests": [
-    "internal/engine/engine_test.go#TestNothingIsTouchedIfTheSnapshotCannotBeWritten",
-    "internal/engine/engine_test.go#TestSilentlyLossyStoreIsCaughtBeforeAnythingChanges"
-   ]
-  },
   "firing.execution-engine.009": {
    "file": "specs/firing/execution-engine/firing-a-plan.feature",
    "fingerprint": "7c63bc156e1f",
@@ -3481,18 +3257,6 @@
    "test": "internal/engine/engine_test.go#TestFireStopsWhenTheRecordCanNoLongerBeUpdated",
    "tests": [
     "internal/engine/engine_test.go#TestFireStopsWhenTheRecordCanNoLongerBeUpdated"
-   ]
-  },
-  "firing.execution-engine.010": {
-   "file": "specs/firing/execution-engine/firing-a-plan.feature",
-   "fingerprint": "7c63bc156e1f",
-   "human": false,
-   "rule": "firing.partial-failure.only-successes-are-restorable",
-   "source": "internal/engine/engine.go#Fire",
-   "status": "verified",
-   "test": "internal/engine/engine_test.go#TestPartialFireRecordsOnlyWhatActuallyChanged",
-   "tests": [
-    "internal/engine/engine_test.go#TestPartialFireRecordsOnlyWhatActuallyChanged"
    ]
   },
   "firing.pause-data-network.001": {
@@ -3535,31 +3299,6 @@
    "test": "",
    "tests": []
   },
-  "planning.action-catalog.002": {
-   "file": "specs/planning/action-catalog/applying-and-undoing-stop-actions.feature",
-   "fingerprint": "c17a49602e71",
-   "human": false,
-   "rule": "firing.pause-data-network.final-snapshot-when-opted-in",
-   "source": "internal/awsx/execute.go#Executor",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
-  "planning.plan-building.001": {
-   "file": "specs/planning/plan-building/shutdown-plan-building.feature",
-   "fingerprint": "84509b1bff3e",
-   "human": false,
-   "rule": "plan.ordering.ingress-cut-before-compute-drained",
-   "source": "internal/plan/plan.go#sortPlan",
-   "status": "verified",
-   "test": "internal/plan/plan_test.go#TestIngressIsCutBeforeComputeIsDrained",
-   "tests": [
-    "internal/plan/plan_test.go#TestIngressIsCutBeforeComputeIsDrained",
-    "internal/plan/plan_test.go#TestASGIsScaledBeforeLooseInstancesAreStopped",
-    "internal/plan/plan_test.go#TestNodegroupIsScaledBeforeLooseInstancesAndAfterLambda",
-    "internal/plan/plan_test.go#TestCloudFrontIsCutFirstOfAll"
-   ]
-  },
   "planning.plan-building.002": {
    "file": "specs/planning/plan-building/shutdown-plan-building.feature",
    "fingerprint": "84509b1bff3e",
@@ -3570,32 +3309,6 @@
    "test": "internal/plan/plan_test.go#TestPlanIsDeterministic",
    "tests": [
     "internal/plan/plan_test.go#TestPlanIsDeterministic"
-   ]
-  },
-  "planning.plan-building.003": {
-   "file": "specs/planning/plan-building/shutdown-plan-building.feature",
-   "fingerprint": "75d544558e5c",
-   "human": false,
-   "rule": "plan.acknowledgement.warnings-and-size-must-be-confirmed",
-   "source": "internal/plan/plan.go#acknowledgements",
-   "status": "verified",
-   "test": "internal/plan/plan_test.go#TestDatabasesAreOptInAndCarryTheSevenDayWarning",
-   "tests": [
-    "internal/plan/plan_test.go#TestDatabasesAreOptInAndCarryTheSevenDayWarning",
-    "internal/plan/plan_test.go#TestLargePlansRequireAcknowledgement"
-   ]
-  },
-  "planning.plan-building.004": {
-   "file": "specs/planning/plan-building/shutdown-plan-building.feature",
-   "fingerprint": "6c1db7f3bcd1",
-   "human": false,
-   "rule": "plan.restore.compute-before-ingress",
-   "source": "internal/plan/plan.go#RestoreOrder",
-   "status": "verified",
-   "test": "internal/plan/plan_test.go#TestRestoreBringsComputeBackBeforeIngress",
-   "tests": [
-    "internal/plan/plan_test.go#TestRestoreBringsComputeBackBeforeIngress",
-    "internal/plan/plan_test.go#TestNewKindsRestoreInReverseOfTheOrderTheyWereCut"
    ]
   },
   "planning.plan-building.005": {
@@ -3611,31 +3324,6 @@
     "internal/plan/plan_test.go#TestASGIsScaledBeforeLooseInstancesAreStopped",
     "internal/plan/plan_test.go#TestNodegroupIsScaledBeforeLooseInstancesAndAfterLambda",
     "internal/plan/plan_test.go#TestCloudFrontIsCutFirstOfAll"
-   ]
-  },
-  "planning.plan-building.006": {
-   "file": "specs/planning/plan-building/plan-building.feature",
-   "fingerprint": "84509b1bff3e",
-   "human": false,
-   "rule": "planning.order.deterministic",
-   "source": "internal/plan/plan.go#sortPlan",
-   "status": "verified",
-   "test": "internal/plan/plan_test.go#TestPlanIsDeterministic",
-   "tests": [
-    "internal/plan/plan_test.go#TestPlanIsDeterministic"
-   ]
-  },
-  "planning.plan-building.007": {
-   "file": "specs/planning/plan-building/plan-building.feature",
-   "fingerprint": "6c1db7f3bcd1",
-   "human": false,
-   "rule": "planning.restore.reverse-phase-order",
-   "source": "internal/plan/plan.go#RestoreOrder",
-   "status": "verified",
-   "test": "internal/plan/plan_test.go#TestRestoreBringsComputeBackBeforeIngress",
-   "tests": [
-    "internal/plan/plan_test.go#TestRestoreBringsComputeBackBeforeIngress",
-    "internal/plan/plan_test.go#TestNewKindsRestoreInReverseOfTheOrderTheyWereCut"
    ]
   },
   "planning.plan-building.008": {
@@ -3674,34 +3362,12 @@
     "internal/plan/plan_test.go#TestStatefulStorageIsNeverTouched"
    ]
   },
-  "planning.protected-resources.002": {
-   "file": "specs/planning/protected-resources/never-touch-stateful-storage.feature",
-   "fingerprint": "a996d849a337",
-   "human": false,
-   "rule": "planning.protected-resources.protected-service-arn-never-touched",
-   "source": "internal/model/model.go#IsNeverTouch",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
   "planning.protected-resources.003": {
    "file": "specs/planning/protected-resources/never-touch-stateful-storage.feature",
    "fingerprint": "a996d849a337",
    "human": false,
    "rule": "planning.protected-resources.compute-is-not-protected",
    "source": "internal/model/model.go#IsNeverTouch",
-   "status": "verified",
-   "test": "internal/plan/plan_test.go#TestStatefulStorageIsNeverTouched",
-   "tests": [
-    "internal/plan/plan_test.go#TestStatefulStorageIsNeverTouched"
-   ]
-  },
-  "planning.protected-resources.004": {
-   "file": "specs/planning/protected-resources/protected-and-skipped-resources.feature",
-   "fingerprint": "22b44e5e8c22",
-   "human": false,
-   "rule": "plan.protection.stateful-storage-never-touched",
-   "source": "internal/plan/plan.go#Build",
    "status": "verified",
    "test": "internal/plan/plan_test.go#TestStatefulStorageIsNeverTouched",
    "tests": [
@@ -3720,20 +3386,6 @@
     "internal/plan/plan_test.go#TestProtectTagWinsOverEveryScope",
     "internal/plan/plan_test.go#TestProtectTagOnlyIgnoredWhenExplicitlyFalse",
     "internal/plan/plan_test.go#TestOutOfScopeResourcesAreExplained"
-   ]
-  },
-  "planning.protected-resources.006": {
-   "file": "specs/planning/protected-resources/protected-and-skipped-resources.feature",
-   "fingerprint": "3e3977cec40e",
-   "human": false,
-   "rule": "plan.protection.risky-kinds-are-opt-in",
-   "source": "internal/plan/plan.go#actionFor",
-   "status": "verified",
-   "test": "internal/plan/plan_test.go#TestDatabasesAreOptInAndCarryTheSevenDayWarning",
-   "tests": [
-    "internal/plan/plan_test.go#TestDatabasesAreOptInAndCarryTheSevenDayWarning",
-    "internal/plan/plan_test.go#TestInstanceStoreLossIsRefusedByDefault",
-    "internal/plan/plan_test.go#TestNATGatewayDeletionIsOptInAndFlagged"
    ]
   },
   "planning.protected-resources.007": {
@@ -3768,33 +3420,6 @@
    "fingerprint": "4c8f2351cef4",
    "human": false,
    "rule": "planning.protected.protect-tag-unprotects-only-when-explicitly-false",
-   "source": "internal/policy/policy.go#isProtected",
-   "status": "verified",
-   "test": "internal/plan/plan_test.go#TestProtectTagOnlyIgnoredWhenExplicitlyFalse",
-   "tests": [
-    "internal/plan/plan_test.go#TestProtectTagOnlyIgnoredWhenExplicitlyFalse"
-   ]
-  },
-  "planning.protected-resources.010": {
-   "file": "specs/planning/protected-resources/protected-resources.feature",
-   "fingerprint": "3606d400fb5a",
-   "human": false,
-   "rule": "planning.protected.already-at-rest-not-rescheduled",
-   "source": "internal/plan/plan.go#computeAction",
-   "status": "verified",
-   "test": "internal/plan/plan_test.go#TestAlreadyStoppedResourcesAreSkipped",
-   "tests": [
-    "internal/plan/plan_test.go#TestAlreadyStoppedResourcesAreSkipped",
-    "internal/plan/plan_test.go#TestNodegroupAlreadyAtZeroIsRefusedNotReapplied",
-    "internal/plan/plan_test.go#TestAnAlreadyDisabledDistributionIsRefused",
-    "internal/plan/plan_test.go#TestAStageAlreadyThrottledToZeroIsRefused"
-   ]
-  },
-  "planning.protected-resources.011": {
-   "file": "specs/planning/protected-resources/protect-tag.feature",
-   "fingerprint": "4c8f2351cef4",
-   "human": false,
-   "rule": "planning.protected.only-explicit-false-unprotects",
    "source": "internal/policy/policy.go#isProtected",
    "status": "verified",
    "test": "internal/plan/plan_test.go#TestProtectTagOnlyIgnoredWhenExplicitlyFalse",
@@ -3838,16 +3463,6 @@
     "internal/plan/plan_test.go#TestNATGatewayDeletionIsOptInAndFlagged"
    ]
   },
-  "planning.scope-policy.004": {
-   "file": "specs/planning/scope-policy/scope-policy.feature",
-   "fingerprint": "cd26ac28f128",
-   "human": false,
-   "rule": "planning.scope.unknown-policy-keys-rejected",
-   "source": "internal/policy/policy.go#Parse",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
   "recovery.fire-status.001": {
    "file": "specs/recovery/fire-status/cli-fire-status.feature",
    "fingerprint": "6df2d890ba59",
@@ -3867,18 +3482,6 @@
    "status": "inferred",
    "test": "",
    "tests": []
-  },
-  "recovery.fire-status.003": {
-   "file": "specs/recovery/fire-status/database-restart-deadlines.feature",
-   "fingerprint": "10ddf8586af8",
-   "human": false,
-   "rule": "recovery.status.database-auto-restart-deadline",
-   "source": "internal/engine/engine.go#Deadlines",
-   "status": "verified",
-   "test": "internal/engine/engine_test.go#TestDatabaseDeadlinesAreReported",
-   "tests": [
-    "internal/engine/engine_test.go#TestDatabaseDeadlinesAreReported"
-   ]
   },
   "recovery.fire-status.004": {
    "file": "specs/recovery/fire-status/database-auto-restart-warning.feature",
@@ -3964,18 +3567,6 @@
     "internal/engine/engine_test.go#TestRestoreRunsInReversePhaseOrder"
    ]
   },
-  "recovery.restore-run.008": {
-   "file": "specs/recovery/restore-run/restoring-an-account.feature",
-   "fingerprint": "4d7fd1012334",
-   "human": false,
-   "rule": "recovery.restore.never-twice",
-   "source": "internal/engine/engine.go#Restore",
-   "status": "verified",
-   "test": "internal/engine/engine_test.go#TestRestoreIsIdempotent",
-   "tests": [
-    "internal/engine/engine_test.go#TestRestoreIsIdempotent"
-   ]
-  },
   "recovery.restore-run.009": {
    "file": "specs/recovery/restore-run/restoring-an-account.feature",
    "fingerprint": "4d7fd1012334",
@@ -4020,30 +3611,6 @@
     "internal/plan/plan_test.go#TestPriorInt32RefusesRatherThanWrapping"
    ]
   },
-  "recovery.restore-run.014": {
-   "file": "specs/recovery/restore-run/restoring-recorded-state.feature",
-   "fingerprint": "745999eeac8b",
-   "human": false,
-   "rule": "recovery.restore-run.enabled-flag-must-be-a-real-boolean",
-   "source": "internal/model/model.go#PriorBool",
-   "status": "verified",
-   "test": "internal/model/model_test.go#TestPriorBoolOnlyAcceptsARealBool",
-   "tests": [
-    "internal/model/model_test.go#TestPriorBoolOnlyAcceptsARealBool"
-   ]
-  },
-  "recovery.restore-run.015": {
-   "file": "specs/recovery/restore-run/restoring-recorded-state.feature",
-   "fingerprint": "b86d6e0f5865",
-   "human": false,
-   "rule": "recovery.restore-run.fractional-rates-kept-exactly",
-   "source": "internal/model/model.go#PriorFloat",
-   "status": "verified",
-   "test": "internal/model/model_test.go#TestPriorFloatKeepsFractionalRatesAndRefusesNonsense",
-   "tests": [
-    "internal/model/model_test.go#TestPriorFloatKeepsFractionalRatesAndRefusesNonsense"
-   ]
-  },
   "recovery.restore-run.016": {
    "file": "specs/recovery/restore-run/restore-refuses-to-guess-prior-state.feature",
    "fingerprint": "fe8bfa3a1f20",
@@ -4068,16 +3635,6 @@
     "internal/model/model_test.go#TestPriorFloatKeepsFractionalRatesAndRefusesNonsense"
    ]
   },
-  "recovery.restore-run.018": {
-   "file": "specs/recovery/restore-run/restore-refuses-to-guess-prior-state.feature",
-   "fingerprint": "3ea890d236f1",
-   "human": false,
-   "rule": "recovery.restore.stage-without-default-throttle-returns-to-account-limit",
-   "source": "internal/awsx/execute_ingress.go#restoreStage",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
   "recovery.restore-run.019": {
    "file": "specs/recovery/restore-run/restore-refuses-to-guess-prior-state.feature",
    "fingerprint": "b0234457575f",
@@ -4087,18 +3644,6 @@
    "status": "inferred",
    "test": "",
    "tests": []
-  },
-  "recovery.restore-snapshot.001": {
-   "file": "specs/recovery/restore-snapshot/restore-record.feature",
-   "fingerprint": "bea3bf24ab95",
-   "human": false,
-   "rule": "recovery.snapshot.fire-refused-without-verified-record",
-   "source": "internal/state/state.go#PutVerified",
-   "status": "verified",
-   "test": "internal/state/state_test.go#TestPutVerifiedCatchesALossyStore",
-   "tests": [
-    "internal/state/state_test.go#TestPutVerifiedCatchesALossyStore"
-   ]
   },
   "recovery.restore-snapshot.002": {
    "file": "specs/recovery/restore-snapshot/restore-record.feature",
@@ -4112,16 +3657,6 @@
     "internal/state/state_test.go#TestFromPlanCarriesEveryActionsPriorState"
    ]
   },
-  "recovery.restore-snapshot.003": {
-   "file": "specs/recovery/restore-snapshot/restore-record.feature",
-   "fingerprint": "e64b7043deb0",
-   "human": false,
-   "rule": "recovery.snapshot.lambda-refuses-without-durable-store",
-   "source": "internal/state/state.go#Build",
-   "status": "inferred",
-   "test": "",
-   "tests": []
-  },
   "recovery.restore-snapshot.004": {
    "file": "specs/recovery/restore-snapshot/restore-record-before-fire.feature",
    "fingerprint": "bea3bf24ab95",
@@ -4132,18 +3667,6 @@
    "test": "internal/state/state_test.go#TestPutVerifiedCatchesALossyStore",
    "tests": [
     "internal/state/state_test.go#TestPutVerifiedCatchesALossyStore"
-   ]
-  },
-  "recovery.restore-snapshot.005": {
-   "file": "specs/recovery/restore-snapshot/restore-record-before-fire.feature",
-   "fingerprint": "0506bd8306d2",
-   "human": false,
-   "rule": "recovery.restore-record.covers-every-planned-action",
-   "source": "internal/state/state.go#From",
-   "status": "verified",
-   "test": "internal/state/state_test.go#TestFromPlanCarriesEveryActionsPriorState",
-   "tests": [
-    "internal/state/state_test.go#TestFromPlanCarriesEveryActionsPriorState"
    ]
   },
   "recovery.restore-snapshot.006": {

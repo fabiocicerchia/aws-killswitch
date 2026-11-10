@@ -25,11 +25,3 @@ Feature: Applying and undoing each stop action
       | NAT gateway             | nat-0abc1234def567890 | deleted                                                                           |
       | RDS instance            | orders-db             | stopped                                                                           |
       | Aurora cluster          | reports-cluster       | stopped                                                                           |
-
-  @id:planning.action-catalog.002 @rule:firing.pause-data-network.final-snapshot-when-opted-in @inferred @source:internal/awsx/execute.go#Executor @questionable
-  Scenario: A database stopped under a final-snapshot policy is stopped without a snapshot
-    Given the policy sets include_databases and final_snapshot
-    And the plan lists RDS instance orders-db as "snapshot, then stop the database"
-    When the operator fires the plan
-    Then RDS instance orders-db is stopped
-    And no snapshot named killswitch-orders-db-<timestamp> is taken

@@ -5,19 +5,6 @@ Feature: Refusing a duplicate trip after a recent fire
   Background:
     Given the account's restore records are kept in the configured state store
 
-  @id:automation.trip-cycle.010 @rule:automation.trip-cycle.cooldown-only-counts-live-fires @verified @source:internal/trip/trip.go#FiredRecently @test:internal/trip/trip_test.go#TestAFireOlderThanTheCooldownDoesNotBlockANewOne @test:internal/trip/trip_test.go#TestARestoredSnapshotDoesNotBlockANewFire @test:internal/trip/trip_test.go#TestAPlannedButNeverFiredSnapshotDoesNotBlock @test:internal/trip/trip_test.go#TestAFireStampedInTheFutureIsIgnored
-  Scenario Outline: Only a fire that is still in effect and under an hour old holds the cooldown
-    Given the only earlier restore record is <prior_record>
-    When the budget alarm trips the killswitch
-    Then the trip goes ahead and discovers, plans and fires as usual
-
-    Examples:
-      | prior_record                                    |
-      | fired 2 hours ago and never restored            |
-      | fired 10 minutes ago and restored 5 minutes ago |
-      | planned but never fired                         |
-      | stamped as fired 30 minutes in the future       |
-
   @id:automation.trip-cycle.011 @rule:automation.trip-cycle.unreadable-state-does-not-block @verified @source:internal/trip/trip.go#FiredRecently @test:internal/trip/trip_test.go#TestUnreadableStateDoesNotRefuseToFire
   Scenario: A trip is not refused because past restore records cannot be read
     Given the state store refuses to list past restore records, for example with "s3: access denied"

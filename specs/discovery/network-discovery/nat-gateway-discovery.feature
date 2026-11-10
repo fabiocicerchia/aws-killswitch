@@ -62,15 +62,3 @@ Feature: Discovering NAT gateways and the routes that depend on them
     Then neither NAT gateway appears in the plan
     And the operator sees a discovery warning starting "warning: natgateway in eu-west-1:"
     And resources found by other services in eu-west-1 still appear in the plan
-
-  @id:discovery.network-discovery.006 @rule:discovery.network.nat-gateway-flat-hourly-estimate @inferred @source:internal/awsx/discover_network.go#natGateways @questionable
-  Scenario Outline: Each NAT gateway is estimated to save a flat $0.045 per hour in every region
-    Given an available NAT gateway "nat-0a1b2c3d4e5f60001" in region <region>
-    When the operator plans a shutdown
-    Then the NAT gateway's estimated hourly saving is $0.045
-
-    Examples:
-      | region         |
-      | us-east-1      |
-      | eu-west-1      |
-      | ap-southeast-1 |

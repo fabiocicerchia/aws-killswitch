@@ -23,20 +23,6 @@ Feature: Never touching stateful storage
       | secretsmanager |
       | route53-zone   |
 
-  @id:planning.protected-resources.002 @rule:planning.protected-resources.protected-service-arn-never-touched @inferred @source:internal/model/model.go#IsNeverTouch @questionable
-  Scenario Outline: A resource whose ARN names a protected service is never scheduled
-    Given the account holds a resource with ARN "<arn>"
-    When the operator builds a plan
-    Then the plan contains no action for that resource
-    And the resource is listed under NOT TOUCHED as a protected kind
-
-    Examples:
-      | arn                                                        |
-      | arn:aws:s3:::example-bucket                                |
-      | arn:aws:dynamodb:eu-west-1:111122223333:table/orders       |
-      | arn:aws:backup:eu-west-1:111122223333:backup-vault:default |
-      | arn:aws:kms:eu-west-1:111122223333:key/example             |
-
   @id:planning.protected-resources.003 @rule:planning.protected-resources.compute-is-not-protected @verified @source:internal/model/model.go#IsNeverTouch @test:internal/plan/plan_test.go#TestStatefulStorageIsNeverTouched
   Scenario Outline: Compute kinds are not part of the protected set
     Given the account holds a running resource of kind "<kind>"

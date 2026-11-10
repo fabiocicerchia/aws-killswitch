@@ -29,14 +29,6 @@ Feature: Firing and restoring from the command line
       | without --yes |
       | with --yes    |
 
-  @id:cli.commands.003 @rule:cli.fire.cooldown-refuses-second-fire @inferred @source:cmd/aws-killswitch/commands.go#cmdFire
-  Scenario: A second fire within the cooldown is refused unless forced
-    Given the account was fired 15 minutes ago and not restored
-    When the operator runs fire --yes without --force
-    Then the error names the cooldown reason followed by "; pass --force to fire anyway"
-    And no new restore record is written
-    And the process exits 64
-
   @id:cli.commands.004 @rule:cli.fire.nothing-in-scope-fails @inferred @source:cmd/aws-killswitch/commands.go#refuseToFire
   Scenario: Firing when nothing is in scope fails
     Given no resource in the account matches the policy scope

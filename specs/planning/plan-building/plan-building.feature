@@ -12,20 +12,6 @@ Feature: Building a shutdown plan that is safe to run and to reverse
     When the operator builds a plan
     Then the actions run in this order: CloudFront distribution, API Gateway stage, ALB listener, Lambda function, ECS service, EKS nodegroup, auto-scaling group, EC2 instance, NAT gateway, RDS cluster, RDS instance
 
-  @id:planning.plan-building.006 @rule:planning.order.deterministic @verified @source:internal/plan/plan.go#sortPlan @test:internal/plan/plan_test.go#TestPlanIsDeterministic
-  Scenario: The same inventory always produces the same plan, whatever order it was discovered in
-    Given an inventory of Lambda functions "fn-a" and "fn-b", auto-scaling group "asg-z" and ALB listener "l-1", all tagged Env=prod
-    When the operator builds a plan twice from that inventory, discovered in different orders
-    Then both plans list the same actions in the same order
-
-  @id:planning.plan-building.007 @rule:planning.restore.reverse-phase-order @verified @source:internal/plan/plan.go#RestoreOrder @test:internal/plan/plan_test.go#TestRestoreBringsComputeBackBeforeIngress @test:internal/plan/plan_test.go#TestNewKindsRestoreInReverseOfTheOrderTheyWereCut @questionable
-  Scenario: Restore brings data and compute back before letting traffic in
-    Given a fire stopped ALB listener "listener-1", auto-scaling group "asg-1" and RDS instance "db-1"
-    When the operator restores the fire
-    Then "db-1" is restored first
-    And "asg-1" is restored next
-    And "listener-1" is restored last
-
   @id:planning.plan-building.008 @rule:planning.ack.warnings-require-acknowledgement @verified @source:internal/plan/plan.go#acknowledgements @test:internal/plan/plan_test.go#TestDatabasesAreOptInAndCarryTheSevenDayWarning
   Scenario Outline: Every warning in the plan is something the operator must acknowledge
     Given the plan schedules <resource>

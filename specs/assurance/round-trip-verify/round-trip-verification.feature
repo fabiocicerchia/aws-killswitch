@@ -32,10 +32,3 @@ Feature: Verifying a fire and restore round trip
     Then the report shows the ECS service as planned
     And the report shows 0 changed
     And the ECS service is still running
-
-  @id:assurance.round-trip-verify.008 @rule:assurance.round-trip.empty-plan-is-an-error @inferred @source:internal/verify/verify.go#Run
-  Scenario: A scratch account with nothing to stop is refused rather than passed
-    Given a scratch account holding no resource the policy would stop
-    When the operator runs the verification
-    Then the operator sees 'nothing to fire: the scratch account holds no resource this policy would touch'
-    And nothing is fired or restored

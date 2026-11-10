@@ -27,12 +27,6 @@ Feature: Checking month-to-date spend against a threshold
     And no over-threshold line is printed
     And the process exits 0
 
-  @id:cost.current-spend.007 @rule:cost.spend.stale-figures-warned @inferred @source:cmd/aws-killswitch/commands.go#cmdSpend
-  Scenario: Estimated spend figures carry a lag warning
-    Given Cost Explorer marks the month-to-date figures as estimated
-    When the operator runs spend
-    Then "figures are estimated and lag by hours — for a fast trip, drive this from a Budgets action, not from polling" is printed
-
   @id:cost.current-spend.008 @rule:cost.spend.no-policy-needed @inferred @source:cmd/aws-killswitch/main.go#run
   Scenario: Spend works without a policy file
     Given no killswitch.json exists

@@ -31,14 +31,6 @@ Feature: Restoring only to the exact recorded prior state
       | -5            | fails with "no usable recorded throttle; refusing to guess" |
       | the text "10" | fails with "no usable recorded throttle; refusing to guess" |
 
-  @id:recovery.restore-run.018 @rule:recovery.restore.stage-without-default-throttle-returns-to-account-limit @inferred @source:internal/awsx/execute_ingress.go#restoreStage @questionable
-  Scenario: A stage that had no default throttle cannot currently be restored
-    Given API Gateway stage a1b2c3/prod had no stage-wide default throttle when it was discovered
-    And the fire throttled the stage to zero
-    When the operator restores the fire
-    Then the restore of a1b2c3/prod fails with "no usable recorded throttle; refusing to guess"
-    And the stage stays throttled to zero instead of returning to the account limit
-
   @id:recovery.restore-run.019 @rule:recovery.restore.lambda-reservation-unreadable-removes-reservation @inferred @source:internal/awsx/execute_compute.go#restoreLambda @questionable
   Scenario Outline: A Lambda function whose recorded reservation flag cannot be read has its reservation removed
     Given the recorded prior state of Lambda function checkout-worker says whether it had a concurrency reservation as <recorded>

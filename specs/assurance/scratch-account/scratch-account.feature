@@ -47,10 +47,3 @@ Feature: Provisioning a scratch account for verification
       | ECS service        | desired task count               | 2          |
       | auto-scaling group | min, desired and max capacity    | 1, 2 and 3 |
       | EKS nodegroup      | min, desired and max size        | 1, 2 and 3 |
-
-  @id:assurance.scratch-account.004 @rule:assurance.scratch-account.seed-output-next-steps @inferred @source:examples/scratch-account/main.tf#next
-  Scenario: Seeding the scratch account tells the operator to plan, verify and then destroy
-    When the operator applies the scratch-account module
-    Then the output lists "aws-killswitch plan   --config killswitch.json"
-    And the output lists "aws-killswitch verify --config killswitch.json --yes"
-    And the output tells the operator to run "terraform destroy" before the bill notices

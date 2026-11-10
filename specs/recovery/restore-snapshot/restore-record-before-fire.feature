@@ -18,14 +18,6 @@ Feature: Recording how to put the account back before firing
       | accepts the record but cannot read it back             | snapshot written to <store> but could not be read back                                             |
       | rejects the write                                      | writing snapshot to <store>                                                                        |
 
-  @id:recovery.restore-snapshot.005 @rule:recovery.restore-record.covers-every-planned-action @verified @source:internal/state/state.go#From @test:internal/state/state_test.go#TestFromPlanCarriesEveryActionsPriorState
-  Scenario: Every resource the plan will stop is in the restore record with its prior settings
-    Given the plan stops auto-scaling group asg-1 with desired capacity 4
-    And the plan blocks load balancer listener l-1 that forwarded traffic
-    When the operator fires the plan
-    Then the restore record holds 2 entries
-    And each entry carries the settings the resource had before the fire
-
   @id:recovery.restore-snapshot.006 @rule:recovery.restore-record.prior-numbers-preserved @verified @source:internal/model/model.go#PriorInt @test:internal/state/state_test.go#TestLocalStoreRoundTripsPriorStateAsNumbers
   Scenario: Recorded capacity numbers come back as the same whole numbers
     Given auto-scaling group asg-a had desired capacity 3, minimum 1 and maximum 6 before the fire

@@ -5,20 +5,6 @@ Feature: Draining and restoring compute workloads
   Background:
     Given the operator has a reviewed plan that includes compute resources in the account
 
-  @id:firing.drain-compute.001 @rule:firing.drain-compute.kind-reaches-zero-cost-state @inferred @source:internal/awsx/execute_compute.go#scaleNodegroup
-  Scenario Outline: Firing drains each compute kind to its zero-cost state
-    Given the plan includes a <kind> named "<name>"
-    When the operator fires the plan
-    Then "<name>" is left <fired_state>
-
-    Examples:
-      | kind                   | name                       | fired_state                                                |
-      | Lambda function        | orders-worker              | with reserved concurrency 0, so no invocation can run      |
-      | ECS service            | api in cluster prod        | with desired count 0                                       |
-      | auto-scaling group     | web-asg                    | with min size 0, desired capacity 0 and max size 0         |
-      | EC2 instance           | i-0abc1234def567890        | stopped, not terminated                                    |
-      | EKS managed node group | ng-default in cluster prod | with min size 0 and desired size 0, its max size unchanged |
-
   @id:firing.drain-compute.002 @rule:recovery.restore-run.compute-returns-to-recorded-capacity @inferred @source:internal/awsx/execute_compute.go#restoreLambda
   Scenario Outline: Restoring puts each compute workload back to its recorded capacity
     Given "<name>" was drained by a fire that recorded <recorded>
@@ -49,10 +35,3 @@ Feature: Draining and restoring compute workloads
       | EKS node group ng-default     | has no desired size                                 | incomplete or unusable recorded node counts; refusing to guess   |
       | EKS node group ng-default     | names no cluster                                    | recorded state names no cluster or nodegroup                     |
       | Lambda function orders-worker | says it had a reservation but holds no usable value | recorded a reservation but not a usable value; refusing to guess |
-
-  @id:firing.drain-compute.004 @rule:recovery.restore-run.lambda-unknown-reservation-removed @inferred @source:internal/awsx/execute_compute.go#restoreLambda @questionable
-  Scenario: A Lambda whose record does not say whether it had a reservation is restored with none
-    Given Lambda function "orders-worker" was drained by a fire whose record does not state whether it had reserved concurrency
-    When the operator restores the fire
-    Then "orders-worker" ends up with no reserved concurrency
-    And the restore reports no error for "orders-worker"

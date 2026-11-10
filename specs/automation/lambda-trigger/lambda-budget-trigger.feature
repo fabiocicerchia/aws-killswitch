@@ -38,25 +38,6 @@ Feature: Firing the killswitch from a budget alert
     Then nothing in the account is stopped
     And the invocation fails with an error starting "policy:"
 
-  @id:automation.lambda-trigger.004 @rule:automation.lambda.repeat-delivery-skipped @inferred @source:cmd/killswitch-lambda/main.go#handle
-  Scenario: A repeated budget alert within an hour of a fire does not fire again
-    Given the killswitch fired 20 minutes ago and that fire has not been restored
-    When the same budget alert is delivered again
-    Then nothing in the account is changed
-    And the response has fired false and skipped "already fired 20m0s ago; inside the 1h0m0s cooldown"
-
-  @id:automation.lambda-trigger.005 @rule:automation.lambda.unattended-needs-force-for-acknowledgements @inferred @source:cmd/killswitch-lambda/main.go#Event
-  Scenario Outline: An unattended fire does not apply a plan whose actions need acknowledgement unless the event forces it
-    Given the plan for the account has 2 actions that need acknowledgement
-    When a budget alert invokes the killswitch with force <force>
-    Then the response has fired <fired>
-    And the response skipped reason is <skipped>
-
-    Examples:
-      | force  | fired | skipped                                                 |
-      | absent | false | 2 action(s) need acknowledgement; not firing unattended |
-      | true   | true  | (none)                                                  |
-
   @id:automation.lambda-trigger.006 @rule:automation.lambda.dry-run-test-invocation @inferred @source:cmd/killswitch-lambda/main.go#handle
   Scenario: A dry-run invocation exercises discovery and planning without stopping anything
     Given the account has running resources in scope

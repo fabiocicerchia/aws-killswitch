@@ -11,13 +11,6 @@ Feature: Restoring an account from its restore record
     When the operator restores plan-1
     Then db-1 is restored first, then asg-1, then listener-1
 
-  @id:recovery.restore-run.008 @rule:recovery.restore.never-twice @verified @source:internal/engine/engine.go#Restore @test:internal/engine/engine_test.go#TestRestoreIsIdempotent
-  Scenario: A second restore of the same fire changes nothing
-    Given plan-1 has already been restored in full
-    When the operator restores plan-1 again
-    Then the restore fails with "this snapshot records no changes to undo"
-    And no resource is restored a second time
-
   @id:recovery.restore-run.009 @rule:recovery.restore.stop-on-first-failure @inferred @source:internal/engine/engine.go#Restore @questionable
   Scenario: A restore that hits a failure stops there and leaves the rest restorable
     Given the fire stopped database db-1 and scaled down auto-scaling group asg-1
