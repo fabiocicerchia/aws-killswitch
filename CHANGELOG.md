@@ -5,6 +5,19 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.4](https://github.com/fabiocicerchia/aws-killswitch/compare/v1.12.3...v1.12.4) (2026-11-13)
+
+
+### Bug Fixes
+
+* 2 issues found by code-atlas (insights to act on) ([#172](https://github.com/fabiocicerchia/aws-killswitch/issues/172)) ([be948d4](https://github.com/fabiocicerchia/aws-killswitch/commit/be948d479e1614a86e8c9ce60bcd907ab5e5ef82))
+* 3 issues found by code-atlas (ci that cannot fail) ([#171](https://github.com/fabiocicerchia/aws-killswitch/issues/171)) ([dbdf2a7](https://github.com/fabiocicerchia/aws-killswitch/commit/dbdf2a754a0c9c8a054b3f6653d39d58ffff5e77))
+* 3 issues found by code-atlas (code design) ([#173](https://github.com/fabiocicerchia/aws-killswitch/issues/173)) ([5cfd780](https://github.com/fabiocicerchia/aws-killswitch/commit/5cfd7800c1d52fab8d35ce000d74d0682732e70e))
+* 6 issues found by code-atlas (test suites) ([#174](https://github.com/fabiocicerchia/aws-killswitch/issues/174)) ([2453268](https://github.com/fabiocicerchia/aws-killswitch/commit/24532685e7d1d0fd5a1ded232f4a970bb326b84d))
+* Correct examples/basic/README.md: 1 claim that no longer hold ([#170](https://github.com/fabiocicerchia/aws-killswitch/issues/170)) ([63f6488](https://github.com/fabiocicerchia/aws-killswitch/commit/63f648889319593ba8287c8c0be7a42645258686))
+* **deps:** bump Go toolchain to 1.26.11 for net/http GO-2026-6859 ([#182](https://github.com/fabiocicerchia/aws-killswitch/issues/182)) ([1648c37](https://github.com/fabiocicerchia/aws-killswitch/commit/1648c376cd009fd9c452e612724a117864eeef36))
+* Upgrade gitpython 3.1.62 → 3.2.1 ([#165](https://github.com/fabiocicerchia/aws-killswitch/issues/165)) ([7add2b5](https://github.com/fabiocicerchia/aws-killswitch/commit/7add2b5ef97db3f3339a56b44e18b007af8ee83d))
+
 ## [1.12.3](https://github.com/fabiocicerchia/aws-killswitch/compare/v1.12.2...v1.12.3) (2026-10-22)
 
 
